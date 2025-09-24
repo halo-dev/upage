@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 聊天使用记录，每个 message 对应多条。
+model ChatUsage {
+  id              String   @id @default(uuid())
+  // 用户 ID
+  userId          String
+  // 聊天的 id
+  chatId          String
+  // 消息的 id
+  messageId       String
+  // 输入令牌数
+  inputTokens     Int      @default(0)
+  // 输出令牌数
+  outputTokens    Int      @default(0)
+  // 缓存令牌数
+  cachedTokens    Int      @default(0)
+  // 推理令牌数
+  reasoningTokens Int      @default(0)
+  // 总令牌数
+  totalTokens     Int      @default(0)
+  // 调用时间
+  calledAt        DateTime @default(now())
+  // 调用状态
+  status       String
+  // 使用的模型名称
+  modelName    String?
+  // 提示文本
+  prompt       String?
+  // 包含额外调用信息的元数据
+  metadata     Json? /// @type {Object}
+  // 创建时间
+  createdAt    DateTime @default(now())
+  // 更新时间
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([messageId])
+  @@index([chatId])
+  @@index([calledAt])
+  @@index([status])
+}
+
+// 聊天，一个聊天会包含多个消息。
+model Chat {
+  id          String   @id @default(uuid())
+  // URL 标识符
+  urlId       String?  @unique
+  // 用户 ID
+  userId      String
+  // 聊天描述
+  description String?
+  // 时间戳
+  timestamp   DateTime @default(now())
+  // 版本，每次更新时，版本号加 1
+  version     Int      @default(1)
+  // 包含额外信息的元数据
+  metadata    Json? /// @type {{gitUrl?: string, gitBranch?: string, netlifySiteId?: string}}
+  // 创建时间
+  createdAt   DateTime @default(now())
+  // 更新时间
+  updatedAt   DateTime @updatedAt
+
+  // 关联的消息
+  messages    Message[]    @relation("ChatToMessages")
+  // 关联的部署记录
+  deployments Deployment[]
+
+  @@index([userId])
+  @@index([urlId])
+}
+
+// 聊天消息，消息是需要有序的。 @ai-sdk/ui-utils 的 Message 类型。
+model Message {
+  id          String  @id @default(uuid())
+  // 消息所属聊天
+  chatId      String
+  // 消息所属用户
+  userId      String
+  // 'user' 或 'assistant'
+  role        String
+  // 消息内容
+  content     String  @db.Text
+  // 版本 ID
+  revisionId  String?
+  // 注释
+  annotations Json? /// @type {Array<{id: string, text: string, start: number, end: number}>}
+
+  // 是否为遗弃消息
+  isDiscarded Boolean @default(false)
+
+  // 消息的元数据
+  metadata    Json? /// @type {Record<string, any>}
+
+  // 消息的部分内容，用于存储 UIMessage 的 parts
+  parts       Json? /// @type {Array<{type: string, text?: string, [key: string]: any}>}
+
+  version     Int    @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chat            Chat             @relation("ChatToMessages", fields: [chatId], references: [id], onDelete: Cascade)
+  // 关联的页面
+  page            Page?            @relation("MessageToPage")
+  // 关联的部分
+  sections        Section[]        @relation("MessageToSections")
+
+  @@index([chatId])
+  @@index([userId])
+}
+
+model Page {
+  id        String   @id @default(uuid())
+  // 关联的消息 ID
+  messageId String   @unique
+  // 页面数据 (JSON 数组格式)
+  pages     Json /// @type {Array<Object>} 自定义编辑器的页面数据结构数组，每个元素代表一个页面
+  // 创建时间
+  createdAt DateTime @default(now())
+  // 更新时间
+  updatedAt DateTime @updatedAt
+
+  // 关联的消息
+  message Message @relation("MessageToPage", fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model Section {
+  id        String   @id @default(uuid())
+  // 所属消息 ID
+  messageId String
+  // 部分类型，通常为 "section"
+  type      String   @default("section")
+  // 操作类型：add, update, remove 等
+  action    String   @default("add")
+  // 操作的 ID
+  actionId  String
+  // 页面名称
+  pageName  String   @default("")
+  // Section 内容 (HTML/CSS)
+  content   String   @db.Text
+  // DOM ID
+  domId     String
+  // 根 DOM ID，用于标识父级容器
+  rootDomId String?
+  // 排序顺序
+  sort      Int      @default(0)
+  // 创建时间
+  createdAt DateTime @default(now())
+  // 更新时间
+  updatedAt DateTime @updatedAt
+
+  // 关联的消息
+  message Message @relation("MessageToSections", fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([domId])
+  @@index([rootDomId])
+}
+
+// 部署记录表，记录用户将代码部署到各平台的信息
+model Deployment {
+  id           String   @id @default(uuid())
+  // 用户 ID
+  userId       String
+  // 聊天 ID
+  chatId       String
+  // 部署平台（1Panel、Netlify、Vercel 等）
+  platform     String
+  // 平台上的部署 ID
+  deploymentId String
+  // 部署后的访问链接
+  url          String
+  // 部署状态
+  status       String
+  // 包含平台特定信息的元数据
+  metadata     Json? /// @type {Object}
+  // 创建时间
+  createdAt    DateTime @default(now())
+  // 更新时间
+  updatedAt    DateTime @updatedAt
+
+  // 关联的聊天
+  chat Chat? @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([chatId])
+  @@index([platform])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// 用户设置表，用于保存用户的各种设置
+model UserSetting {
+  id        String   @id @default(uuid())
+  // 用户 ID
+  userId    String
+  // 设置类别（profile、connectivity、services 等）
+  category  String
+  // 设置键名
+  key       String
+  // 设置值
+  value     String   @db.Text
+  // 是否为敏感信息（如 API 密钥）
+  isSecret  Boolean  @default(false)
+  // 创建时间
+  createdAt DateTime @default(now())
+  // 更新时间
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, category, key])
+  @@index([userId])
+  @@index([category])
+  @@index([key])
+  @@index([isSecret])
+}

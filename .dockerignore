@@ -1,0 +1,40 @@
+# Ignore Git and GitHub files
+.git
+.github/
+
+# Ignore Husky configuration files
+.husky/
+
+# Ignore documentation and metadata files
+CONTRIBUTING.md
+LICENSE
+README.md
+
+# Ignore environment examples and sensitive info
+.env
+.env.*
+*.local
+*.example
+.env.development
+.env.production
+.env.test
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore node modules, logs and cache files
+**/*.log
+**/node_modules
+**/dist
+**/build
+**/.cache
+logs
+dist-ssr
+.DS_Store
+
+# Ignore any potential secrets or key files
+**/*.pem
+**/*.key
+**/secrets/
+**/credentials/

@@ -1,0 +1,191 @@
+/* Color Tokens Light Theme */
+:root,
+:root[data-theme='light'] {
+  --upage-elements-borderColor: #E2E8F0;
+  --upage-elements-borderColorActive: theme('colors.accent.600');
+
+  --upage-elements-bg-depth-1: theme('colors.white');
+  --upage-elements-bg-depth-2: #F8FAFC;
+  --upage-elements-bg-depth-3: #F1F5F9;
+  --upage-elements-bg-depth-4: theme('colors.alpha.gray.5');
+
+  --upage-elements-textPrimary: #0F172A;
+  --upage-elements-textSecondary: #334155;
+  --upage-elements-textTertiary: #64748B;
+  --upage-elements-textSuccess: theme('colors.green.500');
+  --upage-elements-textWarning: theme('colors.yellow.500');
+  --upage-elements-textError: theme('colors.red.500');
+
+  --upage-elements-code-background: theme('colors.gray.100');
+  --upage-elements-code-text: theme('colors.gray.950');
+
+  --upage-elements-button-primary-background: theme('colors.accent.500');
+  --upage-elements-button-primary-backgroundHover: theme('colors.accent.600');
+  --upage-elements-button-primary-text: theme('colors.white');
+
+  --upage-elements-button-secondary-background: #F1F5F9;
+  --upage-elements-button-secondary-backgroundHover: #E2E8F0;
+  --upage-elements-button-secondary-text: #334155;
+
+  --upage-elements-button-danger-background: theme('colors.red.500');
+  --upage-elements-button-danger-backgroundHover: theme('colors.red.600');
+  --upage-elements-button-danger-text: theme('colors.white');
+
+  --upage-elements-item-contentDefault: var(--upage-elements-textPrimary);
+  --upage-elements-item-contentActive: theme('colors.gray.950');
+  --upage-elements-item-contentAccent: theme('colors.accent.700');
+  --upage-elements-item-contentDanger: theme('colors.red.500');
+  --upage-elements-item-backgroundDefault: rgba(0, 0, 0, 0);
+  --upage-elements-item-backgroundActive: theme('colors.alpha.gray.5');
+  --upage-elements-item-backgroundAccent: theme('colors.alpha.accent.10');
+  --upage-elements-item-backgroundDanger: theme('colors.alpha.red.10');
+
+  --upage-elements-loader-background: theme('colors.alpha.gray.10');
+  --upage-elements-loader-progress: theme('colors.accent.500');
+
+  --upage-elements-artifacts-background: theme('colors.white');
+  --upage-elements-artifacts-backgroundHover: theme('colors.alpha.gray.2');
+  --upage-elements-artifacts-borderColor: var(--upage-elements-borderColor);
+  --upage-elements-artifacts-inlineCode-background: #F1F5F9;
+  --upage-elements-artifacts-inlineCode-text: var(--upage-elements-textPrimary);
+
+  --upage-elements-actions-background: theme('colors.white');
+  --upage-elements-actions-code-background: #1E293B;
+
+  --upage-elements-messages-background: #F8FAFC;
+  --upage-elements-messages-linkColor: theme('colors.accent.600');
+  --upage-elements-messages-code-background: #1E293B;
+  --upage-elements-messages-inlineCode-background: #F1F5F9;
+  --upage-elements-messages-inlineCode-text: #0F172A;
+
+  --upage-elements-icon-success: theme('colors.green.500');
+  --upage-elements-icon-error: theme('colors.red.500');
+  --upage-elements-icon-primary: theme('colors.gray.950');
+  --upage-elements-icon-secondary: theme('colors.gray.600');
+  --upage-elements-icon-tertiary: theme('colors.gray.500');
+
+  --upage-elements-dividerColor: theme('colors.gray.100');
+
+  --upage-elements-prompt-background: theme('colors.alpha.white.80');
+
+  --upage-elements-sidebar-dropdownShadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --upage-elements-sidebar-buttonBackgroundDefault: theme('colors.accent.500');
+  --upage-elements-sidebar-buttonBackgroundHover: theme('colors.accent.600');
+  --upage-elements-sidebar-buttonText: theme('colors.white');
+
+  --upage-elements-preview-addressBar-background: theme('colors.gray.100');
+  --upage-elements-preview-addressBar-backgroundHover: theme('colors.alpha.gray.5');
+  --upage-elements-preview-addressBar-backgroundActive: theme('colors.white');
+  --upage-elements-preview-addressBar-text: var(--upage-elements-textSecondary);
+  --upage-elements-preview-addressBar-textActive: var(--upage-elements-textPrimary);
+
+  --upage-elements-cta-background: theme('colors.gray.100');
+  --upage-elements-cta-text: theme('colors.gray.950');
+
+  --upage-elements-scrollbar-thumb: theme('colors.gray.500');
+}
+
+/* Color Tokens Dark Theme */
+:root,
+:root[data-theme='dark'] {
+  --upage-elements-borderColor: #334155;
+  --upage-elements-borderColorActive: theme('colors.accent.500');
+
+  --upage-elements-bg-depth-1: #0F172A;
+  --upage-elements-bg-depth-2: #1E293B;
+  --upage-elements-bg-depth-3: #334155;
+  --upage-elements-bg-depth-4: theme('colors.alpha.white.5');
+
+  --upage-elements-textPrimary: theme('colors.white');
+  --upage-elements-textSecondary: theme('colors.gray.300');
+  --upage-elements-textTertiary: theme('colors.gray.400');
+  --upage-elements-textSuccess: theme('colors.green.500');
+  --upage-elements-textWarning: theme('colors.yellow.500');
+  --upage-elements-textError: theme('colors.red.500');
+
+  --upage-elements-code-background: theme('colors.gray.800');
+  --upage-elements-code-text: theme('colors.white');
+
+  --upage-elements-button-primary-background: theme('colors.accent.500');
+  --upage-elements-button-primary-backgroundHover: theme('colors.accent.600');
+  --upage-elements-button-primary-text: theme('colors.white');
+
+  --upage-elements-button-secondary-background: #334155;
+  --upage-elements-button-secondary-backgroundHover: #475569;
+  --upage-elements-button-secondary-text: theme('colors.white');
+
+  --upage-elements-button-danger-background: theme('colors.red.500');
+  --upage-elements-button-danger-backgroundHover: theme('colors.red.600');
+  --upage-elements-button-danger-text: theme('colors.white');
+
+  --upage-elements-item-contentDefault: theme('colors.alpha.white.50');
+  --upage-elements-item-contentActive: theme('colors.white');
+  --upage-elements-item-contentAccent: theme('colors.accent.500');
+  --upage-elements-item-contentDanger: theme('colors.red.500');
+  --upage-elements-item-backgroundDefault: rgba(255, 255, 255, 0);
+  --upage-elements-item-backgroundActive: theme('colors.alpha.white.10');
+  --upage-elements-item-backgroundAccent: theme('colors.alpha.accent.10');
+  --upage-elements-item-backgroundDanger: theme('colors.alpha.red.10');
+
+  --upage-elements-loader-background: theme('colors.alpha.gray.10');
+  --upage-elements-loader-progress: theme('colors.accent.500');
+
+  --upage-elements-artifacts-background: #1E293B;
+  --upage-elements-artifacts-backgroundHover: theme('colors.alpha.white.5');
+  --upage-elements-artifacts-borderColor: var(--upage-elements-borderColor);
+  --upage-elements-artifacts-inlineCode-background: #334155;
+  --upage-elements-artifacts-inlineCode-text: theme('colors.white');
+
+  --upage-elements-actions-background: #1E293B;
+  --upage-elements-actions-code-background: #0F172A;
+
+  --upage-elements-messages-background: #1E293B;
+  --upage-elements-messages-linkColor: theme('colors.accent.400');
+  --upage-elements-messages-code-background: #0F172A;
+  --upage-elements-messages-inlineCode-background: #334155;
+  --upage-elements-messages-inlineCode-text: var(--upage-elements-textPrimary);
+
+  --upage-elements-icon-success: theme('colors.green.400');
+  --upage-elements-icon-error: theme('colors.red.400');
+  --upage-elements-icon-primary: theme('colors.gray.950');
+  --upage-elements-icon-secondary: theme('colors.gray.600');
+  --upage-elements-icon-tertiary: theme('colors.gray.500');
+
+  --upage-elements-dividerColor: theme('colors.gray.100');
+
+  --upage-elements-prompt-background: rgba(15, 23, 42, 0.8);
+
+  --upage-elements-sidebar-dropdownShadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --upage-elements-sidebar-buttonBackgroundDefault: theme('colors.accent.500');
+  --upage-elements-sidebar-buttonBackgroundHover: theme('colors.accent.600');
+  --upage-elements-sidebar-buttonText: theme('colors.white');
+
+  --upage-elements-preview-addressBar-background: var(--upage-elements-bg-depth-1);
+  --upage-elements-preview-addressBar-backgroundHover: theme('colors.alpha.white.5');
+  --upage-elements-preview-addressBar-backgroundActive: var(--upage-elements-bg-depth-1);
+  --upage-elements-preview-addressBar-text: var(--upage-elements-textSecondary);
+  --upage-elements-preview-addressBar-textActive: var(--upage-elements-textPrimary);
+
+  --upage-elements-cta-background: theme('colors.alpha.white.10');
+  --upage-elements-cta-text: theme('colors.white');
+
+  --upage-elements-scrollbar-thumb: theme('colors.gray.300');
+}
+
+/*
+ * Element Tokens
+ *
+ * Hierarchy: Element Token -> (Element Token | Color Tokens) -> Primitives
+ */
+:root {
+  --header-height: 54px;
+  --chat-max-width: 48rem;
+  --chat-width: 30rem;
+  --workbench-width: min(calc(100% - var(--chat-width)), 2536px);
+  --workbench-inner-width: var(--workbench-width);
+  --workbench-left: calc(100% - var(--workbench-width));
+
+  /* Toasts */
+  --toastify-color-progress-success: var(--upage-elements-icon-success);
+  --toastify-color-progress-error: var(--upage-elements-icon-error);
+}

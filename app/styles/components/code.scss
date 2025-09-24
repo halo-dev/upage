@@ -1,0 +1,9 @@
+.actions .shiki {
+  background-color: var(--upage-elements-actions-code-background) !important;
+}
+
+.shiki {
+  &:not(:has(.actions), .actions *) {
+    background-color: var(--upage-elements-messages-code-background) !important;
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**/*.ts", "**/*.tsx", "**/*.css", "**/*.scss", "**/app/**", "**/*.mjs", "!**/public/**"]
+  },
+  "formatter": {
+    "enabled": true,
+    "useEditorconfig": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 120,
+    "attributePosition": "auto",
+    "bracketSpacing": true
+  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "security": { "noGlobalEval": "error" },
+      "style": { "useBlockStatements": "off" },
+      "correctness": {
+        "noUnusedImports": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSameLine": false,
+      "quoteStyle": "single",
+      "attributePosition": "auto",
+      "bracketSpacing": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.json", "**/*.json", "**/*.json5", "**/*.json5", "**/*.jsonc", "**/*.jsonc"],
+      "javascript": { "globals": [] },
+      "linter": { "rules": { "correctness": { "noUnusedVariables": "off" } } }
+    },
+    {
+      "includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noConstAssign": "off",
+            "noGlobalObjectCalls": "off",
+            "noInvalidBuiltinInstantiation": "off",
+            "noInvalidConstructorSuper": "off",
+            "noSetterReturn": "off",
+            "noUndeclaredVariables": "off",
+            "noUnreachable": "off",
+            "noUnreachableSuper": "off"
+          },
+          "style": {
+            "useConst": "error"
+          },
+          "suspicious": {
+            "noClassAssign": "off",
+            "noDuplicateClassMembers": "off",
+            "noDuplicateObjectKeys": "off",
+            "noDuplicateParameters": "off",
+            "noFunctionAssign": "off",
+            "noImportAssign": "off",
+            "noRedeclare": "off",
+            "noUnsafeNegation": "off",
+            "useGetterReturn": "off",
+            "noVar": "error"
+          },
+          "complexity": {
+            "noArguments": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "linter": {
+        "rules": {
+          "complexity": { "noUselessTypeConstraint": "error" },
+          "correctness": {
+            "noUnusedVariables": "error"
+          },
+          "style": { "noNamespace": "error", "useAsConstAssertion": "error", "useArrayLiterals": "off" },
+          "suspicious": {
+            "noExplicitAny": "error",
+            "noExtraNonNullAssertion": "error",
+            "noMisleadingInstantiator": "error",
+            "noUnsafeDeclarationMerging": "error",
+            "useNamespaceKeyword": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"],
+      "javascript": { "globals": [] },
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noUselessTernary": "error",
+            "useLiteralKeys": "error"
+          },
+          "correctness": {
+            "noConstantCondition": "error",
+            "noSwitchDeclarations": "error",
+            "noUnusedVariables": "off"
+          },
+          "style": { "useBlockStatements": "error" },
+          "suspicious": {
+            "noAsyncPromiseExecutor": "error",
+            "noDebugger": "warn",
+            "useDefaultSwitchClauseLast": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noUselessTernary": "error",
+            "useLiteralKeys": "error"
+          },
+          "correctness": {
+            "noConstantCondition": "error",
+            "noSwitchDeclarations": "error",
+            "noUnusedVariables": "error"
+          },
+          "style": {
+            "noNonNullAssertion": "off",
+            "useBlockStatements": "error"
+          },
+          "suspicious": {
+            "noAsyncPromiseExecutor": "error",
+            "noDebugger": "warn",
+            "noEmptyBlockStatements": "warn",
+            "noExplicitAny": "off",
+            "noExtraNonNullAssertion": "error",
+            "useDefaultSwitchClauseLast": "error"
+          }
+        }
+      }
+    }
+  ]
+}

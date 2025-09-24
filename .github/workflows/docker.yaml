@@ -1,0 +1,39 @@
+name: Docker Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**"
+      - "!**.md"
+      - '!docs/**'
+  release:
+    types:
+      - published
+
+concurrency:
+  group: ${{github.workflow}} - ${{github.ref}}
+  cancel-in-progress: true
+
+permissions:
+  packages: write
+  contents: read
+
+jobs:
+  docker-build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup and Build
+        uses: ./.github/actions/setup-and-build
+      - name: Docker Buildx and Push
+        uses: ./.github/actions/docker-buildx-push
+        with:
+          image-name: ${{ github.event_name == 'release' && 'upage' || 'upage-dev' }}
+          ghcr-token: ${{ secrets.GITHUB_TOKEN }}
+          dockerhub-user: ${{ secrets.DOCKER_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKER_TOKEN }}
+          push: true
+          platforms: linux/amd64,linux/arm64/v8,linux/ppc64le,linux/s390x
