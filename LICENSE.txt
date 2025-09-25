@@ -1,8 +1,8 @@
 # Open Source License
 
-SQLBot is licensed under a modified version of the GNU General Public License version 3 (GPLv3), with the following additional conditions:
+UPage is licensed under a modified version of the GNU General Public License version 3 (GPLv3), with the following additional conditions:
 
-1. LOGO and copyright information: In the process of using SQLBot's frontend, you may not remove or modify the LOGO or copyright information in the SQLBot console or applications.
+1. LOGO and copyright information: In the process of using UPage, you may not remove or modify the LOGO or copyright information in the UPage applications.
 
 2. As a contributor, you should agree that:
 
