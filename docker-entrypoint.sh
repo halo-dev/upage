@@ -1,131 +1,260 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
-echo "🚀 启动 UPage 应用..."
+SCRIPT_NAME=$(basename "$0")
+START_TIME=$(date +%s)
+MAX_DB_RETRIES=10
+DB_RETRY_INTERVAL=5
+TEMP_FILES=()
 
-print_db_info() {
-  if [ -z "$DATABASE_URL" ]; then
-    echo "⚠️ 警告：DATABASE_URL 环境变量未设置！"
-    return
-  fi
+cleanup() {
+  log_info "正在清理资源..."
 
-  DB_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
-  DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
-  DB_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]*\)\/.*/\1/p')
-  DB_NAME=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
-  DB_SCHEMA=$(echo $DATABASE_URL | sed -n 's/.*schema=\([^&]*\).*/\1/p')
+  for temp_file in "${TEMP_FILES[@]}"; do
+    if [[ -f "$temp_file" ]]; then
+      rm -f "$temp_file"
+      log_debug "已删除临时文件: $temp_file"
+    fi
+  done
 
-  echo "📊 数据库连接信息："
-  echo "   - 用户: $DB_USER"
-  echo "   - 主机: $DB_HOST"
-  echo "   - 端口: $DB_PORT"
-  echo "   - 数据库: $DB_NAME"
-  echo "   - Schema: $DB_SCHEMA"
+  log_info "清理完成"
 }
 
-echo "🖥️ 系统环境信息："
-echo "   - NODE_ENV: $NODE_ENV"
-echo "   - 当前用户: $(whoami)"
-echo "   - 工作目录: $(pwd)"
+handle_exit() {
+  log_info "接收到退出信号，正在退出..."
+  cleanup
+  exit 0
+}
 
-print_db_info
+trap handle_exit SIGTERM SIGINT
+trap cleanup EXIT
 
-echo "⏳ 等待数据库连接..."
-MAX_RETRIES=5
-RETRY_COUNT=0
+LOG_LEVEL_DEBUG=0
+LOG_LEVEL_INFO=1
+LOG_LEVEL_WARN=2
+LOG_LEVEL_ERROR=3
+CURRENT_LOG_LEVEL=${LOG_LEVEL_INFO}
 
-ERROR_LOG=$(mktemp)
+if [[ "$LOG_LEVEL" == "debug" ]]; then
+  CURRENT_LOG_LEVEL=${LOG_LEVEL_DEBUG}
+elif [[ "$LOG_LEVEL" == "info" ]]; then
+  CURRENT_LOG_LEVEL=${LOG_LEVEL_INFO}
+elif [[ "$LOG_LEVEL" == "warn" ]]; then
+  CURRENT_LOG_LEVEL=${LOG_LEVEL_WARN}
+elif [[ "$LOG_LEVEL" == "error" ]]; then
+  CURRENT_LOG_LEVEL=${LOG_LEVEL_ERROR}
+fi
 
-until pnpm prisma db push --accept-data-loss 2>$ERROR_LOG || pnpm prisma migrate deploy 2>$ERROR_LOG; do
-  RETRY_COUNT=$((RETRY_COUNT + 1))
+log_debug() {
+  if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_LEVEL_DEBUG} ]]; then
+    echo "🔍 [$(date '+%Y-%m-%d %H:%M:%S')] [DEBUG] $*"
+  fi
+}
 
-  echo "❌ 数据库连接尝试 $RETRY_COUNT 失败，错误信息："
-  cat $ERROR_LOG
+log_info() {
+  if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_LEVEL_INFO} ]]; then
+    echo "ℹ️ [$(date '+%Y-%m-%d %H:%M:%S')] [INFO] $*"
+  fi
+}
 
-  if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-    echo "❌ 数据库连接失败！已达到最大重试次数。"
-    echo "🔍 最后一次错误详情："
-    cat $ERROR_LOG
-    echo "🔍 尝试使用 pg_isready 检查数据库连接："
-    if command -v pg_isready >/dev/null 2>&1; then
-      pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER && echo "✅ 数据库可以连接" || echo "❌ 数据库无法连接"
+log_warn() {
+  if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_LEVEL_WARN} ]]; then
+    echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] [WARN] $*"
+  fi
+}
+
+log_error() {
+  if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_LEVEL_ERROR} ]]; then
+    echo "❌ [$(date '+%Y-%m-%d %H:%M:%S')] [ERROR] $*"
+  fi
+}
+
+log_success() {
+  if [[ ${CURRENT_LOG_LEVEL} -le ${LOG_LEVEL_INFO} ]]; then
+    echo "✅ [$(date '+%Y-%m-%d %H:%M:%S')] [SUCCESS] $*"
+  fi
+}
+
+# 创建安全的临时文件
+create_temp_file() {
+  local temp_file
+  temp_file=$(mktemp)
+  TEMP_FILES+=("$temp_file")
+  echo "$temp_file"
+}
+
+safe_db_url() {
+  # 直接返回固定的数据库路径
+  echo "sqlite://data/upage.db"
+}
+
+# 设置数据库信息
+extract_db_info() {
+  DB_FILE="data/upage.db"
+  return 0
+}
+
+# 检查数据库连接
+check_db_connection() {
+  log_info "检查 SQLite 数据库..."
+
+  if ! extract_db_info; then
+    return 1
+  fi
+
+  log_info "SQLite 数据库文件路径: $DB_FILE"
+
+  # 如果数据库文件已存在，检查是否可读写
+  if [[ -f "$DB_FILE" && ! -w "$DB_FILE" ]]; then
+    log_error "SQLite 数据库文件存在但不可写: $DB_FILE"
+    return 1
+  fi
+
+  # 验证 Prisma 配置
+  local output_file
+  output_file=$(create_temp_file)
+
+  if pnpm prisma validate --schema=./prisma/schema.prisma > "$output_file" 2>&1; then
+    log_success "Prisma 配置验证成功"
+  else
+    log_warn "Prisma 配置验证警告，但将继续执行:"
+    cat "$output_file"
+  fi
+
+  log_success "SQLite 数据库检查通过"
+  return 0
+}
+
+# 等待数据库就绪
+wait_for_db() {
+  log_info "准备 SQLite 数据库..."
+
+  if check_db_connection; then
+    log_success "SQLite 数据库就绪"
+    return 0
+  else
+    log_error "SQLite 数据库检查失败"
+    return 1
+  fi
+}
+
+# 处理数据库迁移
+handle_db_migration() {
+  log_info "处理数据库迁移..."
+
+  # 1. 尝试直接应用迁移
+  local migrate_output
+  migrate_output=$(create_temp_file)
+
+  log_info "尝试应用数据库迁移..."
+  if pnpm prisma migrate deploy --schema=./prisma/schema.prisma > "$migrate_output" 2>&1; then
+    log_success "数据库迁移成功应用"
+    return 0
+  fi
+
+  if grep -q "P3005" "$migrate_output" || grep -q "数据库架构不为空" "$migrate_output"; then
+    log_warn "检测到已存在的数据库结构，需要应用 baseline..."
+
+    local migration_dirs
+    migration_dirs=$(find prisma/migrations -maxdepth 1 -type d | grep -v "^prisma/migrations$" | sort)
+
+    if [[ -z "$migration_dirs" ]]; then
+      log_warn "未找到迁移，跳过 baseline 处理"
     else
-      echo "⚠️ pg_isready 命令不可用，无法进行连接测试"
+      log_info "找到以下迁移:"
+
+      for migration_dir in $migration_dirs; do
+        local migration_name
+        migration_name=$(basename "$migration_dir")
+        log_info "  - $migration_name"
+
+        log_info "将迁移 $migration_name 标记为已应用..."
+        local resolve_output
+        resolve_output=$(create_temp_file)
+
+        if ! pnpm prisma migrate resolve --applied "$migration_name" > "$resolve_output" 2>&1; then
+          log_warn "标记迁移 $migration_name 时出错:"
+          cat "$resolve_output"
+        fi
+      done
+
+      log_success "Baseline 应用成功"
+
+      log_info "检查并应用新的迁移..."
+      local deploy_output
+      deploy_output=$(create_temp_file)
+
+      if ! pnpm prisma migrate deploy > "$deploy_output" 2>&1; then
+        log_warn "应用新迁移时出错:"
+        cat "$deploy_output"
+
+        log_info "尝试使用 db push 作为备选方案..."
+        local push_output
+        push_output=$(create_temp_file)
+
+        if ! pnpm prisma db push --accept-data-loss --skip-generate > "$push_output" 2>&1; then
+          log_error "使用 db push 也失败了:"
+          cat "$push_output"
+          return 1
+        else
+          log_success "使用 db push 成功应用架构"
+        fi
+      else
+        log_success "新迁移应用成功"
+      fi
     fi
+  else
+    log_warn "迁移失败，错误信息:"
+    cat "$migrate_output"
+
+    log_info "尝试使用 db push 作为备选方案..."
+    local push_output
+    push_output=$(create_temp_file)
+
+    if ! pnpm prisma db push --accept-data-loss --skip-generate > "$push_output" 2>&1; then
+      log_error "使用 db push 也失败了:"
+      cat "$push_output"
+      return 1
+    else
+      log_success "使用 db push 成功应用架构"
+    fi
+  fi
+
+  return 0
+}
+
+main() {
+  log_info "🚀 启动 UPage 应用..."
+
+  log_info "系统环境信息:"
+  log_info "  - NODE_ENV: $NODE_ENV"
+  log_info "  - 当前用户: $(whoami)"
+  log_info "  - 工作目录: $(pwd)"
+
+  if extract_db_info; then
+    log_info "SQLite 数据库信息:"
+    log_info "  - 数据库文件: $DB_FILE"
+  fi
+
+  if ! wait_for_db; then
+    log_error "数据库连接失败，退出启动流程"
     exit 1
   fi
 
-  echo "⏳ 数据库尚未就绪，等待 5 秒后重试... (${RETRY_COUNT}/${MAX_RETRIES})"
-  sleep 5
-done
-
-rm -f $ERROR_LOG
-
-echo "✅ 数据库连接成功"
-
-echo "🔍 检查数据库迁移状态..."
-
-MIGRATE_ERROR_LOG=$(mktemp)
-
-if pnpm prisma migrate deploy 2>$MIGRATE_ERROR_LOG | grep -q "P3005"; then
-  echo "📊 检测到已存在的数据库结构，需要应用baseline..."
-
-  echo "📑 获取所有迁移..."
-  MIGRATION_DIRS=$(find prisma/migrations -maxdepth 1 -type d | grep -v "^prisma/migrations$" | sort)
-
-  if [ -z "$MIGRATION_DIRS" ]; then
-    echo "⚠️ 未找到迁移，跳过baseline处理"
-  else
-    echo "🔄 找到以下迁移："
-
-    for MIGRATION_DIR in $MIGRATION_DIRS; do
-      MIGRATION_NAME=$(basename "$MIGRATION_DIR")
-      echo "   - $MIGRATION_NAME"
-
-      echo "🔖 将迁移 $MIGRATION_NAME 标记为已应用..."
-      RESOLVE_ERROR_LOG=$(mktemp)
-      if ! pnpm prisma migrate resolve --applied "$MIGRATION_NAME" 2>$RESOLVE_ERROR_LOG; then
-        echo "⚠️ 标记迁移 $MIGRATION_NAME 时出错："
-        cat $RESOLVE_ERROR_LOG
-      fi
-      rm -f $RESOLVE_ERROR_LOG
-    done
-
-    echo "✅ Baseline应用成功"
-
-    echo "🔄 检查并应用新的迁移..."
-    DEPLOY_ERROR_LOG=$(mktemp)
-    if ! pnpm prisma migrate deploy 2>$DEPLOY_ERROR_LOG; then
-      echo "⚠️ 应用新迁移时出错："
-      cat $DEPLOY_ERROR_LOG
-    fi
-    rm -f $DEPLOY_ERROR_LOG
+  if ! handle_db_migration; then
+    log_error "数据库迁移失败，退出启动流程"
+    exit 1
   fi
-else
-  if [ -s "$MIGRATE_ERROR_LOG" ]; then
-    echo "⚠️ 数据库迁移过程中出现警告或错误："
-    cat $MIGRATE_ERROR_LOG
-  else
-    echo "🆕 数据库迁移已成功应用"
-  fi
-fi
 
-rm -f $MIGRATE_ERROR_LOG
+  local end_time
+  end_time=$(date +%s)
+  local duration=$((end_time - START_TIME))
 
-echo "✅ 数据库迁移完成"
+  log_success "初始化完成，耗时 ${duration} 秒"
+  log_info "启动应用服务..."
 
-echo "🔧 生成 Prisma Client..."
-GENERATE_ERROR_LOG=$(mktemp)
-if ! pnpm prisma generate 2>$GENERATE_ERROR_LOG; then
-  echo "⚠️ 生成 Prisma Client 时出错："
-  cat $GENERATE_ERROR_LOG
-else
-  echo "✅ Prisma Client 生成完成"
-fi
-rm -f $GENERATE_ERROR_LOG
+  log_info "执行命令: $*"
+  exec "$@"
+}
 
-echo "🎉 启动应用服务..."
-
-# 执行传入的命令
-echo "🚀 执行命令: $@"
-exec "$@"
+main "$@"

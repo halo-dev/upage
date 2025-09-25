@@ -52,3 +52,5 @@ mock
 
 # storage
 /public/uploads
+
+/data/

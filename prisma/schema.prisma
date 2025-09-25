@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:../data/upage.db"
 }
 
 // 聊天使用记录，每个 message 对应多条。
@@ -87,7 +87,7 @@ model Message {
   // 'user' 或 'assistant'
   role        String
   // 消息内容
-  content     String  @db.Text
+  content     String
   // 版本 ID
   revisionId  String?
   // 注释
@@ -147,7 +147,7 @@ model Section {
   // 页面名称
   pageName  String   @default("")
   // Section 内容 (HTML/CSS)
-  content   String   @db.Text
+  content   String
   // DOM ID
   domId     String
   // 根 DOM ID，用于标识父级容器
@@ -209,7 +209,7 @@ model UserSetting {
   // 设置键名
   key       String
   // 设置值
-  value     String   @db.Text
+  value     String
   // 是否为敏感信息（如 API 密钥）
   isSecret  Boolean  @default(false)
   // 创建时间

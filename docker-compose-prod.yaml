@@ -1,17 +1,13 @@
 version: "3.9"
 services:
   upage:
-    depends_on:
-      postgres:
-        condition: service_healthy
-    image: ghcr.io/halo-dev/upage:latest
+    image: upage-ai:production
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
     environment:
       - OPERATING_ENV=${OPERATING_ENV:-production}
       - NODE_ENV=${NODE_ENV:-production}
-      - DATABASE_URL=postgres://upage:${POSTGRES_PASSWORD}@postgres:5432/upage?schema=upage_schema
       - GROQ_API_KEY=${GROQ_API_KEY}
       - HuggingFace_API_KEY=${HuggingFace_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
@@ -49,28 +45,9 @@ services:
       - USAGE_LOG_FILE=${USAGE_LOG_FILE:-true}
       - MAX_UPLOAD_SIZE_MB=${MAX_UPLOAD_SIZE_MB:-5}
     volumes:
+      - ./data:/app/data
       - ./logs:/app/logs
       - ./storage:/app/storage
-    networks:
-      upage_network:
-  postgres:
-    image: postgres:17-alpine
-    user: postgres
-    environment:
-      POSTGRES_USER: upage
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - upage-db:/var/lib/postgresql/data
-    networks:
-      upage_network:
-
-networks:
-  upage_network:
 
 volumes:
   upage-db:

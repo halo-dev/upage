@@ -9,7 +9,7 @@
 
 ------------------------------
 
-UPage 是一款基于人工智能的可视化网页构建平台，支持多种 AI 提供商集成，快速实现定制化网页。
+UPage 是一款基于人工智能的可视化网页构建平台，支持多种 AI 提供商集成，基于自然语言快速实现定制化网页。
 
 ------------------------------
 
@@ -30,7 +30,8 @@ docker run -d \
   -e OPENAI_LIKE_API_KEY=your-openai-like-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
+  -v ./data:/app/data \
   -v ./logs:/app/logs \
   -v ./storage:/app/storage \
-  ghcr.io/halo-dev/upage:latest
+  ghcr.io/halo-dev/upage
 ```

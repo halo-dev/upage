@@ -80,7 +80,7 @@ ${Object.entries(context)
 
   return _streamText({
     model,
-    tools,
+    tools: tools(),
     system: systemPrompt,
     maxOutputTokens: maxTokens || MAX_TOKENS,
     messages: convertToModelMessages(messages),

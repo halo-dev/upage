@@ -1,78 +1,53 @@
-FROM node:20.18.0-alpine AS builder
-
+# ---- build stage ----
+FROM node:20.18.0-alpine  AS build
 WORKDIR /app
-
-RUN apk add --no-cache python3 make g++ bash
-
-COPY package.json pnpm-lock.yaml ./
 
 ENV HUSKY=0
 
-RUN npm install -g pnpm && pnpm install
+# Use pnpm
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
 
+# Install deps efficiently
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm fetch
+
+# Copy source and build
 COPY . .
+# install with dev deps (needed to build)
+RUN pnpm install --offline --frozen-lockfile
 
-RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
-
-FROM node:20.18.0-alpine AS deps
-
-WORKDIR /app
-
-RUN apk add --no-cache python3 make g++ bash
-
-COPY package.json pnpm-lock.yaml ./
-
-ENV HUSKY=0
-
-RUN npm install -g pnpm && pnpm install --prod
-
-COPY prisma ./prisma
-
+# Generate prisma client
 RUN pnpm prisma generate
 
-FROM node:20.18.0-alpine AS upage-ai-production
+# Build the Remix app (SSR + client)
+RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm run build
 
+# Keep only production deps for runtime
+RUN pnpm prune --prod --ignore-scripts
+
+# ---- runtime stage ----
+FROM node:20.18.0-alpine  AS runtime
 WORKDIR /app
 
-RUN apk add --no-cache bash
+ENV NODE_ENV=production
+ENV LOGTO_ENABLE_DEV=false
+ENV PORT=3000
+ENV HOST=0.0.0.0
 
-RUN npm install -g pnpm
+# Use pnpm
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
 
-ARG LOG_LEVEL=debug
-ARG PORT=3000
-ARG LLM_DEFAULT_PROVIDER
-ARG LLM_DEFAULT_MODEL
-ARG LLM_ENABLED_PROVIDERS
-ARG DEFAULT_NUM_CTX
-ARG OLLAMA_API_BASE_URL
-ARG TOGETHER_API_BASE_URL
-ARG LOGTO_ENDPOINT
-ARG LOGTO_APP_ID
-ARG LOGTO_BASE_URL
+# Install bash
+RUN apk add --no-cache bash \
+  && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_ENV=production \
-    PORT=${PORT} \
-    LOG_LEVEL=${LOG_LEVEL} \
-    DEFAULT_NUM_CTX=${DEFAULT_NUM_CTX} \
-    LLM_DEFAULT_PROVIDER=${LLM_DEFAULT_PROVIDER} \
-    LLM_DEFAULT_MODEL=${LLM_DEFAULT_MODEL} \
-    LLM_ENABLED_PROVIDERS=${LLM_ENABLED_PROVIDERS} \
-    OLLAMA_API_BASE_URL=${OLLAMA_API_BASE_URL} \
-    TOGETHER_API_BASE_URL=${TOGETHER_API_BASE_URL} \
-    LOGTO_ENDPOINT=${LOGTO_ENDPOINT} \
-    LOGTO_APP_ID=${LOGTO_APP_ID} \
-    LOGTO_BASE_URL=${LOGTO_BASE_URL} \
-    RUNNING_IN_DOCKER=true \
-    STORAGE_DIR=/app/storage
-
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/server.mjs ./
-
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/prisma ./prisma
-
-COPY package.json ./
+# Copy only what we need to run
+COPY --from=build /app/build /app/build
+COPY --from=build /app/node_modules /app/node_modules
+COPY --from=build /app/public ./public
+COPY --from=build /app/package.json /app/package.json
+COPY --from=build /app/server.mjs ./
+COPY --from=build /app/prisma ./prisma
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
