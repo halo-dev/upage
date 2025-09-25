@@ -7,6 +7,9 @@ ENV HUSKY=0
 # Use pnpm
 RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
 
+# Install python and build tools
+RUN apk add --no-cache python3 make g++
+
 # Install deps efficiently
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm fetch
