@@ -1,5 +1,5 @@
 <h1 align="center">UPage</h1>
-<h3 align="center">基于人工智能的可视化网页构建平台</h3>
+<h3 align="center">基于大模型的可视化网页构建平台</h3>
 
 <p align="center">
 <a href="https://github.com/halo-dev/upage/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/halo-dev/upage.svg?style=flat-square&include_prereleases" /></a>
@@ -9,7 +9,7 @@
 
 ------------------------------
 
-UPage 是一款基于人工智能的可视化网页构建平台，支持多种 AI 提供商集成，基于自然语言快速实现定制化网页。
+UPage 是一款基于大模型的可视化网页构建平台，支持多种 AI 提供商集成，基于自然语言快速实现定制化网页。
 
 ------------------------------
 
