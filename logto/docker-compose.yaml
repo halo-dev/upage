@@ -20,6 +20,8 @@ services:
   postgres:
     image: postgres:17-alpine
     user: postgres
+    ports:
+      - ${LOGTO_POSTGRES_PORT:-5432}:5432
     environment:
       POSTGRES_USER: logto
       POSTGRES_PASSWORD: ${LOGTO_POSTGRES_PASSWORD}
