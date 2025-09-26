@@ -139,6 +139,6 @@ docker-compose up -d
 
 ## 下一步
 
-- 阅读[用户指南](user-guide/basics)学习如何使用 UPage 创建网页
-- 探索[配置参考](configuration)了解所有可用的配置选项
-- 探索[Logto 认证集成](logto)了解如何集成 Logto 实现用户认证
+- 阅读[用户指南](../user-guide/basics)学习如何使用 UPage 创建网页
+- 探索[配置参考](../configuration)了解所有可用的配置选项
+- 探索[Logto 认证集成](./logto)了解如何集成 Logto 实现用户认证

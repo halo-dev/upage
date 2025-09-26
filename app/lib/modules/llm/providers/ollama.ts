@@ -39,10 +39,6 @@ export default class OllamaProvider extends BaseProvider {
 
   staticModels: ModelInfo[] = [];
 
-  getDefaultNumCtx(): number {
-    return process.env.DEFAULT_NUM_CTX ? parseInt(process.env.DEFAULT_NUM_CTX, 10) : 32768;
-  }
-
   async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
     let { baseUrl } = this.getProviderBaseUrlAndKey({
       apiKeys,

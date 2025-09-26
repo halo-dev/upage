@@ -27,6 +27,8 @@ UPage 使用环境变量进行配置。您可以通过以下方式设置环境�
 
 ## AI 提供商配置
 
+UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用页面生成功能。
+
 ### AI 基础配置
 
 | 环境变量 | 描述 | 默认值 | 必填 |
@@ -36,12 +38,169 @@ UPage 使用环境变量进行配置。您可以通过以下方式设置环境�
 | `LLM_MINOR_MODEL` | 辅助页面生成所使用的模型 | - | 是 |
 | `LLM_ENABLED_PROVIDERS` | 启用的 LLM 提供商列表（逗号分隔） | 所有支持的提供商 | 否 |
 
+### Amazon Bedrock
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Amazon Bedrock 提供商名称 | AmazonBedrock | 是 |
+| `AWS_BEDROCK_CONFIG` | Amazon Bedrock 配置 | - | 是（如果使用 Amazon Bedrock） |
+
+:::info
+前往 [Amazon Bedrock](https://console.aws.amazon.com/iam/home) 中获取配置。
+`AWS_BEDROCK_CONFIG` 应为 JSON 格式，例如：
+```json
+{
+  // Bedrock 可用的 AWS 区域
+  "region": "us-east-1",
+  // 你的 AWS 访问密钥 ID
+  "accessKeyId": "your-access-key-id",
+  // 你的 AWS 访问密钥令牌
+  "secretAccessKey": "your-secret-access-key",
+  // AWS 会话令牌（可选），如果使用 IAM 角色或临时凭据，则为临时会话令牌
+  "sessionToken": "your-session-token"
+}
+```
+:::
+
+### Anthropic Claude
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Anthropic 提供商 | Anthropic | 是 |
+| `ANTHROPIC_API_KEY` | Anthropic API 密钥 | - | 是（如果使用 Anthropic） |
+
+:::info
+前往 [Anthropic](https://console.anthropic.com/settings/keys) 获取 API 密钥。
+:::
+
+### Cohere
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Cohere 提供商名称 | Cohere | 是 |
+| `COHERE_API_KEY` | Cohere API 密钥 | - | 是（如果使用 Cohere） |
+
+:::info
+前往 [Cohere](https://dashboard.cohere.com/api-keys) 获取 API 密钥。
+:::
+
 ### DeepSeek
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
 | `LLM_DEFAULT_PROVIDER` | DeepSeek 提供商名称 | Deepseek | 是 |
 | `DEEPSEEK_API_KEY` | DeepSeek API 密钥 | - | 是（如果使用 DeepSeek） |
+
+:::info
+前往 [DeepSeek](https://platform.deepseek.com/api_keys) 获取 API 密钥。
+:::
+
+### Github
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Github 提供商名称 | Github | 是 |
+| `GITHUB_API_KEY` | Github API 密钥 | - | 是（如果使用 Github） |
+
+:::info
+前往 [Github](https://github.com/settings/personal-access-tokens) 获取 API 密钥。
+:::
+
+### Google
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Google 提供商名称 | Google | 是 |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Google 生成式 AI API 密钥 | - | 是（如果使用 Google） |
+
+:::info
+前往 [Google](https://console.cloud.google.com/apis/credentials) 获取 API 密钥。
+:::
+
+### Groq
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Groq 提供商名称 | Groq | 是 |
+| `GROQ_API_KEY` | Groq API 密钥 | - | 是（如果使用 Groq） |
+
+:::info
+前往 [Groq](https://console.groq.com/keys) 获取 API 密钥。
+:::
+
+### HuggingFace
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | HuggingFace 提供商名称 | HuggingFace | 是 |
+| `HuggingFace_API_KEY` | HuggingFace API 密钥 | - | 是（如果使用 HuggingFace） |
+
+:::info
+前往 [HuggingFace](https://huggingface.co/settings/tokens) 获取 API 密钥。
+:::
+
+### Hyperbolic
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Hyperbolic 提供商名称 | Hyperbolic | 是 |
+| `HYPERBOLIC_API_KEY` | Hyperbolic API 密钥 | - | 是（如果使用 Hyperbolic） |
+
+:::info
+前往 [Hyperbolic](https://hyperbolic.ai/dashboard/api-keys) 获取 API 密钥。
+:::
+
+### LMStudio
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | LMStudio 提供商名称 | LMStudio | 是 |
+| `LMSTUDIO_API_BASE_URL` | LMStudio API URL | `http://127.0.0.1:1234` | 是（如果使用 LMStudio） |
+
+:::warning
+由于可能存在的 IPV6 的问题，所以不要使用 http://localhost:1234 而应该使用类似于 http://127.0.0.1:1234 的地址
+:::
+
+### Mistral
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Mistral 提供商名称 | Mistral | 是 |
+| `MISTRAL_API_KEY` | Mistral API 密钥 | - | 是（如果使用 Mistral） |
+
+:::info
+前往 [Mistral](https://console.mistral.ai/api-keys/) 获取 API 密钥。
+:::
+
+### Ollama
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | Ollama 提供商名称 | Ollama | 是 |
+| `OLLAMA_API_BASE_URL` | Ollama API URL | `http://127.0.0.1:11434` | 是（如果使用 Ollama） |
+
+:::warning
+由于可能存在的 IPV6 的问题，所以不要使用 http://localhost:11434 而应该使用类似于 http://127.0.0.1:11434 的地址
+:::
+
+### OpenRouter
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | OpenRouter 提供商名称 | OpenRouter | 是 |
+| `OPEN_ROUTER_API_KEY` | OpenRouter API 密钥 | - | 是（如果使用 OpenRouter） |
+
+:::info
+前往 [OpenRouter](https://openrouter.ai/settings/keys) 获取 API 密钥。
+:::
+
+### 兼容 OpenAI 接口的服务
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_DEFAULT_PROVIDER` | OpenAILike 提供商名称 | OpenAILike | 是 |
+| `OPENAI_LIKE_API_BASE_URL` | API 基础 URL | - | 是（如果使用 OpenAILike） |
+| `OPENAI_LIKE_API_KEY` | API 密钥 | - | 是（如果使用 OpenAILike） |
 
 ### OpenAI
 
@@ -50,60 +209,81 @@ UPage 使用环境变量进行配置。您可以通过以下方式设置环境�
 | `LLM_DEFAULT_PROVIDER` | OpenAI 提供商名称 | OpenAI | 是 |
 | `OPENAI_API_KEY` | OpenAI API 密钥 | - | 是（如果使用 OpenAI） |
 
-### Anthropic Claude
+:::info
+前往 [OpenAI](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key) 获取 API 密钥。
+:::
+
+### Perplexity
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Anthropic 提供商 | Anthropic | 是 |
-| `ANTHROPIC_API_KEY` | Anthropic API 密钥 | - | 是（如果使用 Anthropic） |
-| `ANTHROPIC_API_BASE_URL` | Anthropic API 基础 URL | `https://api.anthropic.com` | 否 |
+| `LLM_DEFAULT_PROVIDER` | Perplexity 提供商名称 | Perplexity | 是 |
+| `PERPLEXITY_API_KEY` | Perplexity API 密钥 | - | 是（如果使用 Perplexity） |
 
-### 兼容 OpenAI 接口的服务
+:::info
+前往 [Perplexity](https://www.perplexity.ai/settings/api) 获取 API 密钥。
+:::
 
-| 环境变量 | 描述 | 默认值 | 必填 |
-| --- | --- | --- | --- |
-| `OPENAI_LIKE_API_KEY` | API 密钥 | - | 是（如果使用 OpenAILike） |
-| `OPENAI_LIKE_API_BASE_URL` | API 基础 URL | - | 是（如果使用 OpenAILike） |
-| `OPENAI_LIKE_ORGANIZATION_ID` | 组织 ID | - | 否 |
-
-### Ollama
+### Together
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `OLLAMA_API_BASE_URL` | Ollama API 基础 URL | `http://localhost:11434` | 是（如果使用 Ollama） |
+| `LLM_DEFAULT_PROVIDER` | Together 提供商名称 | Together | 是 |
+| `TOGETHER_API_BASE_URL` | Together API 基础 URL | - | 是（如果使用 Together） |
+| `TOGETHER_API_KEY` | Together API 密钥 | - | 是（如果使用 Together） |
 
-### Groq
+:::info
+前往 [Together](https://api.together.xyz/settings/api-keys) 获取 API 密钥。
+:::
 
-| 环境变量 | 描述 | 默认值 | 必填 |
-| --- | --- | --- | --- |
-| `GROQ_API_KEY` | Groq API 密钥 | - | 是（如果使用 Groq） |
-
-### HuggingFace
-
-| 环境变量 | 描述 | 默认值 | 必填 |
-| --- | --- | --- | --- |
-| `HuggingFace_API_KEY` | HuggingFace API 密钥 | - | 是（如果使用 HuggingFace） |
-
-### OpenRouter
+### xAI
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `OPEN_ROUTER_API_KEY` | OpenRouter API 密钥 | - | 是（如果使用 OpenRouter） |
+| `LLM_DEFAULT_PROVIDER` | xAI 提供商名称 | xAI | 是 |
+| `XAI_API_KEY` | xAI API 密钥 | - | 是（如果使用 xAI） |
 
-### Google Gemini
+:::info
+前往 [xAI](https://x.ai/api) 获取 API 密钥。
+:::
+
+## AI 工具配置
+
+UPage 支持集成部分 AI 工具调用，用于为 UPage 提供服务，您可以根据需要配置。
+
+### Serper（网络搜索工具）
+
+UPage 集成了 [Serper](https://serper.dev) 的搜索服务，您可以通过配置 `SERPER_API_KEY` 来使用 Serper 的搜索服务。
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `GOOGLE_API_KEY` | Google API 密钥 | - | 是（如果使用 Google） |
-| `GOOGLE_API_BASE_URL` | Google API 基础 URL | `https://generativelanguage.googleapis.com` | 否 |
+| `SERPER_API_KEY` | Serper API 密钥 | - | 是（如果使用 Serper） |
+
+:::info
+前往 [Serper](https://serper.dev/api-keys) 获取 API 密钥。
+:::
+
+### Weather（天气工具）
+
+UPage 集成了 [Weather](https://weatherapi.com) 的天气服务，您可以通过配置 `WEATHER_API_KEY` 来使用 Weather 的天气服务。
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `WEATHER_API_KEY` | Weather API 密钥 | - | 是（如果使用 Weather） |
+
+:::info
+前往 [Weather](https://www.weatherapi.com/my/) 获取 API 密钥。
+:::
 
 ## 认证配置
 
 ### Logto 认证
 
+UPage 默认仅支持单一的匿名用户访问，您可以通过集成 Logto 后配置 `LOGTO_ENABLE` 来启用 Logto 认证，支持多用户登录。
+
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LOGTO_ENABLE` | 是否启用 Logto 认证 | `false` | 否 |
+| `LOGTO_ENABLE` | 是否启用 Logto 认证 | `false` | 是 |
 | `LOGTO_ENDPOINT` | Logto 服务的 URL | - | 是（如果使用 Logto） |
 | `LOGTO_APP_ID` | Logto 应用程序 ID | - | 是（如果使用 Logto） |
 | `LOGTO_APP_SECRET` | Logto 应用程序密钥 | - | 是（如果使用 Logto） |
@@ -116,28 +296,13 @@ Logto 集成请参阅 [Logto 认证集成](./deployment/logto)文档。
 
 ## 配置示例
 
-### 基本配置示例
-
-```bash
-# 基础配置
-PORT=3000
-NODE_ENV=production
-LOG_LEVEL=info
-
-# AI 提供商配置
-LLM_DEFAULT_PROVIDER=OpenAI
-OPENAI_API_KEY=your-openai-api-key
-LLM_DEFAULT_MODEL=gpt-4-turbo
-LLM_MINOR_MODEL=gpt-3.5-turbo
-```
-
-### 完整的 Docker Compose 配置示例
+以下内容以使用 Docker Compose 作为示例，用于展示 UPage 的完整配置。
 
 ```yaml
 version: "3.9"
 services:
   upage:
-    image: ghcr.io/halo-dev/upage:latest
+    image: halo-dev/upage:latest
     container_name: upage
     restart: unless-stopped
     ports:
@@ -152,11 +317,16 @@ services:
       - MAX_UPLOAD_SIZE_MB=10
       - STORAGE_DIR=/app/storage
       
-      # AI 提供商配置
-      - LLM_DEFAULT_PROVIDER=OpenAI
-      - OPENAI_API_KEY=your-openai-api-key
-      - LLM_DEFAULT_MODEL=gpt-4-turbo
-      - LLM_MINOR_MODEL=gpt-3.5-turbo
+      # 使用 DeepSeek 提供商配置
+      - LLM_DEFAULT_PROVIDER=DeepSeek
+      # 这里使用 DEEPSEEK_API_KEY
+      - DEEPSEEK_API_KEY=your-deepseek-api-key
+      - LLM_DEFAULT_MODEL=deepseek-chat
+      - LLM_MINOR_MODEL=deepseek-chat
+
+      # AI 工具配置
+      - SERPER_API_KEY=your-serper-api-key
+      - WEATHER_API_KEY=your-weather-api-key
       
       # Logto 认证配置
       - LOGTO_ENABLE=true
@@ -164,38 +334,40 @@ services:
       - LOGTO_APP_ID=your-app-id
       - LOGTO_APP_SECRET=your-app-secret
       - LOGTO_COOKIE_SECRET=your-cookie-secret
-      - LOGTO_BASE_URL=https://api.upage.io
+      - LOGTO_BASE_URL=http://localhost:3000
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
       - ./storage:/app/storage
 ```
 
-## 多环境配置
+如果你要切换使用其他 AI 提供商，则只需要修改 `LLM_DEFAULT_PROVIDER` 和相应的 API 密钥、Model 即可，例如：
 
-### 开发环境
+```yaml
+version: "3.9"
+services:
+  upage:
+    image: halo-dev/upage:latest
+    container_name: upage
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # 使用 OpenAI 提供商配置
+      - LLM_DEFAULT_PROVIDER=OpenAI
+      # 这里注意需要改为 OPENAI_API_KEY
+      - OPENAI_API_KEY=your-openai-api-key
+      - LLM_DEFAULT_MODEL=gpt-4.1
+      - LLM_MINOR_MODEL=gpt-4.1-mini
 
-```bash
-NODE_ENV=development
-OPERATING_ENV=development
-LOG_LEVEL=debug
-PORT=3000
-```
+      # ...其他配置
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./storage:/app/storage
+``` 
 
-### 测试环境
+## 下一步
 
-```bash
-NODE_ENV=production
-OPERATING_ENV=testing
-LOG_LEVEL=info
-PORT=3000
-```
-
-### 生产环境
-
-```bash
-NODE_ENV=production
-OPERATING_ENV=production
-LOG_LEVEL=warn
-PORT=3000
-```
+- 阅读[用户指南](./user-guide/basics)学习如何使用 UPage 创建网页
+- 阅读[贡献指南](./contributing)了解如何贡献 UPage

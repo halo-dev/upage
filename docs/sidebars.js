@@ -46,11 +46,21 @@ const sidebars = {
     {
       type: 'category',
       label: '用户指南',
+      link: {
+        type: 'generated-index',
+        title: '用户指南',
+        slug: 'user-guide',
+      },
       items: [
         'user-guide/basics',
         'user-guide/ai-page-generation',
         'user-guide/page-management',
       ],
+    },
+    {
+      type: 'doc',
+      id: 'contributing',
+      label: '贡献指南',
     },
     {
       type: 'doc',
@@ -61,11 +71,6 @@ const sidebars = {
       type: 'doc',
       id: 'changelog',
       label: '更新日志',
-    },
-    {
-      type: 'doc',
-      id: 'contributing',
-      label: '贡献指南',
     },
   ],
 };
