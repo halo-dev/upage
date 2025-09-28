@@ -56,9 +56,9 @@ docker run -d \
   --name upage \
   --restart unless-stopped \
   -p 3000:3000 \
-  -e LLM_DEFAULT_PROVIDER=OpenAILike \
-  -e OPENAI_LIKE_API_BASE_URL=your-openai-like-api-base-url \
-  -e OPENAI_LIKE_API_KEY=your-openai-like-api-key \
+  -e LLM_PROVIDER=OpenAILike \
+  -e PROVIDER_BASE_URL=your-openai-like-api-base-url \
+  -e PROVIDER_API_KEY=your-openai-like-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
   -v ~/upage/data:/app/data \
@@ -113,9 +113,9 @@ UPage 支持通过环境变量进行配置。以下是一些比较重要的环�
 
 | 环境变量 | 描述 | 必填 | 示例 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | 默认 LLM 提供商 | 是 | `OpenAILike` |
-| `OPENAI_LIKE_API_BASE_URL` | OpenAI 兼容 API 基础 URL | 是 | `https://your-api-base-url` |
-| `OPENAI_LIKE_API_KEY` | OpenAI 兼容 API 密钥 | 是 | `your-openai-like-api-key` |
+| `LLM_PROVIDER` | 默认 LLM 提供商 | 是 | `OpenAILike` |
+| `PROVIDER_BASE_URL` | OpenAI 兼容 API 基础 URL | 是 | `https://your-api-base-url` |
+| `PROVIDER_API_KEY` | OpenAI 兼容 API 密钥 | 是 | `your-openai-like-api-key` |
 
 ### 大模型配置
 
@@ -141,9 +141,9 @@ docker run -d \
   --name upage \
   --restart unless-stopped \
   -p 3000:3000 \
-  -e LLM_DEFAULT_PROVIDER=OpenAILike \
-  -e OPENAI_LIKE_API_BASE_URL=your-openai-like-api-base-url \
-  -e OPENAI_LIKE_API_KEY=your-openai-like-api-key \
+  -e LLM_PROVIDER=OpenAILike \
+  -e PROVIDER_BASE_URL=your-openai-like-api-base-url \
+  -e PROVIDER_API_KEY=your-openai-like-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
   -v ~/upage/data:/app/data \

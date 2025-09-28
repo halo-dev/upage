@@ -29,25 +29,31 @@ UPage 使用环境变量进行配置。您可以通过以下方式设置环境�
 
 UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用页面生成功能。
 
-### AI 基础配置
+:::tip 配置参数颜色说明
+为了帮助您区分不同提供商所需的配置参数，我们使用了不同的颜色标记：
+- <span className="base-url-highlight">API 基础 URL</span>: 用蓝色标记，通常是服务的访问地址
+- <span className="api-key-highlight">API 密钥</span>: 用红色标记，通常是敏感信息，需要从提供商处获取
+:::
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | LLM 提供商，根据需要配置一个 | - | 是 |
+| `LLM_PROVIDER` | LLM 提供商，按照下述配置项配置一个 | - | 是 |
+| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | LLM 提供商的 API 基础 URL，部分提供商需要设置此项，例如 OpenAILike, Ollama, LMStudio | - | 否，部分提供商不需要设置此项 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | LLM 提供商的 API 密钥，大部分提供商需要设置此项 | - | 否，部分提供商不需要设置此项 |
 | `LLM_DEFAULT_MODEL` | 生成页面所使用的模型 | - | 是 |
 | `LLM_MINOR_MODEL` | 辅助页面生成所使用的模型 | - | 是 |
-| `LLM_ENABLED_PROVIDERS` | 启用的 LLM 提供商列表（逗号分隔） | 所有支持的提供商 | 否 |
+
+以下是常见的 AI 提供商配置：
 
 ### Amazon Bedrock
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Amazon Bedrock 提供商名称 | AmazonBedrock | 是 |
-| `AWS_BEDROCK_CONFIG` | Amazon Bedrock 配置 | - | 是（如果使用 Amazon Bedrock） |
+| `LLM_PROVIDER` | Amazon Bedrock 提供商名称 | AmazonBedrock | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Amazon Bedrock 配置 | - | 是（如果使用 Amazon Bedrock） |
 
 :::info
-前往 [Amazon Bedrock](https://console.aws.amazon.com/iam/home) 中获取配置。
-`AWS_BEDROCK_CONFIG` 应为 JSON 格式，例如：
+在 Amazon Bedrock 提供商中，`PROVIDER_API_KEY` 应为 JSON 格式。例如：
 ```json
 {
   // Bedrock 可用的 AWS 区域
@@ -60,14 +66,15 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
   "sessionToken": "your-session-token"
 }
 ```
+前往 [Amazon Bedrock](https://console.aws.amazon.com/iam/home) 中获取配置。
 :::
 
 ### Anthropic Claude
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Anthropic 提供商 | Anthropic | 是 |
-| `ANTHROPIC_API_KEY` | Anthropic API 密钥 | - | 是（如果使用 Anthropic） |
+| `LLM_PROVIDER` | Anthropic 提供商 | Anthropic | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Anthropic API 密钥 | - | 是（如果使用 Anthropic） |
 
 :::info
 前往 [Anthropic](https://console.anthropic.com/settings/keys) 获取 API 密钥。
@@ -77,8 +84,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Cohere 提供商名称 | Cohere | 是 |
-| `COHERE_API_KEY` | Cohere API 密钥 | - | 是（如果使用 Cohere） |
+| `LLM_PROVIDER` | Cohere 提供商名称 | Cohere | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Cohere API 密钥 | - | 是（如果使用 Cohere） |
 
 :::info
 前往 [Cohere](https://dashboard.cohere.com/api-keys) 获取 API 密钥。
@@ -88,8 +95,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | DeepSeek 提供商名称 | Deepseek | 是 |
-| `DEEPSEEK_API_KEY` | DeepSeek API 密钥 | - | 是（如果使用 DeepSeek） |
+| `LLM_PROVIDER` | DeepSeek 提供商名称 | Deepseek | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | DeepSeek API 密钥 | - | 是（如果使用 DeepSeek） |
 
 :::info
 前往 [DeepSeek](https://platform.deepseek.com/api_keys) 获取 API 密钥。
@@ -99,8 +106,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Github 提供商名称 | Github | 是 |
-| `GITHUB_API_KEY` | Github API 密钥 | - | 是（如果使用 Github） |
+| `LLM_PROVIDER` | Github 提供商名称 | Github | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Github API 密钥 | - | 是（如果使用 Github） |
 
 :::info
 前往 [Github](https://github.com/settings/personal-access-tokens) 获取 API 密钥。
@@ -110,8 +117,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Google 提供商名称 | Google | 是 |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Google 生成式 AI API 密钥 | - | 是（如果使用 Google） |
+| `LLM_PROVIDER` | Google 提供商名称 | Google | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Google 生成式 AI API 密钥 | - | 是（如果使用 Google） |
 
 :::info
 前往 [Google](https://console.cloud.google.com/apis/credentials) 获取 API 密钥。
@@ -121,8 +128,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Groq 提供商名称 | Groq | 是 |
-| `GROQ_API_KEY` | Groq API 密钥 | - | 是（如果使用 Groq） |
+| `LLM_PROVIDER` | Groq 提供商名称 | Groq | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Groq API 密钥 | - | 是（如果使用 Groq） |
 
 :::info
 前往 [Groq](https://console.groq.com/keys) 获取 API 密钥。
@@ -132,8 +139,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | HuggingFace 提供商名称 | HuggingFace | 是 |
-| `HuggingFace_API_KEY` | HuggingFace API 密钥 | - | 是（如果使用 HuggingFace） |
+| `LLM_PROVIDER` | HuggingFace 提供商名称 | HuggingFace | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | HuggingFace API 密钥 | - | 是（如果使用 HuggingFace） |
 
 :::info
 前往 [HuggingFace](https://huggingface.co/settings/tokens) 获取 API 密钥。
@@ -143,8 +150,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Hyperbolic 提供商名称 | Hyperbolic | 是 |
-| `HYPERBOLIC_API_KEY` | Hyperbolic API 密钥 | - | 是（如果使用 Hyperbolic） |
+| `LLM_PROVIDER` | Hyperbolic 提供商名称 | Hyperbolic | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Hyperbolic API 密钥 | - | 是（如果使用 Hyperbolic） |
 
 :::info
 前往 [Hyperbolic](https://hyperbolic.ai/dashboard/api-keys) 获取 API 密钥。
@@ -154,8 +161,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | LMStudio 提供商名称 | LMStudio | 是 |
-| `LMSTUDIO_API_BASE_URL` | LMStudio API URL | `http://127.0.0.1:1234` | 是（如果使用 LMStudio） |
+| `LLM_PROVIDER` | LMStudio 提供商名称 | LMStudio | 是 |
+| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | LMStudio API URL | `http://127.0.0.1:1234` | 是（如果使用 LMStudio） |
 
 :::warning
 由于可能存在的 IPV6 的问题，所以不要使用 http://localhost:1234 而应该使用类似于 http://127.0.0.1:1234 的地址
@@ -165,8 +172,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Mistral 提供商名称 | Mistral | 是 |
-| `MISTRAL_API_KEY` | Mistral API 密钥 | - | 是（如果使用 Mistral） |
+| `LLM_PROVIDER` | Mistral 提供商名称 | Mistral | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Mistral API 密钥 | - | 是（如果使用 Mistral） |
 
 :::info
 前往 [Mistral](https://console.mistral.ai/api-keys/) 获取 API 密钥。
@@ -176,8 +183,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Ollama 提供商名称 | Ollama | 是 |
-| `OLLAMA_API_BASE_URL` | Ollama API URL | `http://127.0.0.1:11434` | 是（如果使用 Ollama） |
+| `LLM_PROVIDER` | Ollama 提供商名称 | Ollama | 是 |
+| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | Ollama API URL | `http://127.0.0.1:11434` | 是（如果使用 Ollama） |
 
 :::warning
 由于可能存在的 IPV6 的问题，所以不要使用 http://localhost:11434 而应该使用类似于 http://127.0.0.1:11434 的地址
@@ -187,8 +194,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | OpenRouter 提供商名称 | OpenRouter | 是 |
-| `OPEN_ROUTER_API_KEY` | OpenRouter API 密钥 | - | 是（如果使用 OpenRouter） |
+| `LLM_PROVIDER` | OpenRouter 提供商名称 | OpenRouter | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | OpenRouter API 密钥 | - | 是（如果使用 OpenRouter） |
 
 :::info
 前往 [OpenRouter](https://openrouter.ai/settings/keys) 获取 API 密钥。
@@ -198,16 +205,16 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | OpenAILike 提供商名称 | OpenAILike | 是 |
-| `OPENAI_LIKE_API_BASE_URL` | API 基础 URL | - | 是（如果使用 OpenAILike） |
-| `OPENAI_LIKE_API_KEY` | API 密钥 | - | 是（如果使用 OpenAILike） |
+| `LLM_PROVIDER` | OpenAILike 提供商名称 | OpenAILike | 是 |
+| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | API 基础 URL | - | 是（如果使用 OpenAILike） |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | API 密钥 | - | 是（如果使用 OpenAILike） |
 
 ### OpenAI
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | OpenAI 提供商名称 | OpenAI | 是 |
-| `OPENAI_API_KEY` | OpenAI API 密钥 | - | 是（如果使用 OpenAI） |
+| `LLM_PROVIDER` | OpenAI 提供商名称 | OpenAI | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | OpenAI API 密钥 | - | 是（如果使用 OpenAI） |
 
 :::info
 前往 [OpenAI](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key) 获取 API 密钥。
@@ -217,8 +224,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Perplexity 提供商名称 | Perplexity | 是 |
-| `PERPLEXITY_API_KEY` | Perplexity API 密钥 | - | 是（如果使用 Perplexity） |
+| `LLM_PROVIDER` | Perplexity 提供商名称 | Perplexity | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Perplexity API 密钥 | - | 是（如果使用 Perplexity） |
 
 :::info
 前往 [Perplexity](https://www.perplexity.ai/settings/api) 获取 API 密钥。
@@ -228,9 +235,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | Together 提供商名称 | Together | 是 |
-| `TOGETHER_API_BASE_URL` | Together API 基础 URL | - | 是（如果使用 Together） |
-| `TOGETHER_API_KEY` | Together API 密钥 | - | 是（如果使用 Together） |
+| `LLM_PROVIDER` | Together 提供商名称 | Together | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Together API 密钥 | - | 是（如果使用 Together） |
 
 :::info
 前往 [Together](https://api.together.xyz/settings/api-keys) 获取 API 密钥。
@@ -240,8 +246,8 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_DEFAULT_PROVIDER` | xAI 提供商名称 | xAI | 是 |
-| `XAI_API_KEY` | xAI API 密钥 | - | 是（如果使用 xAI） |
+| `LLM_PROVIDER` | xAI 提供商名称 | xAI | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | xAI API 密钥 | - | 是（如果使用 xAI） |
 
 :::info
 前往 [xAI](https://x.ai/api) 获取 API 密钥。
@@ -318,9 +324,8 @@ services:
       - STORAGE_DIR=/app/storage
       
       # 使用 DeepSeek 提供商配置
-      - LLM_DEFAULT_PROVIDER=DeepSeek
-      # 这里使用 DEEPSEEK_API_KEY
-      - DEEPSEEK_API_KEY=your-deepseek-api-key
+      - LLM_PROVIDER=DeepSeek
+      - PROVIDER_API_KEY=your-deepseek-api-key
       - LLM_DEFAULT_MODEL=deepseek-chat
       - LLM_MINOR_MODEL=deepseek-chat
 
@@ -341,7 +346,7 @@ services:
       - ./storage:/app/storage
 ```
 
-如果你要切换使用其他 AI 提供商，则只需要修改 `LLM_DEFAULT_PROVIDER` 和相应的 API 密钥、Model 即可，例如：
+如果你要切换使用其他 AI 提供商，则只需要修改 `LLM_PROVIDER` 和相应的 API 密钥、Model 即可，例如：
 
 ```yaml
 version: "3.9"
@@ -353,10 +358,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # 使用 OpenAI 提供商配置
-      - LLM_DEFAULT_PROVIDER=OpenAI
-      # 这里注意需要改为 OPENAI_API_KEY
-      - OPENAI_API_KEY=your-openai-api-key
+      # 使用 OpenAI 兼容接口的提供商配置
+      - LLM_PROVIDER=OpenAILike
+      - PROVIDER_BASE_URL=your-openai-api-base-url
+      - PROVIDER_API_KEY=your-openai-api-key
       - LLM_DEFAULT_MODEL=gpt-4.1
       - LLM_MINOR_MODEL=gpt-4.1-mini
 

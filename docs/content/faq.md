@@ -39,9 +39,9 @@ docker run -d \
   --name upage \
   --restart unless-stopped \
   -p 3000:3000 \
-  -e LLM_DEFAULT_PROVIDER=OpenAILike \
-  -e OPENAI_LIKE_API_BASE_URL=your-openai-like-api-base-url \
-  -e OPENAI_LIKE_API_KEY=your-openai-like-api-key \
+  -e LLM_PROVIDER=OpenAILike \
+  -e PROVIDER_BASE_URL=your-openai-like-api-base-url \
+  -e PROVIDER_API_KEY=your-openai-like-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
   -v ./data:/app/data \
@@ -112,14 +112,14 @@ UPage 支持多种 AI 提供商，包括：
 
 ```bash
 # OpenAI
--e LLM_DEFAULT_PROVIDER=OpenAI \
--e OPENAI_API_KEY=your-openai-api-key \
+-e LLM_PROVIDER=OpenAI \
+-e PROVIDER_API_KEY=your-openai-api-key \
 -e LLM_DEFAULT_MODEL=gpt-4-turbo \
 -e LLM_MINOR_MODEL=gpt-3.5-turbo
 
 # Anthropic Claude
--e LLM_DEFAULT_PROVIDER=Anthropic \
--e ANTHROPIC_API_KEY=your-anthropic-api-key \
+-e LLM_PROVIDER=Anthropic \
+-e PROVIDER_API_KEY=your-anthropic-api-key \
 -e LLM_DEFAULT_MODEL=claude-3-opus-20240229 \
 -e LLM_MINOR_MODEL=claude-3-haiku-20240307
 ```

@@ -58,9 +58,10 @@ export default class TogetherProvider extends BaseProvider {
   getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
     const { model, providerSettings } = options;
 
-    const { baseUrl, apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
+    const { baseUrl: fetchBaseUrl, apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
+    const baseUrl = fetchBaseUrl || 'https://api.together.xyz/v1';
 
-    if (!baseUrl || !apiKey) {
+    if (!apiKey) {
       throw new Error(`Missing configuration for ${this.name} provider`);
     }
 

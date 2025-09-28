@@ -55,9 +55,9 @@ MAX_UPLOAD_SIZE_MB=5
 STORAGE_DIR=./storage
 
 # AI 提供商配置
-LLM_DEFAULT_PROVIDER=OpenAILike
-OPENAI_LIKE_API_BASE_URL=your-openai-like-api-base-url
-OPENAI_LIKE_API_KEY=your-openai-like-api-key
+LLM_PROVIDER=OpenAILike
+PROVIDER_BASE_URL=your-openai-like-api-base-url
+PROVIDER_API_KEY=your-openai-like-api-key
 LLM_DEFAULT_MODEL=your-default-model
 LLM_MINOR_MODEL=your-minor-model
 ```
@@ -135,9 +135,9 @@ module.exports = {
       NODE_ENV: 'production',
       OPERATING_ENV: 'production',
       PORT: 3000,
-      LLM_DEFAULT_PROVIDER: 'OpenAILike',
-      OPENAI_LIKE_API_BASE_URL: 'your-openai-like-api-base-url',
-      OPENAI_LIKE_API_KEY: 'your-openai-like-api-key',
+      LLM_PROVIDER: 'OpenAILike',
+      PROVIDER_BASE_URL: 'your-openai-like-api-base-url',
+      PROVIDER_API_KEY: 'your-openai-like-api-key',
       LLM_DEFAULT_MODEL: 'your-default-model',
       LLM_MINOR_MODEL: 'your-minor-model',
     }
