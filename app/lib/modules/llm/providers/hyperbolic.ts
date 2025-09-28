@@ -8,10 +8,6 @@ export default class HyperbolicProvider extends BaseProvider {
   name = 'Hyperbolic';
   getApiKeyLink = 'https://app.hyperbolic.xyz/settings';
 
-  config = {
-    apiTokenKey: 'HYPERBOLIC_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     {
       name: 'Qwen/Qwen2.5-Coder-32B-Instruct',
@@ -45,13 +41,8 @@ export default class HyperbolicProvider extends BaseProvider {
     },
   ];
 
-  async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
-    const { baseUrl: fetchBaseUrl, apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: settings,
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'HYPERBOLIC_API_KEY',
-    });
+  async getDynamicModels(settings?: IProviderSetting): Promise<ModelInfo[]> {
+    const { baseUrl: fetchBaseUrl, apiKey } = this.getProviderBaseUrlAndKey(settings);
     const baseUrl = fetchBaseUrl || 'https://api.hyperbolic.xyz/v1';
 
     if (!apiKey) {
@@ -76,19 +67,10 @@ export default class HyperbolicProvider extends BaseProvider {
     }));
   }
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'HYPERBOLIC_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw `Missing Api Key configuration for ${this.name} provider`;

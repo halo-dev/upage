@@ -33,7 +33,7 @@ FROM node:20.18.0-alpine  AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV LOGTO_ENABLE_DEV=false
+ENV LOGTO_ENABLE=false
 ENV PORT=3000
 ENV HOST=0.0.0.0
 

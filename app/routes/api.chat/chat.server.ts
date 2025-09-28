@@ -17,9 +17,9 @@ import { createScopedLogger } from '~/lib/.server/logger';
 import { getHistoryChatMessages, saveChatMessages, updateDiscardedMessage } from '~/lib/.server/message';
 import { getPageByMessageId } from '~/lib/.server/page';
 import { CONTINUE_PROMPT } from '~/lib/common/prompts/prompts';
+import { DEFAULT_MODEL, DEFAULT_MODEL_DETAILS, getModel, MINOR_MODEL } from '~/lib/modules/constants';
 import type { Page } from '~/types/actions';
 import type { UPageUIMessage } from '~/types/message';
-import { DEFAULT_MODEL, DEFAULT_MODEL_DETAILS, getModel, MINOR_MODEL } from '~/utils/constants';
 import { approximateUsageFromContent } from '~/utils/token';
 
 const logger = createScopedLogger('api.chat.chat');

@@ -14,7 +14,7 @@ import { sidebarStore } from '~/lib/stores/sidebar';
 import { cubicEasingFn } from '~/utils/easings';
 import WithTooltip from '../ui/Tooltip';
 import { binDates } from './date-binning';
-import { HistoryItem } from './HistoryItem';
+import { HistoryItem } from './HistoryItem.client';
 
 const menuVariants = {
   closed: {

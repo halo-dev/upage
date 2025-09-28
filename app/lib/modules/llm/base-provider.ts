@@ -1,12 +1,11 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import type { LanguageModel } from 'ai';
 import type { IProviderSetting } from '~/types/model';
-import type { ModelInfo, ProviderConfig, ProviderInfo } from './types';
+import type { ModelInfo, ProviderInfo } from './types';
 
 export abstract class BaseProvider implements ProviderInfo {
   abstract name: string;
   abstract staticModels: ModelInfo[];
-  abstract config: ProviderConfig;
   cachedDynamicModels?: {
     cacheId: string;
     models: ModelInfo[];
@@ -16,39 +15,21 @@ export abstract class BaseProvider implements ProviderInfo {
   labelForGetApiKey?: string;
   icon?: string;
 
-  getProviderBaseUrlAndKey(options: {
-    apiKeys?: Record<string, string>;
-    providerSettings?: IProviderSetting;
-    defaultBaseUrlKey: string;
-    defaultApiTokenKey: string;
-  }) {
-    const { apiKeys, providerSettings, defaultBaseUrlKey, defaultApiTokenKey } = options;
-    let settingsBaseUrl = providerSettings?.baseUrl;
-
-    if (settingsBaseUrl && settingsBaseUrl.length == 0) {
-      settingsBaseUrl = undefined;
-    }
-
-    const baseUrlKey = this.config.baseUrlKey || defaultBaseUrlKey;
-    let baseUrl =
-      settingsBaseUrl || process?.env?.[baseUrlKey] || (import.meta.env as any)?.[baseUrlKey] || this.config.baseUrl;
-
+  getProviderBaseUrlAndKey(providerSettings?: IProviderSetting) {
+    let baseUrl = providerSettings?.baseUrl;
     if (baseUrl && baseUrl.endsWith('/')) {
       baseUrl = baseUrl.slice(0, -1);
     }
 
-    const apiTokenKey = this.config.apiTokenKey || defaultApiTokenKey;
-    const apiKey = apiKeys?.[this.name] || process?.env?.[apiTokenKey] || (import.meta.env as any)?.[apiTokenKey];
+    const apiKey = providerSettings?.apiKey;
 
     return {
       baseUrl,
       apiKey,
     };
   }
-  getModelsFromCache(options: {
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): ModelInfo[] | null {
+
+  getModelsFromCache(options: { providerSettings?: Record<string, IProviderSetting> }): ModelInfo[] | null {
     if (!this.cachedDynamicModels) {
       // console.log('no dynamic models',this.name);
       return null;
@@ -65,22 +46,13 @@ export abstract class BaseProvider implements ProviderInfo {
 
     return this.cachedDynamicModels.models;
   }
-  getDynamicModelsCacheKey(options: {
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }) {
+  getDynamicModelsCacheKey(options: { providerSettings?: Record<string, IProviderSetting> }) {
     return JSON.stringify({
-      apiKeys: options.apiKeys?.[this.name],
+      apiKeys: options.providerSettings?.[this.name]?.apiKey,
       providerSettings: options.providerSettings?.[this.name],
     });
   }
-  storeDynamicModels(
-    options: {
-      apiKeys?: Record<string, string>;
-      providerSettings?: Record<string, IProviderSetting>;
-    },
-    models: ModelInfo[],
-  ) {
+  storeDynamicModels(options: { providerSettings?: Record<string, IProviderSetting> }, models: ModelInfo[]) {
     const cacheId = this.getDynamicModelsCacheKey(options);
 
     // console.log('caching dynamic models',this.name,cacheId);
@@ -91,11 +63,10 @@ export abstract class BaseProvider implements ProviderInfo {
   }
 
   // Declare the optional getDynamicModels method
-  getDynamicModels?(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]>;
+  getDynamicModels?(settings?: IProviderSetting): Promise<ModelInfo[]>;
 
   abstract getModelInstance(options: {
     model: string;
-    apiKeys?: Record<string, string>;
     providerSettings?: Record<string, IProviderSetting>;
   }): LanguageModel;
 }

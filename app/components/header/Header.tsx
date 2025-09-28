@@ -5,7 +5,7 @@ import { useAuth } from '~/lib/hooks';
 import { aiState } from '~/lib/stores/ai-state';
 import { HistorySwitch } from '../sidebar/HistorySwitch';
 import { ThemeSwitch } from '../ui/ThemeSwitch';
-import { ChatDescription } from './ChatDescription';
+import { ChatDescription } from './ChatDescription.client';
 import { HeaderActionButtons } from './HeaderActionButtons';
 import { MinimalAvatarDropdown } from './MinimalAvatarDropdown';
 

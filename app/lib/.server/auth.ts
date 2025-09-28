@@ -93,7 +93,7 @@ const config: LogtoConfig = {
 const originalLogto = makeLogtoRemix(config, { sessionStorage });
 
 export function shouldEnforceAuth(): boolean {
-  return process.env.LOGTO_ENABLE_DEV !== 'false';
+  return process.env.LOGTO_ENABLE === 'true';
 }
 
 function getMockDevUser(): MockUser {

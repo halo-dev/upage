@@ -7,11 +7,6 @@ export default class TogetherProvider extends BaseProvider {
   name = 'Together';
   getApiKeyLink = 'https://api.together.xyz/settings/api-keys';
 
-  config = {
-    baseUrlKey: 'TOGETHER_API_BASE_URL',
-    apiTokenKey: 'TOGETHER_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     {
       name: 'Qwen/Qwen2.5-Coder-32B-Instruct',
@@ -33,13 +28,8 @@ export default class TogetherProvider extends BaseProvider {
     },
   ];
 
-  async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
-    const { baseUrl: fetchBaseUrl, apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: settings,
-      defaultBaseUrlKey: 'TOGETHER_API_BASE_URL',
-      defaultApiTokenKey: 'TOGETHER_API_KEY',
-    });
+  async getDynamicModels(settings?: IProviderSetting): Promise<ModelInfo[]> {
+    const { baseUrl: fetchBaseUrl, apiKey } = this.getProviderBaseUrlAndKey(settings);
     const baseUrl = fetchBaseUrl || 'https://api.together.xyz/v1';
 
     if (!baseUrl || !apiKey) {
@@ -65,19 +55,10 @@ export default class TogetherProvider extends BaseProvider {
     }));
   }
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { baseUrl, apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: 'TOGETHER_API_BASE_URL',
-      defaultApiTokenKey: 'TOGETHER_API_KEY',
-    });
+    const { baseUrl, apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!baseUrl || !apiKey) {
       throw new Error(`Missing configuration for ${this.name} provider`);

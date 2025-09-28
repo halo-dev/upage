@@ -27,15 +27,13 @@ export interface OllamaApiResponse {
   models: OllamaModel[];
 }
 
+const BASE_URL = 'http://127.0.0.1:11434';
+
 export default class OllamaProvider extends BaseProvider {
   name = 'Ollama';
   getApiKeyLink = 'https://ollama.com/download';
   labelForGetApiKey = 'Download Ollama';
   icon = 'i-ph:cloud-arrow-down';
-
-  config = {
-    baseUrlKey: 'OLLAMA_API_BASE_URL',
-  };
 
   staticModels: ModelInfo[] = [];
 
@@ -43,16 +41,12 @@ export default class OllamaProvider extends BaseProvider {
     return process.env.DEFAULT_NUM_CTX ? parseInt(process.env.DEFAULT_NUM_CTX, 10) : 32768;
   }
 
-  async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
-    let { baseUrl } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: settings,
-      defaultBaseUrlKey: 'OLLAMA_API_BASE_URL',
-      defaultApiTokenKey: '',
-    });
+  async getDynamicModels(settings?: IProviderSetting): Promise<ModelInfo[]> {
+    let { baseUrl } = this.getProviderBaseUrlAndKey(settings);
 
     if (!baseUrl) {
-      throw new Error('No baseUrl found for OLLAMA provider');
+      logger.debug('No baseUrl found for OLLAMA provider, using default: ', BASE_URL);
+      baseUrl = BASE_URL;
     }
 
     if (typeof window === 'undefined') {
@@ -79,35 +73,28 @@ export default class OllamaProvider extends BaseProvider {
     }));
   }
 
-  getModelInstance: (options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }) => LanguageModel = (options) => {
-    const { apiKeys, providerSettings, model } = options;
+  getModelInstance: (options: { model: string; providerSettings?: Record<string, IProviderSetting> }) => LanguageModel =
+    (options) => {
+      const { providerSettings, model } = options;
 
-    let { baseUrl } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: 'OLLAMA_API_BASE_URL',
-      defaultApiTokenKey: '',
-    });
+      let { baseUrl } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
-    // Backend: Check if we're running in Docker
-    if (!baseUrl) {
-      throw new Error('No baseUrl found for OLLAMA provider');
-    }
+      // Backend: Check if we're running in Docker
+      if (!baseUrl) {
+        logger.debug('No baseUrl found for OLLAMA provider, using default: ', BASE_URL);
+        baseUrl = BASE_URL;
+      }
 
-    const isDocker = process?.env?.RUNNING_IN_DOCKER === 'true';
-    baseUrl = isDocker ? baseUrl.replace('localhost', 'host.docker.internal') : baseUrl;
-    baseUrl = isDocker ? baseUrl.replace('127.0.0.1', 'host.docker.internal') : baseUrl;
+      const isDocker = process?.env?.RUNNING_IN_DOCKER === 'true';
+      baseUrl = isDocker ? baseUrl.replace('localhost', 'host.docker.internal') : baseUrl;
+      baseUrl = isDocker ? baseUrl.replace('127.0.0.1', 'host.docker.internal') : baseUrl;
 
-    logger.debug('Ollama Base Url used: ', baseUrl);
+      logger.debug('Ollama Base Url used: ', baseUrl);
 
-    const ollama = createOllama({
-      baseURL: `${baseUrl}/api`,
-    });
+      const ollama = createOllama({
+        baseURL: `${baseUrl}/api`,
+      });
 
-    return ollama(model);
-  };
+      return ollama(model);
+    };
 }

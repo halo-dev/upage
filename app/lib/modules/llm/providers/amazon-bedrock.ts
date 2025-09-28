@@ -15,10 +15,6 @@ export default class AmazonBedrockProvider extends BaseProvider {
   name = 'AmazonBedrock';
   getApiKeyLink = 'https://console.aws.amazon.com/iam/home';
 
-  config = {
-    apiTokenKey: 'AWS_BEDROCK_CONFIG',
-  };
-
   staticModels: ModelInfo[] = [
     {
       name: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
@@ -91,19 +87,10 @@ export default class AmazonBedrockProvider extends BaseProvider {
     };
   }
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'AWS_BEDROCK_CONFIG',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);
