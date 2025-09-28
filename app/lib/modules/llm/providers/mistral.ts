@@ -8,10 +8,6 @@ export default class MistralProvider extends BaseProvider {
   name = 'Mistral';
   getApiKeyLink = 'https://console.mistral.ai/api-keys/';
 
-  config = {
-    apiTokenKey: 'MISTRAL_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     { name: 'open-mistral-7b', label: 'Mistral 7B', provider: 'Mistral', maxTokenAllowed: 8000 },
     { name: 'open-mixtral-8x7b', label: 'Mistral 8x7B', provider: 'Mistral', maxTokenAllowed: 8000 },
@@ -24,19 +20,10 @@ export default class MistralProvider extends BaseProvider {
     { name: 'mistral-large-latest', label: 'Mistral Large Latest', provider: 'Mistral', maxTokenAllowed: 8000 },
   ];
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'MISTRAL_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);

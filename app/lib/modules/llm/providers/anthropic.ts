@@ -8,10 +8,6 @@ export default class AnthropicProvider extends BaseProvider {
   name = 'Anthropic';
   getApiKeyLink = 'https://console.anthropic.com/settings/keys';
 
-  config = {
-    apiTokenKey: 'ANTHROPIC_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     {
       name: 'claude-3-7-sonnet-20250219',
@@ -42,13 +38,8 @@ export default class AnthropicProvider extends BaseProvider {
     { name: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku', provider: 'Anthropic', maxTokenAllowed: 8000 },
   ];
 
-  async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: settings,
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'ANTHROPIC_API_KEY',
-    });
+  async getDynamicModels(settings: IProviderSetting): Promise<ModelInfo[]> {
+    const { apiKey } = this.getProviderBaseUrlAndKey(settings);
 
     if (!apiKey) {
       throw `Missing Api Key configuration for ${this.name} provider`;
@@ -74,22 +65,14 @@ export default class AnthropicProvider extends BaseProvider {
     }));
   }
 
-  getModelInstance: (options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }) => LanguageModel = (options) => {
-    const { apiKeys, providerSettings, model } = options;
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings,
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'ANTHROPIC_API_KEY',
-    });
-    const anthropic = createAnthropic({
-      apiKey,
-    });
+  getModelInstance: (options: { model: string; providerSettings?: Record<string, IProviderSetting> }) => LanguageModel =
+    (options) => {
+      const { providerSettings, model } = options;
+      const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings);
+      const anthropic = createAnthropic({
+        apiKey,
+      });
 
-    return anthropic(model);
-  };
+      return anthropic(model);
+    };
 }

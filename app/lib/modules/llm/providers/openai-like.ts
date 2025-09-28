@@ -7,20 +7,10 @@ export default class OpenAILikeProvider extends BaseProvider {
   name = 'OpenAILike';
   getApiKeyLink = undefined;
 
-  config = {
-    baseUrlKey: 'OPENAI_LIKE_API_BASE_URL',
-    apiTokenKey: 'OPENAI_LIKE_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [];
 
-  async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
-    const { baseUrl, apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: settings,
-      defaultBaseUrlKey: 'OPENAI_LIKE_API_BASE_URL',
-      defaultApiTokenKey: 'OPENAI_LIKE_API_KEY',
-    });
+  async getDynamicModels(settings?: IProviderSetting): Promise<ModelInfo[]> {
+    const { baseUrl, apiKey } = this.getProviderBaseUrlAndKey(settings);
 
     if (!baseUrl || !apiKey) {
       return [];
@@ -42,19 +32,10 @@ export default class OpenAILikeProvider extends BaseProvider {
     }));
   }
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { baseUrl, apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: 'OPENAI_LIKE_API_BASE_URL',
-      defaultApiTokenKey: 'OPENAI_LIKE_API_KEY',
-    });
+    const { baseUrl, apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!baseUrl || !apiKey) {
       throw new Error(`Missing configuration for ${this.name} provider`);

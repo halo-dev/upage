@@ -8,10 +8,6 @@ export default class OpenAIProvider extends BaseProvider {
   name = 'OpenAI';
   getApiKeyLink = 'https://platform.openai.com/api-keys';
 
-  config = {
-    apiTokenKey: 'OPENAI_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     { name: 'gpt-4o', label: 'GPT-4o', provider: 'OpenAI', maxTokenAllowed: 8000 },
     { name: 'gpt-4o-mini', label: 'GPT-4o Mini', provider: 'OpenAI', maxTokenAllowed: 8000 },
@@ -20,13 +16,8 @@ export default class OpenAIProvider extends BaseProvider {
     { name: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', provider: 'OpenAI', maxTokenAllowed: 8000 },
   ];
 
-  async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: settings,
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'OPENAI_API_KEY',
-    });
+  async getDynamicModels(settings?: IProviderSetting): Promise<ModelInfo[]> {
+    const { apiKey } = this.getProviderBaseUrlAndKey(settings);
 
     if (!apiKey) {
       throw `Missing Api Key configuration for ${this.name} provider`;
@@ -56,19 +47,10 @@ export default class OpenAIProvider extends BaseProvider {
     }));
   }
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'OPENAI_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);

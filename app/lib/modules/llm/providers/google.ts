@@ -8,10 +8,6 @@ export default class GoogleProvider extends BaseProvider {
   name = 'Google';
   getApiKeyLink = 'https://aistudio.google.com/app/apikey';
 
-  config = {
-    apiTokenKey: 'GOOGLE_GENERATIVE_AI_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     { name: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash', provider: 'Google', maxTokenAllowed: 8192 },
     {
@@ -28,13 +24,8 @@ export default class GoogleProvider extends BaseProvider {
     { name: 'gemini-exp-1206', label: 'Gemini exp-1206', provider: 'Google', maxTokenAllowed: 8192 },
   ];
 
-  async getDynamicModels(apiKeys?: Record<string, string>, settings?: IProviderSetting): Promise<ModelInfo[]> {
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: settings,
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'GOOGLE_GENERATIVE_AI_API_KEY',
-    });
+  async getDynamicModels(settings?: IProviderSetting): Promise<ModelInfo[]> {
+    const { apiKey } = this.getProviderBaseUrlAndKey(settings);
 
     if (!apiKey) {
       throw `Missing Api Key configuration for ${this.name} provider`;
@@ -59,19 +50,10 @@ export default class GoogleProvider extends BaseProvider {
     }));
   }
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'GOOGLE_GENERATIVE_AI_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);

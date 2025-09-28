@@ -8,10 +8,6 @@ export default class PerplexityProvider extends BaseProvider {
   name = 'Perplexity';
   getApiKeyLink = 'https://www.perplexity.ai/settings/api';
 
-  config = {
-    apiTokenKey: 'PERPLEXITY_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     {
       name: 'llama-3.1-sonar-small-128k-online',
@@ -33,19 +29,10 @@ export default class PerplexityProvider extends BaseProvider {
     },
   ];
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'PERPLEXITY_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);

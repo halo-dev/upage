@@ -8,10 +8,6 @@ export default class HuggingFaceProvider extends BaseProvider {
   name = 'HuggingFace';
   getApiKeyLink = 'https://huggingface.co/settings/tokens';
 
-  config = {
-    apiTokenKey: 'HuggingFace_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     {
       name: 'Qwen/Qwen2.5-Coder-32B-Instruct',
@@ -81,19 +77,10 @@ export default class HuggingFaceProvider extends BaseProvider {
     },
   ];
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'HuggingFace_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);

@@ -8,10 +8,6 @@ export default class GithubProvider extends BaseProvider {
   name = 'Github';
   getApiKeyLink = 'https://github.com/settings/personal-access-tokens';
 
-  config = {
-    apiTokenKey: 'GITHUB_API_KEY',
-  };
-
   // find more in https://github.com/marketplace?type=models
   staticModels: ModelInfo[] = [
     { name: 'gpt-4o', label: 'GPT-4o', provider: 'Github', maxTokenAllowed: 8000 },
@@ -23,19 +19,10 @@ export default class GithubProvider extends BaseProvider {
     { name: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', provider: 'Github', maxTokenAllowed: 8000 },
   ];
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'GITHUB_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);

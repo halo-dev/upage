@@ -3,8 +3,8 @@ import type { UIMessage } from 'ai';
 import { requireAuth } from '~/lib/.server/auth';
 import { streamEnhancer } from '~/lib/.server/llm/stream-enhancer';
 import { createScopedLogger } from '~/lib/.server/logger';
+import { getModel, MINOR_MODEL } from '~/lib/modules/constants';
 import { errorResponse } from '~/utils/api-response';
-import { getModel, MINOR_MODEL } from '~/utils/constants';
 
 export async function action(args: ActionFunctionArgs) {
   const authResult = await requireAuth(args.request, { isApi: true });

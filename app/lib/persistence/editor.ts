@@ -150,7 +150,7 @@ const logger = createScopedLogger('EditorProjects');
  */
 export async function openEditorDatabase(): Promise<IDBDatabase | undefined> {
   if (typeof indexedDB === 'undefined') {
-    logger.error('indexedDB 在当前环境中不可用');
+    logger.debug('indexedDB 在当前环境中不可用');
     return undefined;
   }
 

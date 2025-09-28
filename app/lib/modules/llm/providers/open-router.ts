@@ -22,10 +22,6 @@ export default class OpenRouterProvider extends BaseProvider {
   name = 'OpenRouter';
   getApiKeyLink = 'https://openrouter.ai/settings/keys';
 
-  config = {
-    apiTokenKey: 'OPEN_ROUTER_API_KEY',
-  };
-
   staticModels: ModelInfo[] = [
     {
       name: 'anthropic/claude-3.5-sonnet',
@@ -73,11 +69,7 @@ export default class OpenRouterProvider extends BaseProvider {
     { name: 'cohere/command', label: 'Cohere Command (OpenRouter)', provider: 'OpenRouter', maxTokenAllowed: 4096 },
   ];
 
-  async getDynamicModels(
-    _apiKeys?: Record<string, string>,
-    _settings?: IProviderSetting,
-    _serverEnv: Record<string, string> = {},
-  ): Promise<ModelInfo[]> {
+  async getDynamicModels(_settings?: IProviderSetting, _serverEnv: Record<string, string> = {}): Promise<ModelInfo[]> {
     try {
       const response = await fetch('https://openrouter.ai/api/v1/models', {
         headers: {
@@ -101,19 +93,10 @@ export default class OpenRouterProvider extends BaseProvider {
     }
   }
 
-  getModelInstance(options: {
-    model: string;
-    apiKeys?: Record<string, string>;
-    providerSettings?: Record<string, IProviderSetting>;
-  }): LanguageModel {
-    const { model, apiKeys, providerSettings } = options;
+  getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {
+    const { model, providerSettings } = options;
 
-    const { apiKey } = this.getProviderBaseUrlAndKey({
-      apiKeys,
-      providerSettings: providerSettings?.[this.name],
-      defaultBaseUrlKey: '',
-      defaultApiTokenKey: 'OPEN_ROUTER_API_KEY',
-    });
+    const { apiKey } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
     if (!apiKey) {
       throw new Error(`Missing API key for ${this.name} provider`);
