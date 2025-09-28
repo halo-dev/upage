@@ -58,19 +58,24 @@ const sidebars = {
       ],
     },
     {
-      type: 'doc',
-      id: 'contributing',
+      type: 'category',
       label: '贡献指南',
+      link: {
+        type: 'doc',
+        id: 'contributing/contributing',
+      },
+      items: [
+        'contributing/code-of-conduct',
+        'contributing/ways-to-contribute',
+        'contributing/development-setup',
+        'contributing/code-standards',
+        'contributing/workflow',
+      ],
     },
     {
       type: 'doc',
       id: 'faq',
       label: '常见问题',
-    },
-    {
-      type: 'doc',
-      id: 'changelog',
-      label: '更新日志',
     },
   ],
 };

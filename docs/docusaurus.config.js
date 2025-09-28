@@ -68,7 +68,7 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
-            label: '文档',
+            label: '使用文档',
           },
           {
             href: 'https://github.com/halo-dev/upage',
@@ -116,7 +116,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Halo 社区`,
+        copyright: `Copyright © ${new Date().getFullYear()} 凌霞软件. Built with Docusaurus.`,
       },
       prism: {
         theme: require('prism-react-renderer').themes.github,

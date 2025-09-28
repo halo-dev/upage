@@ -11,7 +11,7 @@ title: 常见问题
 
 ### UPage 是什么？
 
-UPage 是一款基于人工智能的可视化网页构建平台，支持多种 AI 提供商集成，基于自然语言快速实现定制化网页。它允许用户通过简单的文字描述生成完整的网页，并提供可视化编辑工具进行进一步定制。
+UPage 是一款基于大模型的可视化网页构建平台，支持多种 AI 提供商集成，基于自然语言快速实现定制化网页。它允许用户通过简单的文字描述生成完整的网页，并提供可视化编辑工具进行进一步定制。
 
 ### UPage 适合哪些用户？
 
@@ -26,7 +26,7 @@ UPage 适合各类需要快速创建网页的用户，包括但不限于：
 
 ### UPage 是开源的吗？
 
-是的，UPage 是一个开源项目，采用 MIT 许可证。您可以在 [GitHub](https://github.com/halo-dev/upage) 上查看源代码，也可以参与项目开发和改进。
+是的，UPage 是一个开源项目，采用 [基于 GPLv3 的补充协议许可证](https://github.com/halo-dev/upage/blob/main/LICENSE.txt)。您可以在 [GitHub](https://github.com/halo-dev/upage) 上查看源代码，也可以参与项目开发和改进。
 
 ## 安装和部署
 
@@ -40,16 +40,17 @@ docker run -d \
   --restart unless-stopped \
   -p 3000:3000 \
   -e LLM_DEFAULT_PROVIDER=OpenAILike \
+  -e OPENAI_LIKE_API_BASE_URL=your-openai-like-api-base-url \
   -e OPENAI_LIKE_API_KEY=your-openai-like-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
   -v ./data:/app/data \
   -v ./logs:/app/logs \
   -v ./storage:/app/storage \
-  ghcr.io/halo-dev/upage
+  halo-dev/upage:latest
 ```
 
-详细的安装说明请参考[快速开始](quick-start)文档。
+详细的安装说明请参考[快速开始](./quick-start)文档。
 
 ### UPage 的系统要求是什么？
 
@@ -58,7 +59,7 @@ UPage 的最低系统要求：
 - Docker 20.10.0 或更高版本（如果使用 Docker 部署）
 - Node.js 18.18.0 或更高版本（如果源码部署）
 - 至少 2GB 可用内存
-- 至少 1GB 可用磁盘空间
+- 至少 2GB 可用磁盘空间
 - 互联网连接（用于访问 AI API）
 
 ### 如何更新 UPage？
@@ -67,7 +68,7 @@ UPage 的最低系统要求：
 
 ```bash
 # 拉取最新镜像
-docker pull ghcr.io/halo-dev/upage:latest
+docker pull halo-dev/upage:latest
 
 # 停止并删除旧容器
 docker stop upage
@@ -79,7 +80,7 @@ docker run -d \
   --restart unless-stopped \
   -p 3000:3000 \
   ... # 其他环境变量和挂载
-  ghcr.io/halo-dev/upage:latest
+  halo-dev/upage:latest
 ```
 
 如果使用 Docker Compose，则可以执行：
@@ -96,11 +97,14 @@ docker-compose up -d
 
 UPage 支持多种 AI 提供商，包括：
 
-- OpenAI（GPT-3.5、GPT-4 等）
+- DeepSeek（DeepSeek-Chat、DeepSeek-Reasoner）
+- OpenAI（GPT-4o、GPT-5 等）
 - Anthropic Claude
 - Google Gemini
 - 兼容 OpenAI 接口的服务（如 Azure OpenAI、智谱 AI 等）
 - Ollama（本地部署的开源模型）
+
+所有支持的 AI 提供商请参考[配置参考- AI 提供商配置](./configuration#ai-提供商配置)文档。
 
 ### 如何配置 AI 提供商？
 
@@ -120,11 +124,11 @@ UPage 支持多种 AI 提供商，包括：
 -e LLM_MINOR_MODEL=claude-3-haiku-20240307
 ```
 
-详细的配置选项请参考[配置参考](configuration)文档。
+详细的配置选项请参考[配置参考 - AI 提供商配置](./configuration#ai-提供商配置)文档。
 
 ### 使用 AI 生成页面需要多少 token？
 
-生成一个标准页面通常需要 2,000-10,000 个 token，具体取决于页面的复杂度和内容量。复杂的页面可能需要更多 token。UPage 会优化 prompt，尽量减少 token 消耗。
+生成一个标准页面通常需要 2,000-10,000 个 token，具体取决于页面的复杂度和内容量。复杂的页面可能需要更多 token。UPage 会尽可能优化 prompt，尽量减少 token 消耗。
 
 ### 如何优化 AI 提示以获得更好的结果？
 
@@ -145,35 +149,22 @@ UPage 支持多种 AI 提供商，包括：
 ...
 ```
 
+你可以使用 UPage 的优化提示功能来优化您的提示。
+
 ## 使用问题
-
-### 如何创建第一个页面？
-
-1. 登录 UPage
-2. 点击侧边栏中的"新建页面"按钮
-3. 选择"AI 创建"、"从模板创建"或"空白页面"
-4. 如果选择 AI 创建，输入页面描述并点击"生成"
-5. 等待 AI 生成页面，然后进行进一步编辑
 
 ### 如何编辑 AI 生成的页面？
 
 1. 在页面列表中选择要编辑的页面
-2. 使用可视化编辑器修改页面元素
-3. 可以拖拽组件、调整布局、编辑文本和图片
-4. 使用右侧属性面板修改组件属性和样式
-5. 也可以使用 AI 辅助功能进行局部或整体调整
-
-### 如何导出页面？
-
-1. 在页面列表中选择要导出的页面
-2. 点击操作菜单中的"导出"选项
-3. 选择导出格式（HTML/CSS/JS、ZIP、JSON 或 PDF）
-4. 配置导出选项
-5. 点击"导出"开始下载
+2. 使用可视化编辑器点击要修改的页面元素
+3. 对于文本组件，可以直接输入文本进行修改
+4. 对于图片组件，可以点击上传图片进行替换
+5. 使用弹出的属性面板修改组件属性和样式
+6. 也可以使用 AI 辅助功能进行局部或整体调整
 
 ### UPage 支持响应式设计吗？
 
-是的，UPage 生成的页面默认支持响应式设计，可以自动适应不同屏幕尺寸。您可以在编辑器中预览页面在不同设备上的显示效果，并进行针对性调整。
+是的，UPage 生成的页面默认支持响应式设计，可以自动适应不同屏幕尺寸。您可以在编辑器中预览页面在不同设备上的显示效果，并进行针对性调整。如果生成的页面不符合您的预期，您可以尝试使用 AI 辅助调整。
 
 ## 数据和安全
 
@@ -197,9 +188,9 @@ tar -czf upage-storage-backup-$(date +%Y%m%d).tar.gz ./storage
 
 UPage 本身不会收集或传输用户数据，除非明确配置。当使用 AI 功能时，页面内容会发送到配置的 AI 提供商进行处理。请确保您使用的 AI 提供商符合您的隐私要求。
 
-### 如何配置 UPage 的访问控制？
+### 如何配置 UPage 的多用户？
 
-UPage 支持通过 Logto 进行用户认证和访问控制。配置 Logto 后，您可以创建用户账户、分配角色和权限，实现细粒度的访问控制。详细配置请参考[Logto 认证集成](deployment/logto)文档。
+UPage 支持通过 Logto 进行用户认证和访问控制。详细配置请参考[Logto 认证集成](deployment/logto)文档。
 
 ## 故障排除
 
@@ -211,10 +202,11 @@ UPage 支持通过 Logto 进行用户认证和访问控制。配置 Logto 后，
 2. **提示过于复杂**：尝试简化页面描述，分步骤生成
 3. **token 限制**：检查是否达到 AI 提供商的 token 限制
 4. **模型不支持**：尝试使用更强大的模型或不同的 AI 提供商
+5. **生成内容超过限制**：UPage 默认限制单次回答不超过 3 次 Token 上限，您可以尝试分步骤生成
 
 ### 如何查看系统日志？
 
-可以通过以下方式查看系统日志：
+默认情况下，UPage 会将日志保存在挂载的 `logs` 目录中，可以通过以下方式查看系统日志：
 
 ```bash
 # 查看容器日志
@@ -254,33 +246,15 @@ cat logs/combined-*.log
 
 ## 高级问题
 
-### 如何自定义 UPage 的主题？
-
-目前 UPage 不支持完全自定义主题，但您可以通过以下方式调整外观：
-
-1. 在页面编辑器中使用自定义 CSS
-2. 使用 AI 生成符合特定设计风格的页面
-3. 在导出的代码中进行进一步自定义
-
 ### UPage 支持插件系统吗？
 
-目前 UPage 不提供正式的插件系统，但作为开源项目，您可以通过 fork 代码库并进行修改来扩展功能。
+UPage 不提供正式的插件系统，但作为开源项目，您可以通过 fork 代码库并进行修改来扩展功能。
 
 ### 如何与现有系统集成？
 
 UPage 提供多种集成方式：
 
 1. **API 集成**：使用 UPage API 与其他系统交互
-2. **导出集成**：导出页面代码并集成到现有系统
+2. **导出集成**：下载页面源代码（HTML/CSS/JS）并集成到现有系统
 3. **部署集成**：使用 Vercel 或 Netlify 集成直接部署页面
 4. **认证集成**：通过 Logto 与现有认证系统集成
-
-### UPage 与其他页面构建器的区别是什么？
-
-UPage 的主要区别在于：
-
-1. **AI 驱动**：基于自然语言描述生成页面
-2. **开源**：完全开源，可自由定制和扩展
-3. **多 AI 提供商支持**：支持多种 AI 模型和提供商
-4. **本地部署**：可在本地或私有云部署，保护数据安全
-5. **轻量级**：资源占用较低，易于部署和维护

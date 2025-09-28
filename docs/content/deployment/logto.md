@@ -34,6 +34,15 @@ Logto 支持两种接入方式，您可以根据自己的需求选择合适的�
 
 UPage 提供了一个简化的 Logto 部署配置。在 UPage 项目目录下，您可以找到 `logto/docker-compose.yaml` 文件以及 `.env` 文件。
 
+如果是开发环境，执行以下命令：
+
+```bash
+cd ./logto
+docker-compose up -d
+```
+
+如果是生产环境，执行以下命令：
+
 ```bash
 curl -L https://raw.githubusercontent.com/halo-dev/upage/refs/heads/main/logto/docker-compose.yaml -o ~/upage/logto/docker-compose.yaml
 curl -L https://raw.githubusercontent.com/halo-dev/upage/refs/heads/main/logto/.env -o ~/upage/logto/.env

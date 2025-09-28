@@ -21,6 +21,10 @@ UPage 是一个开源的网页构建工具，它利用大语言模型，让用�
 - **响应式设计**：自动适应不同屏幕尺寸
 - **部署集成**：支持一键部署到常见托管平台
 
+:::note
+特别感谢 [bolt.diy](https://github.com/stackblitz-labs/bolt.diy) 项目，UPage 的实现基于该项目的代码结构。
+:::
+
 ## 快速开始
 
 请查看[快速开始](quick-start.md)指南，了解如何安装和使用 UPage。
@@ -31,4 +35,4 @@ UPage 是一个开源项目，我们欢迎任何形式的贡献。请查看[贡�
 
 ## 许可证
 
-UPage 采用 [基于 GPLv3 的补充协议许可证](https://github.com/halo-dev/upage/blob/main/LICENSE)。
+UPage 采用 [基于 GPLv3 的补充协议许可证](https://github.com/halo-dev/upage/blob/main/LICENSE.txt)。
