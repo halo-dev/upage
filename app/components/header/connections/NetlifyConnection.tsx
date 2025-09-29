@@ -55,7 +55,7 @@ export default function NetlifyConnection() {
   const siteActions: SiteAction[] = [
     {
       name: '清除缓存',
-      icon: 'heroicons:arrow-path',
+      icon: 'i-heroicons:arrow-path',
       action: async (siteId: string) => {
         try {
           const response = await fetch(`/api/netlify/sites/${siteId}/cache`, {
@@ -76,7 +76,7 @@ export default function NetlifyConnection() {
     },
     {
       name: '删除站点',
-      icon: 'heroicons:trash',
+      icon: 'i-heroicons:trash',
       action: async (siteId: string) => {
         try {
           const response = await fetch(`/api/netlify/sites/${siteId}`, {
@@ -251,14 +251,14 @@ export default function NetlifyConnection() {
                   variant="outline"
                   className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                 >
-                  <div className="heroicons:building-library size-4 text-upage-elements-item-contentAccent" />
+                  <div className="i-heroicons:building-library size-4 text-upage-elements-item-contentAccent" />
                   <span>{connection.stats.totalSites} 站点</span>
                 </Badge>
                 <Badge
                   variant="outline"
                   className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                 >
-                  <div className="heroicons:rocket-launch size-4 text-upage-elements-item-contentAccent" />
+                  <div className="i-heroicons:rocket-launch size-4 text-upage-elements-item-contentAccent" />
                   <span>{deploymentCount} 部署</span>
                 </Badge>
                 {lastUpdated && (
@@ -266,7 +266,7 @@ export default function NetlifyConnection() {
                     variant="outline"
                     className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                   >
-                    <div className="heroicons:clock size-4 text-upage-elements-item-contentAccent" />
+                    <div className="i-heroicons:clock size-4 text-upage-elements-item-contentAccent" />
                     <span>更新于 {formatDistanceToNow(new Date(lastUpdated), { locale: zhCN })} 前</span>
                   </Badge>
                 )}
@@ -276,7 +276,7 @@ export default function NetlifyConnection() {
                   <div className="bg-upage-elements-background dark:bg-upage-elements-background-depth-1 border border-upage-elements-borderColor dark:border-upage-elements-borderColor rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-sm font-medium flex items-center gap-2 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
-                        <div className="heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                        <div className="i-heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                         您的站点
                       </h4>
                       <Button
@@ -292,7 +292,7 @@ export default function NetlifyConnection() {
                       >
                         <div
                           className={classNames(
-                            'heroicons:arrow-path size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent',
+                            'i-heroicons:arrow-path size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent',
                             { 'animate-spin': fetchingStats },
                           )}
                         />
@@ -315,7 +315,7 @@ export default function NetlifyConnection() {
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <div className="heroicons:cloud size-5 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                              <div className="i-heroicons:cloud size-5 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                               <span className="font-medium text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                                 {site.name}
                               </span>
@@ -326,9 +326,9 @@ export default function NetlifyConnection() {
                                 className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                               >
                                 {site.published_deploy?.state === 'ready' ? (
-                                  <div className="heroicons:check-circle size-4 text-green-500" />
+                                  <div className="i-heroicons:check-circle size-4 text-green-500" />
                                 ) : (
-                                  <div className="heroicons:x-circle size-4 text-red-500" />
+                                  <div className="i-heroicons:x-circle size-4 text-red-500" />
                                 )}
                                 <span className="text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                                   {site.published_deploy?.state || 'Unknown'}
@@ -345,7 +345,7 @@ export default function NetlifyConnection() {
                               className="text-sm flex items-center gap-1 transition-colors text-upage-elements-link-text hover:text-upage-elements-link-textHover dark:text-white dark:hover:text-upage-elements-link-textHover"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <div className="heroicons:cloud size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                              <div className="i-heroicons:cloud size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                               <span className="underline decoration-1 underline-offset-2">
                                 {site.ssl_url || site.url}
                               </span>
@@ -388,7 +388,7 @@ export default function NetlifyConnection() {
                               {site.published_deploy && (
                                 <div className="mt-3 text-sm">
                                   <div className="flex items-center gap-1">
-                                    <div className="heroicons:clock size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                    <div className="i-heroicons:clock size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                     <span className="text-upage-elements-textSecondary dark:text-upage-elements-textSecondary">
                                       发布于{' '}
                                       {formatDistanceToNow(new Date(site.published_deploy.published_at), {
@@ -399,7 +399,7 @@ export default function NetlifyConnection() {
                                   </div>
                                   {site.published_deploy.branch && (
                                     <div className="flex items-center gap-1 mt-1">
-                                      <div className="heroicons:code-bracket size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                      <div className="i-heroicons:code-bracket size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                       <span className="text-upage-elements-textSecondary dark:text-upage-elements-textSecondary">
                                         分支: {site.published_deploy.branch}
                                       </span>
@@ -417,7 +417,7 @@ export default function NetlifyConnection() {
                     <div className="bg-upage-elements-background dark:bg-upage-elements-background-depth-1 border border-upage-elements-borderColor dark:border-upage-elements-borderColor rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-medium flex items-center gap-2 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
-                          <div className="heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                          <div className="i-heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                           最近部署
                         </h4>
                       </div>
@@ -440,11 +440,11 @@ export default function NetlifyConnection() {
                                   className="flex items-center gap-1"
                                 >
                                   {deploy.state === 'ready' ? (
-                                    <div className="heroicons:check-circle size-4 text-green-500" />
+                                    <div className="i-heroicons:check-circle size-4 text-green-500" />
                                   ) : deploy.state === 'error' ? (
-                                    <div className="heroicons:x-circle size-4 text-red-500" />
+                                    <div className="i-heroicons:x-circle size-4 text-red-500" />
                                   ) : (
-                                    <div className="heroicons:building-library size-4 text-upage-elements-item-contentAccent" />
+                                    <div className="i-heroicons:building-library size-4 text-upage-elements-item-contentAccent" />
                                   )}
                                   <span className="text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                                     {deploy.state}
@@ -457,7 +457,7 @@ export default function NetlifyConnection() {
                             </div>
                             {deploy.branch && (
                               <div className="mt-2 text-xs text-upage-elements-textSecondary dark:text-upage-elements-textSecondary flex items-center gap-1">
-                                <div className="heroicons:code-bracket size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                <div className="i-heroicons:code-bracket size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                 <span className="text-upage-elements-textSecondary dark:text-upage-elements-textSecondary">
                                   分支: {deploy.branch}
                                 </span>
@@ -472,7 +472,7 @@ export default function NetlifyConnection() {
                                   className="flex items-center gap-1 transition-colors text-upage-elements-link-text hover:text-upage-elements-link-textHover dark:text-white dark:hover:text-upage-elements-link-textHover"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <div className="heroicons:cloud size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                  <div className="i-heroicons:cloud size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                   <span className="underline decoration-1 underline-offset-2">{deploy.deploy_url}</span>
                                 </a>
                               </div>
@@ -485,7 +485,7 @@ export default function NetlifyConnection() {
                                 disabled={isActionLoading}
                                 className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                               >
-                                <div className="heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                <div className="i-heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                 发布
                               </Button>
                               {deploy.state === 'ready' ? (
@@ -496,7 +496,7 @@ export default function NetlifyConnection() {
                                   disabled={isActionLoading}
                                   className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                                 >
-                                  <div className="heroicons:lock-closed size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                  <div className="i-heroicons:lock-closed size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                   锁定
                                 </Button>
                               ) : (
@@ -507,7 +507,7 @@ export default function NetlifyConnection() {
                                   disabled={isActionLoading}
                                   className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                                 >
-                                  <div className="heroicons:lock-open size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                  <div className="i-heroicons:lock-open size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                   解锁
                                 </Button>
                               )}
@@ -521,7 +521,7 @@ export default function NetlifyConnection() {
                     <div className="bg-upage-elements-background dark:bg-upage-elements-background-depth-1 border border-upage-elements-borderColor dark:border-upage-elements-borderColor rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="text-sm font-medium flex items-center gap-2 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
-                          <div className="heroicons:code-bracket size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                          <div className="i-heroicons:code-bracket size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                           最近构建
                         </h4>
                       </div>
@@ -540,11 +540,11 @@ export default function NetlifyConnection() {
                                   className="flex items-center gap-1"
                                 >
                                   {build.done && !build.error ? (
-                                    <div className="heroicons:check-circle size-4" />
+                                    <div className="i-heroicons:check-circle size-4" />
                                   ) : build.error ? (
-                                    <div className="heroicons:x-circle size-4" />
+                                    <div className="i-heroicons:x-circle size-4" />
                                   ) : (
-                                    <div className="heroicons:code-bracket size-4" />
+                                    <div className="i-heroicons:code-bracket size-4" />
                                   )}
                                   <span className="text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                                     {build.done ? (build.error ? '失败' : '完成') : '进行中'}
@@ -557,7 +557,7 @@ export default function NetlifyConnection() {
                             </div>
                             {build.error && (
                               <div className="mt-2 text-xs text-upage-elements-textDestructive dark:text-upage-elements-textDestructive flex items-center gap-1">
-                                <div className="heroicons:x-circle size-3 text-upage-elements-textDestructive dark:text-upage-elements-textDestructive" />
+                                <div className="i-heroicons:x-circle size-3 text-upage-elements-textDestructive dark:text-upage-elements-textDestructive" />
                                 错误: {build.error}
                               </div>
                             )}
@@ -639,7 +639,7 @@ export default function NetlifyConnection() {
           <div className="flex flex-col w-full gap-4 mt-4">
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <div className="heroicons:check-circle size-4 text-green-500" />
+                <div className="i-heroicons:check-circle size-4 text-green-500" />
                 <span className="text-sm text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                   已连接到 Netlify
                 </span>
@@ -673,7 +673,7 @@ export default function NetlifyConnection() {
                     </>
                   ) : (
                     <>
-                      <div className="heroicons:arrow-path size-4 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary" />
+                      <div className="i-heroicons:academic-cap-solid size-4 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary" />
                       <span className="text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                         刷新统计
                       </span>

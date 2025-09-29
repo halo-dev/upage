@@ -228,7 +228,7 @@ export default function _1PanelConnection({
                   variant="outline"
                   className="flex items-center gap-1 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary"
                 >
-                  <div className="heroicons:building-library size-4 text-upage-elements-item-contentAccent" />
+                  <div className="i-heroicons:building-library size-4 text-upage-elements-item-contentAccent" />
                   <span>{connection.stats.totalWebsites} 站点</span>
                 </Badge>
                 {connection.stats.lastUpdated && (
@@ -248,7 +248,7 @@ export default function _1PanelConnection({
                   <div className="bg-upage-elements-background dark:bg-upage-elements-background-depth-1 border border-upage-elements-borderColor dark:border-upage-elements-borderColor rounded-lg p-4">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-sm font-medium flex items-center gap-2 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
-                        <div className="heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                        <div className="i-heroicons:building-library size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                         您的站点
                       </h4>
                       <Button
@@ -260,7 +260,7 @@ export default function _1PanelConnection({
                       >
                         <div
                           className={classNames(
-                            'heroicons:arrow-path size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent',
+                            'i-heroicons:arrow-path size-4 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent',
                             { 'animate-spin': fetching },
                           )}
                         />
@@ -287,7 +287,7 @@ export default function _1PanelConnection({
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <div className="heroicons:globe-alt size-5 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                              <div className="i-heroicons:globe-alt size-5 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                               <span className="font-medium text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                                 {site.alias}
                               </span>
@@ -318,7 +318,7 @@ export default function _1PanelConnection({
                                 className="text-sm flex items-center gap-1 transition-colors text-upage-elements-link-text hover:text-upage-elements-link-textHover dark:text-white dark:hover:text-upage-elements-link-textHover w-fit"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <div className="heroicons:paper-airplane size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
+                                <div className="i-heroicons:paper-airplane size-3 text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent" />
                                 <span className="underline decoration-1 underline-offset-2">
                                   {`${site.protocol.toLowerCase()}://${domain.domain}`}
                                 </span>
@@ -560,7 +560,7 @@ export default function _1PanelConnection({
                   </>
                 ) : (
                   <>
-                    <div className="heroicons:arrow-path size-4 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary" />
+                    <div className="i-ph:arrows-clockwise size-4 text-upage-elements-textPrimary dark:text-upage-elements-textPrimary" />
                     <span className="text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                       刷新统计
                     </span>
