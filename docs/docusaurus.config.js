@@ -65,8 +65,8 @@ const config = {
       navbar: {
         logo: {
           alt: 'UPage Logo',
-          src: 'img/logo1.png',
-          srcDark: 'img/logo2.png',
+          src: 'img/logo.png',
+          srcDark: 'img/logo-dark.png',
         },
         items: [
           {

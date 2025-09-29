@@ -1,4 +1,6 @@
-<h1 align="center">UPage</h1>
+<p align="center">
+  <img alt="UPage 主界面" src="./public/logo.png" style="width: 240px; height: auto;" />
+</p>
 <h3 align="center">基于大模型的可视化网页构建平台</h3>
 
 <p align="center">
