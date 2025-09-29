@@ -53,8 +53,6 @@ const sidebars = {
       },
       items: [
         'user-guide/basics',
-        'user-guide/ai-page-generation',
-        'user-guide/page-management',
       ],
     },
     {

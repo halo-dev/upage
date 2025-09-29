@@ -50,3 +50,17 @@
 [data-theme="dark"] .base-url-highlight {
   color: #64b5f6;
 }
+
+/* 亮暗模式下的 logo 切换 */
+.theme-logo {
+  position: relative;
+  display: inline-block;
+}
+
+.theme-logo img {
+  content: url('/img/logo1.png');
+}
+
+[data-theme="dark"] .theme-logo img {
+  content: url('/img/logo2.png');
+}
