@@ -41,7 +41,7 @@ docker run -d \
 
 参数说明如下：
 - `-e LLM_PROVIDER=OpenAI`：设置默认的 LLM 提供商为 OpenAI，同时兼容支持 OpenAI 规范的 API 接口。
-- `-e PROVIDER_BASE_URL=your-provider-base-url`：设置 LLM 提供商的 API 基础 URL，部分提供商需要设置此项，例如 Ollama, LMStudio。OpenAI 提供商可选此项。
+- `-e PROVIDER_BASE_URL=your-provider-base-url`：设置 LLM 提供商的 API 基础 URL，部分提供商需要设置此项，例如 Ollama、LMStudio、OpenAI 提供商可选此项。例如 `https://api.openai.com/v1`
 - `-e PROVIDER_API_KEY=your-openai-api-key`：设置 LLM 提供商的 API 密钥，大部分提供商需要设置此项。
 - `-e LLM_DEFAULT_MODEL=your-default-model`：设置默认的 LLM 模型，用于构建页面。
 - `-e LLM_MINOR_MODEL=your-minor-model`：设置次要的 LLM 模型，用于执行其他任务。
