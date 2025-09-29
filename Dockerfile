@@ -32,10 +32,14 @@ RUN pnpm prune --prod --ignore-scripts
 FROM node:20.18.0-alpine  AS runtime
 WORKDIR /app
 
+ENV OPERATING_ENV=production
 ENV NODE_ENV=production
 ENV LOGTO_ENABLE=false
 ENV PORT=3000
 ENV HOST=0.0.0.0
+ENV USAGE_LOG_FILE=true
+ENV MAX_UPLOAD_SIZE_MB=5
+ENV LOG_LEVEL=debug
 
 # Use pnpm
 RUN corepack enable && corepack prepare pnpm@9.4.0 --activate

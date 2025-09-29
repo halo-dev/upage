@@ -46,7 +46,7 @@ runs:
           type=semver,pattern={{ version }}
           type=sha,enabled=${{ github.event_name == 'push' }}
         flavor: |
-          latest=false
+          latest=${{ github.event_name == 'release' }}
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
     - name: Set up Docker Buildx

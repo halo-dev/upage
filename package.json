@@ -13,14 +13,17 @@
     "check": "biome check --write --no-errors-on-unmatched .",
     "check:stage": "biome check --write --staged --no-errors-on-unmatched",
     "clean": "node scripts/clean.js",
-    "setup": "prisma generate && prisma migrate deploy",
+    "setup": "prisma migrate deploy && prisma generate",
     "docker:build": "docker build -t upage-ai:production -t upage-ai:latest --target runtime .",
     "docker:dev:run": "docker compose -f docker-compose-dev.yaml up",
     "docker:prod:run": "docker compose -f docker-compose-prod.yaml up",
     "prepare": "husky || true",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "docs:start": "pnpm --filter upage-docs run start",
+    "docs:build": "pnpm --filter upage-docs run build",
+    "docs:serve": "pnpm --filter upage-docs run serve"
   },
   "dependencies": {
     "@agentic/ai-sdk": "^8.4.4",

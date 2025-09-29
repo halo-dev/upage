@@ -86,7 +86,7 @@ export const gitInfoLoader: LoaderFunction = async ({
 
   if (action === 'getUser' || action === 'getRepos' || action === 'getOrgs' || action === 'getActivity') {
     // Use server-side token instead of client-side token
-    const serverGithubToken = process.env.GITHUB_ACCESS_TOKEN || context.env?.GITHUB_ACCESS_TOKEN;
+    const serverGithubToken = context.env?.GITHUB_ACCESS_TOKEN;
     const cookieToken = request.headers
       .get('Cookie')
       ?.split(';')
