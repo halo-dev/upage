@@ -51,6 +51,8 @@ docker run -d \
 
 访问 `http://localhost:3000` 即可访问 UPage 的界面。
 
+详细使用指南请参考：[UPage 在线文档](https://docs.upage.ai/quick-start)
+
 ## 致谢
 
 UPage 基于 [bolt.diy](https://github.com/stackblitz-labs/bolt.diy) 的代码结构构建，特此致谢该项目带来的启发与贡献。
