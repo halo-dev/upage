@@ -265,8 +265,8 @@ function Page({ page, onClick, selected, unsavedChanges = false }: PageProps) {
       >
         <NodeButton
           className={classNames('group', {
-            'text-upage-elements-item-contentDefault': !selected,
-            'text-upage-elements-item-contentAccent': selected,
+            'text-upage-elements-item-contentDefault dark:bg-gray-800': !selected,
+            'text-upage-elements-item-contentAccent dark:bg-gray-800': selected,
           })}
           iconClasses={classNames('i-ph:file-duotone scale-98', {
             'group-hover:text-upage-elements-item-contentActive': !selected,

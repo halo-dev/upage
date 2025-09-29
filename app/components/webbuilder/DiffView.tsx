@@ -125,7 +125,7 @@ interface FullscreenButtonProps {
 const FullscreenButton = memo(({ onClick, isFullscreen }: FullscreenButtonProps) => (
   <button
     onClick={onClick}
-    className="ml-4 p-1 rounded hover:bg-upage-elements-background-depth-3 text-upage-elements-textTertiary hover:text-upage-elements-textPrimary transition-colors"
+    className="ml-4 p-1 rounded hover:bg-upage-elements-background-depth-3 text-upage-elements-textTertiary hover:text-upage-elements-textPrimary transition-colors dark:bg-gray-800"
     title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
   >
     <div className={isFullscreen ? 'i-ph:corners-in' : 'i-ph:corners-out'} />

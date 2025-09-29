@@ -3,8 +3,14 @@
 exports[`StreamingMessageParser > valid artifacts with actions > should correctly parse chunks and strip out uPage artifacts (0) > onActionClose 1`] = `
 {
   "action": {
+    "action": "add",
     "content": "npm install",
-    "type": "shell",
+    "domId": "page-index",
+    "id": "action_1",
+    "pageName": "index",
+    "rootDomId": "section-1",
+    "sort": undefined,
+    "validRootDomId": true,
   },
   "actionId": "0",
   "artifactId": "artifact_1",
@@ -15,8 +21,14 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 exports[`StreamingMessageParser > valid artifacts with actions > should correctly parse chunks and strip out uPage artifacts (0) > onActionOpen 1`] = `
 {
   "action": {
+    "action": "add",
     "content": "",
-    "type": "shell",
+    "domId": "page-index",
+    "id": "action_1",
+    "pageName": "index",
+    "rootDomId": "section-1",
+    "sort": undefined,
+    "validRootDomId": true,
   },
   "actionId": "0",
   "artifactId": "artifact_1",
@@ -28,8 +40,8 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -37,16 +49,22 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
 exports[`StreamingMessageParser > valid artifacts with actions > should correctly parse chunks and strip out uPage artifacts (1) > onActionClose 1`] = `
 {
   "action": {
+    "action": "add",
     "content": "npm install",
-    "type": "shell",
+    "domId": "page-index",
+    "id": "action_1",
+    "pageName": "index",
+    "rootDomId": "section-1",
+    "sort": undefined,
+    "validRootDomId": true,
   },
   "actionId": "0",
   "artifactId": "artifact_1",
@@ -57,10 +75,14 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 exports[`StreamingMessageParser > valid artifacts with actions > should correctly parse chunks and strip out uPage artifacts (1) > onActionClose 2`] = `
 {
   "action": {
-    "content": "some content
-",
-    "filePath": "index.js",
-    "type": "file",
+    "action": "update",
+    "content": "some content",
+    "domId": "section-1",
+    "id": "action_2",
+    "pageName": "index",
+    "rootDomId": "section-1",
+    "sort": undefined,
+    "validRootDomId": true,
   },
   "actionId": "1",
   "artifactId": "artifact_1",
@@ -71,8 +93,14 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 exports[`StreamingMessageParser > valid artifacts with actions > should correctly parse chunks and strip out uPage artifacts (1) > onActionOpen 1`] = `
 {
   "action": {
+    "action": "add",
     "content": "",
-    "type": "shell",
+    "domId": "page-index",
+    "id": "action_1",
+    "pageName": "index",
+    "rootDomId": "section-1",
+    "sort": undefined,
+    "validRootDomId": true,
   },
   "actionId": "0",
   "artifactId": "artifact_1",
@@ -83,9 +111,14 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 exports[`StreamingMessageParser > valid artifacts with actions > should correctly parse chunks and strip out uPage artifacts (1) > onActionOpen 2`] = `
 {
   "action": {
+    "action": "update",
     "content": "",
-    "filePath": "index.js",
-    "type": "file",
+    "domId": "section-1",
+    "id": "action_2",
+    "pageName": "index",
+    "rootDomId": "section-1",
+    "sort": undefined,
+    "validRootDomId": true,
   },
   "actionId": "1",
   "artifactId": "artifact_1",
@@ -97,8 +130,8 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -106,8 +139,8 @@ exports[`StreamingMessageParser > valid artifacts with actions > should correctl
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -115,8 +148,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -124,8 +157,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -133,8 +166,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": "bundled",
 }
 `;
 
@@ -142,8 +175,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": "bundled",
 }
 `;
 
@@ -151,8 +184,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -160,8 +193,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -169,8 +202,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -178,8 +211,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -187,8 +220,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -196,26 +229,26 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
 exports[`StreamingMessageParser > valid artifacts without actions > should correctly parse chunks and strip out uPage artifacts (5) > onArtifactClose 1`] = `
 {
-  "id": "artifact_1",
+  "id": "artif name=",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
 exports[`StreamingMessageParser > valid artifacts without actions > should correctly parse chunks and strip out uPage artifacts (5) > onArtifactOpen 1`] = `
 {
-  "id": "artifact_1",
+  "id": "artif name=",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -223,8 +256,8 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;
 
@@ -232,7 +265,7 @@ exports[`StreamingMessageParser > valid artifacts without actions > should corre
 {
   "id": "artifact_1",
   "messageId": "message_1",
+  "name": "index",
   "title": "Some title",
-  "type": undefined,
 }
 `;

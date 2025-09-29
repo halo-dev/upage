@@ -510,6 +510,7 @@ export default function _1PanelConnection({
               'bg-upage-elements-button-secondary-background',
               'hover:bg-upage-elements-button-secondary-backgroundHover',
               'disabled:opacity-50 disabled:cursor-not-allowed',
+              'text-upage-elements-textPrimary',
             )}
           >
             {isConnecting ? (

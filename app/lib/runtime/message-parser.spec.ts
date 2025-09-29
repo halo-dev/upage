@@ -36,10 +36,10 @@ describe('StreamingMessageParser', () => {
   describe('invalid or incomplete artifacts', () => {
     it.each<[string | string[], ExpectedResult | string]>([
       ['Foo bar <u', 'Foo bar '],
-      ['Foo bar <uP', 'Foo bar <uP'],
+      ['Foo bar <uP', 'Foo bar '],
       ['Foo bar <uPa', 'Foo bar '],
       ['Foo bar <uPag', 'Foo bar '],
-      ['Foo bar <uPage', 'Foo bar <uPage'],
+      ['Foo bar <uPage', 'Foo bar '],
       ['Foo bar <uPageA', 'Foo bar '],
       ['Foo bar <uPageArtifacs></uPageArtifact>', 'Foo bar <uPageArtifacs></uPageArtifact>'],
       ['Before <PageArtfiact>foo</uPageArtifact> After', 'Before <PageArtfiact>foo</uPageArtifact> After'],
@@ -140,14 +140,14 @@ describe('StreamingMessageParser', () => {
   describe('valid artifacts with actions', () => {
     it.each<[string | string[], ExpectedResult | string]>([
       [
-        'Before <uPageArtifact title="Some title" id="artifact_1" name="index"><uPageAction type="shell">npm install</uPageAction></uPageArtifact> After',
+        'Before <uPageArtifact title="Some title" id="artifact_1" name="index"><uPageAction id="action_1" pageName="index" action="add" domId="page-index" rootDomId="section-1">npm install</uPageAction></uPageArtifact> After',
         {
           output: 'Before  After',
           callbacks: { onArtifactOpen: 1, onArtifactClose: 1, onActionOpen: 1, onActionClose: 1 },
         },
       ],
       [
-        'Before <uPageArtifact title="Some title" id="artifact_1"><uPageAction type="shell">npm install</uPageAction><uPageAction type="file" filePath="index.js">some content</uPageAction></uPageArtifact> After',
+        'Before <uPageArtifact title="Some title" id="artifact_1" name="index"><uPageAction id="action_1" pageName="index" action="add" domId="page-index" rootDomId="section-1">npm install</uPageAction><uPageAction id="action_2" pageName="index" action="update" domId="section-1" rootDomId="section-1">some content</uPageAction></uPageArtifact> After',
         {
           output: 'Before  After',
           callbacks: { onArtifactOpen: 1, onArtifactClose: 1, onActionOpen: 2, onActionClose: 2 },

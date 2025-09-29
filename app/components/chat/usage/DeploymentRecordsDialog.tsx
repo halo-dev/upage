@@ -350,7 +350,7 @@ export const DeploymentRecordsDialog = memo(({ isOpen, onClose }: DeploymentReco
                         </h3>
 
                         <Tabs value={activePlatform} onValueChange={handleTabChange} className="mb-4">
-                          <TabsList className="w-full border border-upage-elements-borderColor rounded-md p-1 bg-gray-50 dark:bg-gray-900/20 flex">
+                          <TabsList className="w-full border border-upage-elements-borderColor rounded-md p-1 bg-gray-50 dark:bg-gray-900/50 flex">
                             {Object.values(DeploymentPlatformEnum).map((platform, index) => {
                               const count = stats.sitesByPlatform?.[platform] || 0;
                               const isLoading = isPlatformLoading(platform);
@@ -364,8 +364,8 @@ export const DeploymentRecordsDialog = memo(({ isOpen, onClose }: DeploymentReco
                                     className={classNames(
                                       'flex-1 relative py-2 px-3 transition-all duration-200',
                                       isActive
-                                        ? 'bg-white dark:bg-gray-800 shadow-sm rounded-md text-upage-elements-textPrimary font-medium'
-                                        : 'hover:bg-gray-100/70 dark:hover:bg-gray-800/30 text-upage-elements-textSecondary',
+                                        ? 'bg-white dark:bg-gray-800 shadow-sm rounded-md text-upage-elements-textPrimary dark:text-upage-elements-textPrimary font-medium'
+                                        : 'bg-transparent dark:bg-transparent hover:bg-gray-100/70 dark:hover:bg-gray-800/30 text-upage-elements-textSecondary dark:text-upage-elements-textSecondary',
                                     )}
                                   >
                                     <div className="flex items-center justify-center gap-2">
