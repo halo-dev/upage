@@ -5,7 +5,7 @@
 const config = {
   title: 'UPage 文档',
   tagline: 'UPage 是一款基于人工智能的可视化网页构建平台',
-  favicon: '../public/favicon.svg',
+  favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
   url: 'https://docs.upage.ai',
@@ -63,10 +63,10 @@ const config = {
       // Replace with your project's social card
       image: 'img/social-card.png',
       navbar: {
-        title: 'UPage',
         logo: {
           alt: 'UPage Logo',
-          src: 'img/logo.svg',
+          src: 'img/logo1.png',
+          srcDark: 'img/logo2.png',
         },
         items: [
           {
