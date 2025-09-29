@@ -331,7 +331,7 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
 
       const continueMessage = async (text: string) => {
         logger.info(
-          `达到最大 token 限制 (${MAX_TOKENS}): 继续消息, 还可以响应 (${MAX_RESPONSE_SEGMENTS - streamSwitches} 个分段)`,
+          `达到最大 token 限制 (${DEFAULT_MODEL_DETAILS?.maxTokenAllowed || MAX_TOKENS}): 继续消息, 还可以响应 (${MAX_RESPONSE_SEGMENTS - streamSwitches} 个分段)`,
         );
         messages.push({
           id: generateId(),

@@ -24,6 +24,8 @@ UPage 使用环境变量进行配置。您可以通过以下方式设置环境�
 | `USAGE_LOG_FILE` | 是否开启文件日志 | `true` | 否 |
 | `MAX_UPLOAD_SIZE_MB` | 附件上传的最大大小 (MB) | `5` | 否 |
 | `STORAGE_DIR` | 资源文件存储位置 | `/app/storage` | 否 |
+| `MAX_RESPONSE_SEGMENTS` | 最大响应分段数 | `5` | 否 |
+| `MAX_TOKENS` | 最大 token 数 | `8000` | 否 |
 
 ## AI 提供商配置
 
