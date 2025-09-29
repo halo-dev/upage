@@ -58,9 +58,9 @@
 }
 
 .theme-logo img {
-  content: url('/img/logo1.png');
+  content: url("/img/logo1.png");
 }
 
 [data-theme="dark"] .theme-logo img {
-  content: url('/img/logo2.png');
+  content: url("/img/logo2.png");
 }
