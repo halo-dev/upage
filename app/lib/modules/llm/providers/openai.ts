@@ -1,4 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModel } from 'ai';
 import { BaseProvider } from '~/lib/modules/llm/base-provider';
 import type { ModelInfo } from '~/lib/modules/llm/types';
@@ -42,13 +43,19 @@ export default class OpenAILikeProvider extends BaseProvider {
       throw new Error(`Missing configuration for ${this.name} provider`);
     }
 
-    let openaiBaseUrl = baseUrl;
-    if (!baseUrl) {
-      openaiBaseUrl = undefined;
+    if (!!baseUrl) {
+      const provider = createOpenAICompatible({
+        name: this.name,
+        baseURL: baseUrl,
+        apiKey,
+        includeUsage: true,
+      });
+
+      return provider(model);
     }
 
     const openai = createOpenAI({
-      baseURL: openaiBaseUrl,
+      baseURL: baseUrl,
       apiKey,
     });
 

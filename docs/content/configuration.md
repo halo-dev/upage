@@ -37,13 +37,68 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_PROVIDER` | LLM 提供商，按照下述配置项配置一个 | - | 是 |
+| `LLM_PROVIDER` | LLM 提供商，**按照下述配置项配置一个** | - | 是 |
 | <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | LLM 提供商的 API 基础 URL，部分提供商需要设置此项，例如 Ollama, LMStudio。 OpenAI 可选此项 | - | 否，部分提供商不需要设置此项 |
 | <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | LLM 提供商的 API 密钥，大部分提供商需要设置此项 | - | 否，部分提供商不需要设置此项 |
 | `LLM_DEFAULT_MODEL` | 生成页面所使用的模型 | - | 是 |
 | `LLM_MINOR_MODEL` | 辅助页面生成所使用的模型 | - | 是 |
 
 以下是常见的 AI 提供商配置：
+
+### 豆包（DouBao）
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_PROVIDER` | DouBao 提供商名称 | DouBao | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | DouBao API 密钥 | - | 是（如果使用 DouBao） |
+
+:::info
+前往 [DouBao](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey) 获取 API 密钥。
+:::
+
+### 文心一言（Ernie）
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_PROVIDER` | Ernie 提供商名称 | Ernie | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Ernie API 密钥 | - | 是（如果使用 Ernie） |
+
+:::info
+前往 [Ernie](https://cloud.baidu.com/doc/WENXINWORKSHOP/s/wm9cvs292) 获取 API 密钥。
+:::
+
+### 月之暗面（Kimi）
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_PROVIDER` | Kimi 提供商名称 | Kimi | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Kimi API 密钥 | - | 是（如果使用 Kimi） |
+
+:::info
+前往 [Kimi](https://platform.moonshot.cn/console/api-keys) 获取 API 密钥。
+:::
+
+### 通义千问（Qwen）
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_PROVIDER` | Qwen 提供商名称 | Qwen | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | Qwen API 密钥 | - | 是（如果使用 Qwen） |
+
+:::info
+前往 [Qwen](https://bailian.console.aliyun.com/?spm=5176.29597918.J_SEsSjsNv72yRuRFS2VknO.2.624f7b08yj3vyX&tab=api#/api/?type=model&url=2712195) 获取 API 密钥。
+:::
+
+### 智谱 AI（ZhiPu）
+
+| 环境变量 | 描述 | 默认值 | 必填 |
+| --- | --- | --- | --- |
+| `LLM_PROVIDER` | ZhiPu 提供商名称 | ZhiPu | 是 |
+| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | ZhiPu API 密钥 | - | 是（如果使用 ZhiPu） |
+
+:::info
+前往 [ZhiPu](https://bigmodel.cn/usercenter/proj-mgmt/apikeys) 获取 API 密钥。
+:::
 
 ### Amazon Bedrock
 
@@ -206,11 +261,18 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
 | `LLM_PROVIDER` | OpenAI 提供商名称 | OpenAI | 是 |
-| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | API 基础 URL | - | 否（不填写时，使用 OpenAI 官方 API） |
+| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | 兼容 OpenAI 的 API 接口的地址 | - | 否（不填写时，使用 OpenAI 官方 API） |
 | <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | OpenAI API 密钥 | - | 是（如果使用 OpenAI） |
 
 :::info
-前往 [OpenAI](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key) 获取 API 密钥。
+此供应商也支持任何 OpenAI 兼容的 API 接口，只需要额外配置 `PROVIDER_BASE_URL` 为兼容 OpenAI 的 API 接口的地址。
+
+在一些第三方软件或平台输入自定义 URL 时，可能需要追加 /v1 或 /v1/chat/completions 等后缀。
+
+如：
+- https://your-api-base-url
+- https://your-api-base-url/v1 （目前最常见）
+- https://your-api-base-url/v1/chat/completions
 :::
 
 ### Perplexity

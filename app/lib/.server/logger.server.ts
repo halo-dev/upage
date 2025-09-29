@@ -22,7 +22,7 @@ let currentLevel: DebugLevel =
   (process.env.LOG_LEVEL as DebugLevel | undefined) || (import.meta.env.DEV ? 'debug' : 'info');
 
 // 文件日志配置
-const enableFileLogging = process.env.USAGE_LOG_FILE === 'true' || import.meta.env.DEV;
+const enableFileLogging = process.env.USAGE_LOG_FILE !== 'false';
 const logDir = path.join(process.cwd(), 'logs');
 
 // 确保日志目录存在
