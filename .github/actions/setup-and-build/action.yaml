@@ -30,3 +30,4 @@ runs:
       run: |
         pnpm install
         pnpm run build
+        pnpm prisma generate
