@@ -53,6 +53,13 @@ docker run -d \
 
 详细使用指南请参考：[UPage 在线文档](https://docs.upage.ai/quick-start)
 
+## UI 展示
+
+|  |  |
+| --- | --- |
+| ![](./img/preview-4.png) | ![](./img/preview-1.png) |
+| ![](./img/preview-2.png) | ![](./img/preview-3.png) |
+
 ## 致谢
 
 UPage 基于 [bolt.diy](https://github.com/stackblitz-labs/bolt.diy) 的代码结构构建，特此致谢该项目带来的启发与贡献。
