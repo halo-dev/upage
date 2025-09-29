@@ -116,9 +116,9 @@ UPage 支持通过环境变量进行配置。以下是一些比较重要的环�
 
 | 环境变量 | 描述 | 必填 | 示例 |
 | --- | --- | --- | --- |
-| `LLM_PROVIDER` | 默认 LLM 提供商 | 是 | `OpenAILike` |
-| `PROVIDER_BASE_URL` | OpenAI 兼容 API 基础 URL | 是 | `https://your-api-base-url` |
-| `PROVIDER_API_KEY` | OpenAI 兼容 API 密钥 | 是 | `your-openai-like-api-key` |
+| `LLM_PROVIDER` | 默认 LLM 提供商 | 是 | `OpenAI` |
+| `PROVIDER_BASE_URL` | OpenAI 兼容 API 基础 URL | 否 | `https://your-api-base-url` |
+| `PROVIDER_API_KEY` | OpenAI 兼容 API 密钥 | 否 | `your-openai-api-key` |
 
 ### 大模型配置
 

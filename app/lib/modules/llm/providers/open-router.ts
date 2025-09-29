@@ -37,7 +37,7 @@ export default class OpenRouterProvider extends BaseProvider {
     },
     {
       name: 'deepseek/deepseek-coder',
-      label: 'Deepseek-Coder V2 236B (OpenRouter)',
+      label: 'DeepSeek-Coder V2 236B (OpenRouter)',
       provider: 'OpenRouter',
       maxTokenAllowed: 8000,
     },

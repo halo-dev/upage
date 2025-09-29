@@ -5,7 +5,7 @@ import type { ModelInfo } from '~/lib/modules/llm/types';
 import type { IProviderSetting } from '~/types/model';
 
 export default class DeepseekProvider extends BaseProvider {
-  name = 'Deepseek';
+  name = 'DeepSeek';
   getApiKeyLink = 'https://platform.deepseek.com/apiKeys';
 
   config = {
@@ -14,9 +14,9 @@ export default class DeepseekProvider extends BaseProvider {
   };
 
   staticModels: ModelInfo[] = [
-    { name: 'deepseek-coder', label: 'Deepseek-Coder', provider: 'Deepseek', maxTokenAllowed: 8000 },
-    { name: 'deepseek-chat', label: 'Deepseek-Chat', provider: 'Deepseek', maxTokenAllowed: 8000 },
-    { name: 'deepseek-reasoner', label: 'Deepseek-Reasoner', provider: 'Deepseek', maxTokenAllowed: 8000 },
+    { name: 'deepseek-coder', label: 'DeepSeek-Coder', provider: 'DeepSeek', maxTokenAllowed: 8000 },
+    { name: 'deepseek-chat', label: 'DeepSeek-Chat', provider: 'DeepSeek', maxTokenAllowed: 8000 },
+    { name: 'deepseek-reasoner', label: 'DeepSeek-Reasoner', provider: 'DeepSeek', maxTokenAllowed: 8000 },
   ];
 
   getModelInstance(options: { model: string; providerSettings?: Record<string, IProviderSetting> }): LanguageModel {

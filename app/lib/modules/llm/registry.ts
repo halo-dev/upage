@@ -12,7 +12,6 @@ import MistralProvider from './providers/mistral';
 import OllamaProvider from './providers/ollama';
 import OpenRouterProvider from './providers/open-router';
 import OpenAIProvider from './providers/openai';
-import OpenAILikeProvider from './providers/openai-like';
 import PerplexityProvider from './providers/perplexity';
 import TogetherProvider from './providers/together';
 import XAIProvider from './providers/xai';
@@ -29,7 +28,6 @@ export {
   OllamaProvider,
   OpenAIProvider,
   OpenRouterProvider,
-  OpenAILikeProvider,
   PerplexityProvider,
   XAIProvider,
   TogetherProvider,

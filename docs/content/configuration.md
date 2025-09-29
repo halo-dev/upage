@@ -38,7 +38,7 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
 | `LLM_PROVIDER` | LLM 提供商，按照下述配置项配置一个 | - | 是 |
-| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | LLM 提供商的 API 基础 URL，部分提供商需要设置此项，例如 OpenAILike, Ollama, LMStudio | - | 否，部分提供商不需要设置此项 |
+| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | LLM 提供商的 API 基础 URL，部分提供商需要设置此项，例如 Ollama, LMStudio。 OpenAI 可选此项 | - | 否，部分提供商不需要设置此项 |
 | <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | LLM 提供商的 API 密钥，大部分提供商需要设置此项 | - | 否，部分提供商不需要设置此项 |
 | `LLM_DEFAULT_MODEL` | 生成页面所使用的模型 | - | 是 |
 | `LLM_MINOR_MODEL` | 辅助页面生成所使用的模型 | - | 是 |
@@ -95,7 +95,7 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
-| `LLM_PROVIDER` | DeepSeek 提供商名称 | Deepseek | 是 |
+| `LLM_PROVIDER` | DeepSeek 提供商名称 | DeepSeek | 是 |
 | <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | DeepSeek API 密钥 | - | 是（如果使用 DeepSeek） |
 
 :::info
@@ -201,19 +201,12 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 前往 [OpenRouter](https://openrouter.ai/settings/keys) 获取 API 密钥。
 :::
 
-### 兼容 OpenAI 接口的服务
-
-| 环境变量 | 描述 | 默认值 | 必填 |
-| --- | --- | --- | --- |
-| `LLM_PROVIDER` | OpenAILike 提供商名称 | OpenAILike | 是 |
-| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | API 基础 URL | - | 是（如果使用 OpenAILike） |
-| <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | API 密钥 | - | 是（如果使用 OpenAILike） |
-
 ### OpenAI
 
 | 环境变量 | 描述 | 默认值 | 必填 |
 | --- | --- | --- | --- |
 | `LLM_PROVIDER` | OpenAI 提供商名称 | OpenAI | 是 |
+| <span className="base-url-highlight">`PROVIDER_BASE_URL`</span> | API 基础 URL | - | 否（不填写时，使用 OpenAI 官方 API） |
 | <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | OpenAI API 密钥 | - | 是（如果使用 OpenAI） |
 
 :::info
@@ -358,8 +351,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # 使用 OpenAI 兼容接口的提供商配置
-      - LLM_PROVIDER=OpenAILike
+      # 使用 OpenAI 提供商配置，同时兼容 OpenAI 规范的 API 接口
+      - LLM_PROVIDER=OpenAI
+      # 此项可选，不填写时，使用 OpenAI 官方 API
       - PROVIDER_BASE_URL=your-openai-api-base-url
       - PROVIDER_API_KEY=your-openai-api-key
       - LLM_DEFAULT_MODEL=gpt-4.1

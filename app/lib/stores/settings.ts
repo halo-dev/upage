@@ -25,9 +25,6 @@ export interface Shortcuts {
   toggleTheme: Shortcut;
 }
 
-export const URL_CONFIGURABLE_PROVIDERS = ['Ollama', 'LMStudio', 'OpenAILike'];
-export const LOCAL_PROVIDERS = ['OpenAILike', 'LMStudio', 'Ollama'];
-
 // Simplified shortcuts store with only theme toggle
 export const shortcutsStore = map<Shortcuts>({
   toggleTheme: {

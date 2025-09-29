@@ -39,9 +39,9 @@ docker run -d \
   --name upage \
   --restart unless-stopped \
   -p 3000:3000 \
-  -e LLM_PROVIDER=OpenAILike \
-  -e PROVIDER_BASE_URL=your-openai-like-api-base-url \
-  -e PROVIDER_API_KEY=your-openai-like-api-key \
+  -e LLM_PROVIDER=OpenAI \
+  -e PROVIDER_BASE_URL=your-openai-api-base-url \
+  -e PROVIDER_API_KEY=your-openai-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
   -v ./data:/app/data \

@@ -29,9 +29,9 @@ docker run -d \
   --name upage \
   --restart unless-stopped \
   -p 3000:3000 \
-  -e LLM_PROVIDER=OpenAILike \
-  -e PROVIDER_BASE_URL=your-openai-like-api-base-url \
-  -e PROVIDER_API_KEY=your-openai-like-api-key \
+  -e LLM_PROVIDER=OpenAI \
+  -e PROVIDER_BASE_URL=your-openai-api-base-url \
+  -e PROVIDER_API_KEY=your-openai-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
   -v ./data:/app/data \
@@ -42,9 +42,9 @@ docker run -d \
 
 ### 参数说明
 
-- `-e LLM_PROVIDER=OpenAILike`：设置默认的 LLM 提供商
-- `-e PROVIDER_BASE_URL=your-openai-like-api-base-url`：设置 API 基础 URL
-- `-e PROVIDER_API_KEY=your-openai-like-api-key`：设置 API 密钥
+- `-e LLM_PROVIDER=OpenAI`：设置默认的 LLM 提供商
+- `-e PROVIDER_BASE_URL=your-openai-api-base-url`：设置 API 基础 URL
+- `-e PROVIDER_API_KEY=your-openai-api-key`：设置 API 密钥
 - `-e LLM_DEFAULT_MODEL=your-default-model`：设置用于页面生成的默认 AI 模型
 - `-e LLM_MINOR_MODEL=your-minor-model`：设置用于辅助任务的 AI 模型
 - `-v ./data:/app/data`：挂载数据目录，用于存储数据库文件
@@ -67,26 +67,18 @@ UPage 支持多种 AI 提供商，您需要至少配置一个 AI 提供商才能
 ### DeepSeek
 
 ```bash
--e LLM_PROVIDER=Deepseek \
+-e LLM_PROVIDER=DeepSeek \
 -e PROVIDER_API_KEY=your-deepseek-api-key \
 -e LLM_DEFAULT_MODEL=deepseek-chat \
 -e LLM_MINOR_MODEL=deepseek-reasoner
-```
-
-### 兼容 OpenAI 接口的服务
-
-```bash
--e LLM_PROVIDER=OpenAILike \
--e PROVIDER_BASE_URL=https://your-api-base-url \
--e PROVIDER_API_KEY=your-api-key \
--e LLM_DEFAULT_MODEL=your-model-name \
--e LLM_MINOR_MODEL=your-minor-model-name
 ```
 
 ### OpenAI
 
 ```bash
 -e LLM_PROVIDER=OpenAI \
+# 此项可选，不填写时，使用 OpenAI 官方 API
+-e PROVIDER_BASE_URL=your-openai-api-base-url \
 -e PROVIDER_API_KEY=your-openai-api-key \
 -e LLM_DEFAULT_MODEL=gpt-4-turbo \
 -e LLM_MINOR_MODEL=gpt-3.5-turbo
