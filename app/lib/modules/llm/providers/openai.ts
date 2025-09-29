@@ -42,8 +42,13 @@ export default class OpenAILikeProvider extends BaseProvider {
       throw new Error(`Missing configuration for ${this.name} provider`);
     }
 
+    let openaiBaseUrl = baseUrl;
+    if (!baseUrl) {
+      openaiBaseUrl = undefined;
+    }
+
     const openai = createOpenAI({
-      baseURL: baseUrl,
+      baseURL: openaiBaseUrl,
       apiKey,
     });
 
