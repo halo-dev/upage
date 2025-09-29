@@ -87,7 +87,7 @@ export function UPageBrand() {
               ripple.remove();
             }, 600);
 
-            window.open('https://upage.ai', '_blank');
+            window.open('https://docs.upage.ai', '_blank');
           });
         }
       });
