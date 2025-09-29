@@ -8,7 +8,7 @@ const config = {
   favicon: '../public/favicon.svg',
 
   // Set the production url of your site here
-  url: 'https://halo-dev.github.io',
+  url: 'https://docs.upage.ai',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -28,6 +28,11 @@ const config = {
   i18n: {
     defaultLocale: 'zh-Hans',
     locales: ['zh-Hans'],
+  },
+
+  future: {
+    experimental_faster: true,
+    v4: true,
   },
 
   presets: [
@@ -121,6 +126,7 @@ const config = {
       prism: {
         theme: require('prism-react-renderer').themes.github,
         darkTheme: require('prism-react-renderer').themes.dracula,
+        additionalLanguages: ['bash']
       },
       colorMode: {
         defaultMode: 'light',
