@@ -33,6 +33,7 @@ const sidebars = {
       items: [
         'deployment/docker',
         'deployment/docker-compose',
+        'deployment/1panel',
         'deployment/source',
         'deployment/logto',
         'deployment/others',
