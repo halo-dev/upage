@@ -51,6 +51,8 @@ docker run -d \
 
 访问 `http://localhost:3000` 即可访问 UPage 的界面。
 
+你也可以通过 [1Panel 应用商店](https://1panel.cn/) 来安装部署 UPage。
+
 详细使用指南请参考：[UPage 在线文档](https://docs.upage.ai/quick-start)
 
 ## UI 展示
