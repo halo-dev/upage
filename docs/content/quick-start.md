@@ -37,7 +37,7 @@ docker run -d \
   -v ./data:/app/data \
   -v ./logs:/app/logs \
   -v ./storage:/app/storage \
-  halo-dev/upage:latest
+  halohub/upage:latest
 ```
 
 ### 参数说明
