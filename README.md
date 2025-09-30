@@ -54,6 +54,12 @@ docker run -d \
 
 详细使用指南请参考：[UPage 在线文档](https://docs.upage.ai/quick-start)
 
+### 联系我们
+
+如你有更多问题，可以加入我们的技术交流群与我们交流。
+
+<img width="180" height="180" alt="contact_me_qr" src="./img/wecom.png">
+
 ## UI 展示
 
 |  |  |
