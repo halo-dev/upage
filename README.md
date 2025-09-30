@@ -6,7 +6,6 @@
 <p align="center">
 <a href="https://github.com/halo-dev/upage/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/halo-dev/upage.svg?style=flat-square&include_prereleases" /></a>
 <a href="https://github.com/halo-dev/upage/commits"><img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/halo-dev/upage.svg?style=flat-square" /></a>
-<a href="https://github.com/halo-dev/upage/actions"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/halo-dev/upage/halo.yaml?branch=main&style=flat-square" /></a>
 <a href="https://halo-dev.github.io/upage/"><img alt="Documentation" src="https://img.shields.io/badge/docs-latest-blue?style=flat-square" /></a>
 </p>
 
