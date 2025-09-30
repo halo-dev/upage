@@ -54,6 +54,9 @@ const sidebars = {
       },
       items: [
         'user-guide/basics',
+        'user-guide/home',
+        'user-guide/dialogue-interface',
+        'user-guide/share',
       ],
     },
     {
