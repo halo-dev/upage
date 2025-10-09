@@ -23,6 +23,8 @@ const remixHandler = createRequestHandler({
 
 const app = express();
 
+app.set('trust proxy', true);
+
 app.use(
   cors({
     // 允许所有来源访问，生产环境中应该设置为特定的域名
@@ -41,6 +43,7 @@ const globalLimiter = rateLimit({
   standardHeaders: 'draft-7', // 返回标准的 RateLimit 头信息
   legacyHeaders: false, // 禁用旧的 X-RateLimit 头信息
   message: '请求过于频繁，请稍后再试',
+  proxy: true,
 });
 
 // 针对聊天 API 的特殊限流中间件
@@ -52,6 +55,7 @@ const chatApiLimiter = rateLimit({
   message: '聊天请求过于频繁，请稍后再试',
   // 仅对聊天 API 路由应用此限制
   skip: (req) => !req.url.includes('/api/chat'),
+  proxy: true,
 });
 
 app.use((req, res, next) => {
