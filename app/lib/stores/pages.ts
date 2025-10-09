@@ -33,27 +33,27 @@ export class PagesStore {
    * @note 跟踪所有自上次用户消息以来被修改的文件及其原始内容，以便模型感知这些更改。
    * 当用户发送另一条消息且所有更改都需要提交时，需要重置。
    */
-  private modifiedPages: Map<string, string> = import.meta.hot?.data.modifiedPages ?? new Map();
+  private modifiedPages: Map<string, string> = import.meta.hot?.data?.modifiedPages ?? new Map();
 
   /**
    * 跟踪已删除的页面，防止它们在重新加载时重新出现
    */
-  private deletedPages: Set<string> = import.meta.hot?.data.deletedPages ?? new Set();
+  private deletedPages: Set<string> = import.meta.hot?.data?.deletedPages ?? new Set();
 
   /**
    * 页面映射，与 AI 做交互，基于 artifacts 数据解析而来。
    * 因此，此数据表示与数据库通信的底层数据，未保存的数据将不会在此处体现。
    * 如果在编辑器中确定保存了数据，则需要实时同步进 #modifiedPages 中。
    */
-  pages: MapStore<PageMap> = import.meta.hot?.data.pages ?? map({});
+  pages: MapStore<PageMap> = import.meta.hot?.data?.pages ?? map({});
 
   /**
    * 页面历史记录，用于 diff 视图。
    * 每次页面保存时，会保存上一次的页面内容。
    */
-  pageHistory: MapStore<Record<string, PageHistory>> = import.meta.hot?.data.pageHistory ?? map({});
+  pageHistory: MapStore<Record<string, PageHistory>> = import.meta.hot?.data?.pageHistory ?? map({});
 
-  activePage: ActivePage = import.meta.hot?.data.activePage ?? atom<string | undefined>();
+  activePage: ActivePage = import.meta.hot?.data?.activePage ?? atom<string | undefined>();
   currentPage = computed([this.pages, this.activePage], (pages, activePage) => {
     if (!activePage) {
       return undefined;
@@ -64,11 +64,11 @@ export class PagesStore {
   /**
    * 基于 action 的 section 映射，作为与 AI 交互的底层数据，基于 actions 数据解析而来。
    */
-  sections: MapStore<SectionMap> = import.meta.hot?.data.sections ?? map({});
+  sections: MapStore<SectionMap> = import.meta.hot?.data?.sections ?? map({});
   /**
    * 当前活跃的 section。
    */
-  activeSection: ActiveSection = import.meta.hot?.data.activeSection ?? atom<string | undefined>();
+  activeSection: ActiveSection = import.meta.hot?.data?.activeSection ?? atom<string | undefined>();
 
   currentSection = computed([this.sections, this.activeSection], (sections, activeSection) => {
     if (!activeSection) {
@@ -100,7 +100,7 @@ export class PagesStore {
       logger.error('Failed to load deleted paths from localStorage', error);
     }
 
-    if (import.meta.hot) {
+    if (import.meta.hot && import.meta.hot.data) {
       // Persist our state across hot reloads
       import.meta.hot.data.pages = this.pages;
       import.meta.hot.data.modifiedPages = this.modifiedPages;

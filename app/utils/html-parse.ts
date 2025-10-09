@@ -7,6 +7,102 @@ export function isScriptContent(content: string): boolean {
 }
 
 /**
+ * 验证第一个标签（根节点）的完整性
+ * @param content 内容字符串
+ * @returns 验证结果，包括是否有效、根元素 id 和标签名
+ */
+function validateRootTagCompleteness(content: string): { valid: boolean; rootId?: string; tagName?: string } {
+  const trimmedContent = content.trim();
+
+  if (!trimmedContent.startsWith('<')) {
+    logger.warn('内容不以标签开始');
+    return { valid: false };
+  }
+
+  // 查找第一个完整的开始标签（找到第一个 >）
+  const firstTagEndIndex = trimmedContent.indexOf('>');
+
+  if (firstTagEndIndex === -1) {
+    logger.warn('根标签不完整：未找到闭合的 >');
+    return { valid: false };
+  }
+
+  // 提取第一个完整的标签（包括 >）
+  const firstTag = trimmedContent.substring(0, firstTagEndIndex + 1);
+
+  // 提取标签名称（支持 <tagName 或 <tagName空格 的形式）
+  const tagNameMatch = firstTag.match(/^<([a-zA-Z][a-zA-Z0-9]*)/);
+
+  if (!tagNameMatch) {
+    logger.warn('无法提取标签名称');
+    return { valid: false };
+  }
+
+  const tagName = tagNameMatch[1];
+
+  // 验证 id 属性是否存在且完整
+  // 支持 id="..." 或 id='...' 两种形式
+  const idPattern = /id=["']([^"']+)["']/;
+  const idMatch = firstTag.match(idPattern);
+
+  if (!idMatch) {
+    logger.warn('根标签缺少完整的 id 属性', { tagName });
+    return { valid: false };
+  }
+
+  const rootId = idMatch[1];
+
+  return { valid: true, rootId, tagName };
+}
+
+/**
+ * 验证指定标签的闭合标签是否完整
+ * @param content 内容字符串
+ * @param tagName 标签名称
+ * @returns 是否存在完整的闭合标签
+ */
+function validateClosingTag(content: string, tagName: string): boolean {
+  const closingTag = `</${tagName}>`;
+  return content.includes(closingTag);
+}
+
+/**
+ * 检查内容中是否存在明显不完整的标签
+ * @param content 内容字符串
+ * @returns 是否存在不完整的标签
+ */
+function hasIncompleteTag(content: string): boolean {
+  // 检查内容末尾是否有不完整的闭合标签
+  // 匹配 </、</d、</div 等（没有 > 的闭合标签）
+  const incompleteClosingTagPattern = /<\/([a-zA-Z][a-zA-Z0-9]*)?$/;
+
+  if (incompleteClosingTagPattern.test(content)) {
+    logger.warn('检测到不完整的闭合标签', { contentEnd: content.slice(-20) });
+    return true;
+  }
+
+  // 检查内容末尾是否有不完整的开始标签
+  // 匹配以 < 开头但没有对应 > 的情况
+  const incompleteOpeningTagPattern = /<[a-zA-Z][^>]*$/;
+
+  if (incompleteOpeningTagPattern.test(content)) {
+    logger.warn('检测到不完整的开始标签', { contentEnd: content.slice(-20) });
+    return true;
+  }
+
+  // 检查内容末尾是否有孤立的 <
+  // 匹配末尾单独的 < 字符（不属于任何标签）
+  const isolatedLessThanPattern = /<$/;
+
+  if (isolatedLessThanPattern.test(content)) {
+    logger.warn('检测到末尾孤立的 < 字符', { contentEnd: content.slice(-20) });
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * 验证内容是否有效
  * - 检查是否包含完整的 id 属性
  * - 检查是否符合内容类型要求（HTML、JS、CSS）
@@ -18,8 +114,20 @@ export function isValidContent(content: string): boolean {
     return false;
   }
 
-  // 处理可能存在的不完整标签
-  content = sanitizeHtmlContent(content);
+  // 检查是否存在明显不完整的标签
+  if (hasIncompleteTag(content)) {
+    logger.warn('内容包含不完整的标签');
+    return false;
+  }
+
+  // 验证根节点标签完整性
+  const rootValidation = validateRootTagCompleteness(content);
+  if (!rootValidation.valid) {
+    logger.warn('根节点标签验证失败');
+    return false;
+  }
+
+  const { rootId } = rootValidation;
 
   try {
     // 创建一个临时的 DOM 解析器
@@ -28,6 +136,12 @@ export function isValidContent(content: string): boolean {
 
     // 检查内容类型
     if (content.trim().startsWith('<script')) {
+      // 对于 script，验证闭合标签完整性
+      if (!validateClosingTag(content, 'script')) {
+        logger.warn('script 标签缺少完整的闭合标签 </script>');
+        return false;
+      }
+
       // JavaScript 内容验证
       const scriptElements = doc.getElementsByTagName('script');
 
@@ -47,15 +161,12 @@ export function isValidContent(content: string): boolean {
         return false;
       }
 
-      // 检查 id 是否完整，即属性在原始内容中是否以 id="..." 或 id='...' 的形式完整出现
-      if (content.indexOf(`id="${scriptElement.id}"`) === -1 && content.indexOf(`id='${scriptElement.id}'`) === -1) {
-        logger.warn('JS content contains incomplete id attribute', { contentLength: content.length });
-        return false;
-      }
-
-      // 检查 script 标签是否有完整的闭合标签
-      if (!content.includes('</script>')) {
-        logger.warn('JS content must have closing </script> tag', { contentLength: content.length });
+      // 验证提取的 id 与 DOMParser 解析的 id 一致
+      if (scriptElement.id !== rootId) {
+        logger.warn('script 标签 id 不一致', {
+          extractedId: rootId,
+          parsedId: scriptElement.id,
+        });
         return false;
       }
 
@@ -63,6 +174,12 @@ export function isValidContent(content: string): boolean {
     }
 
     if (content.trim().startsWith('<style')) {
+      // 对于 style，验证闭合标签完整性
+      if (!validateClosingTag(content, 'style')) {
+        logger.warn('style 标签缺少完整的闭合标签 </style>');
+        return false;
+      }
+
       // CSS 内容验证
       const styleElements = doc.getElementsByTagName('style');
 
@@ -82,14 +199,12 @@ export function isValidContent(content: string): boolean {
         return false;
       }
 
-      if (content.indexOf(`id="${styleElement.id}"`) === -1 && content.indexOf(`id='${styleElement.id}'`) === -1) {
-        logger.warn('CSS content contains incomplete id attribute', { contentLength: content.length });
-        return false;
-      }
-
-      // 检查 style 标签是否有完整的闭合标签
-      if (!content.includes('</style>')) {
-        logger.warn('style content must have closing </style> tag');
+      // 验证提取的 id 与 DOMParser 解析的 id 一致
+      if (styleElement.id !== rootId) {
+        logger.warn('style 标签 id 不一致', {
+          extractedId: rootId,
+          parsedId: styleElement.id,
+        });
         return false;
       }
 
@@ -115,8 +230,12 @@ export function isValidContent(content: string): boolean {
       return false;
     }
 
-    if (content.indexOf(`id="${rootElement.id}"`) === -1 && content.indexOf(`id='${rootElement.id}'`) === -1) {
-      logger.warn('HTML content contains incomplete id attribute');
+    // 验证提取的 id 与 DOMParser 解析的 id 一致
+    if (rootElement.id !== rootId) {
+      logger.warn('HTML 根元素 id 不一致', {
+        extractedId: rootId,
+        parsedId: rootElement.id,
+      });
       return false;
     }
 

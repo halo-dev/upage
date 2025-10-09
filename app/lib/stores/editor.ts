@@ -31,11 +31,11 @@ export const editorCommands = atom<EditorCommand | null>(null);
 export class EditorStore {
   private readonly pagesStore: PagesStore;
 
-  editorInstance: WritableAtom<Editor | null> = import.meta.hot?.data.editorInstance ?? atom<Editor | null>(null);
+  editorInstance: WritableAtom<Editor | null> = import.meta.hot?.data?.editorInstance ?? atom<Editor | null>(null);
   // 编辑器中当前选中的文档。
-  selectedDocument: SelectedDocument = import.meta.hot?.data.selectedPage ?? atom<string | undefined>();
+  selectedDocument: SelectedDocument = import.meta.hot?.data?.selectedPage ?? atom<string | undefined>();
   // 编辑器文档数据，始终是与编辑器所保持的最新数据，但此数据不一定执行了保存。
-  editorDocuments: MapStore<EditorDocuments> = import.meta.hot?.data.documents ?? map({});
+  editorDocuments: MapStore<EditorDocuments> = import.meta.hot?.data?.documents ?? map({});
   // 当前编辑器文档，基于 editorDocuments 和 selectedDocument 计算而来。始终是与编辑器所保持的最新数据，但此数据不一定执行了保存。
   currentDocument = computed([this.editorDocuments, this.selectedDocument], (documents, selectedDocument) => {
     if (!selectedDocument) {
@@ -44,15 +44,15 @@ export class EditorStore {
     return documents[selectedDocument];
   });
   // 当前编辑器未保存的页面
-  unsavedDocuments: WritableAtom<Set<string>> = import.meta.hot?.data.unsavedDocuments ?? atom(new Set<string>());
+  unsavedDocuments: WritableAtom<Set<string>> = import.meta.hot?.data?.unsavedDocuments ?? atom(new Set<string>());
   // 编辑器文档最后保存时间
   documentLastSaved: WritableAtom<Record<string, number>> =
-    import.meta.hot?.data.documentLastSaved ?? atom<Record<string, number>>({});
+    import.meta.hot?.data?.documentLastSaved ?? atom<Record<string, number>>({});
 
   constructor(pagesStore: PagesStore) {
     this.pagesStore = pagesStore;
 
-    if (import.meta.hot) {
+    if (import.meta.hot && import.meta.hot.data) {
       import.meta.hot.data.unsavedDocuments = this.unsavedDocuments;
       import.meta.hot.data.selectedDocument = this.selectedDocument;
       import.meta.hot.data.editorDocuments = this.editorDocuments;

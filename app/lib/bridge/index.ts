@@ -4,11 +4,11 @@ interface BridgeContext {
   loaded: boolean;
 }
 
-export const bridgeContext: BridgeContext = import.meta.hot?.data.editorBridgeContext ?? {
+export const bridgeContext: BridgeContext = import.meta.hot?.data?.editorBridgeContext ?? {
   loaded: false,
 };
 
-if (import.meta.hot) {
+if (import.meta.hot && import.meta.hot.data) {
   import.meta.hot.data.editorBridgeContext = bridgeContext;
 }
 
@@ -171,7 +171,7 @@ export let editorBridge: Promise<EditorBridge> = new Promise(() => {
 
 if (!import.meta.env.SSR) {
   editorBridge =
-    import.meta.hot?.data.editorBridge ??
+    import.meta.hot?.data?.editorBridge ??
     Promise.resolve()
       .then(() => {
         return new EditorBridge();
@@ -181,7 +181,7 @@ if (!import.meta.env.SSR) {
         return editorBridge;
       });
 
-  if (import.meta.hot) {
+  if (import.meta.hot && import.meta.hot.data) {
     import.meta.hot.data.editorBridge = editorBridge;
   }
 }

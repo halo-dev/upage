@@ -37,9 +37,9 @@ export class WebBuilderStore {
   readonly editorStore: EditorStore;
 
   // 是否显示 webBuilder
-  showWorkbench: WritableAtom<boolean> = import.meta.hot?.data.showWorkbench ?? atom(false);
+  showWorkbench: WritableAtom<boolean> = import.meta.hot?.data?.showWorkbench ?? atom(false);
   // 当前 webBuilder 所在的视图
-  currentView: WritableAtom<WebBuilderViewType> = import.meta.hot?.data.currentView ?? atom('code');
+  currentView: WritableAtom<WebBuilderViewType> = import.meta.hot?.data?.currentView ?? atom('code');
 
   constructor() {
     this.previewsStore = new PreviewsStore();
@@ -47,7 +47,7 @@ export class WebBuilderStore {
     this.chatStore = new ChatStore(this, this.pagesStore);
     this.editorStore = new EditorStore(this.pagesStore);
 
-    if (import.meta.hot) {
+    if (import.meta.hot && import.meta.hot.data) {
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
     }

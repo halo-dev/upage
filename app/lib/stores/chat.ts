@@ -27,14 +27,14 @@ export class ChatStore {
 
   // 当前消息 id
   currentMessageId: WritableAtom<string | undefined> =
-    import.meta.hot?.data.currentMessageId ?? atom<string | undefined>(undefined);
+    import.meta.hot?.data?.currentMessageId ?? atom<string | undefined>(undefined);
   currentDescription: WritableAtom<string | undefined> =
-    import.meta.hot?.data.currentDescription ?? atom<string | undefined>(undefined);
+    import.meta.hot?.data?.currentDescription ?? atom<string | undefined>(undefined);
 
-  artifacts: Artifacts = import.meta.hot?.data.artifacts ?? map({});
+  artifacts: Artifacts = import.meta.hot?.data?.artifacts ?? map({});
   artifactIdList: string[] = [];
   actionAlert: WritableAtom<ActionAlert | undefined> =
-    import.meta.hot?.data.actionAlert ?? atom<ActionAlert | undefined>(undefined);
+    import.meta.hot?.data?.actionAlert ?? atom<ActionAlert | undefined>(undefined);
 
   // 添加对webBuilderStore和pagesStore的引用
   readonly webBuilderStore: WebBuilderStore;
@@ -44,7 +44,7 @@ export class ChatStore {
     this.webBuilderStore = webBuilderStore;
     this.pagesStore = pagesStore;
 
-    if (import.meta.hot) {
+    if (import.meta.hot && import.meta.hot.data) {
       import.meta.hot.data.artifacts = this.artifacts;
       import.meta.hot.data.actionAlert = this.actionAlert;
       import.meta.hot.data.currentDescription = this.currentDescription;

@@ -28,7 +28,6 @@ interface Props {
   editable?: boolean;
   debounceChange?: number;
   debounceScroll?: number;
-  autoFocusOnDocumentChange?: boolean;
   onChange?: OnChangeCallback;
   onReset?: () => void;
   onSave?: OnSaveCallback;
@@ -39,7 +38,7 @@ interface Props {
 }
 
 export const EditorStudio = memo(
-  ({ documents, currentPage, currentSection, autoFocusOnDocumentChange, onChange, onSave, onLoad, onReady }: Props) => {
+  ({ documents, currentPage, currentSection, onChange, onSave, onLoad, onReady }: Props) => {
     const editorRef = useRef<Editor | null>(null);
 
     const pendingSectionRef = useRef<Section | null>(null);
@@ -134,7 +133,7 @@ export const EditorStudio = memo(
       // 保存最新的页面属性，确保在节流期间如果有新的更新进来，会使用最新的数据
       pendingSectionRef.current = currentSection;
       setEditorDocument(editor, currentSection);
-    }, [currentSection, autoFocusOnDocumentChange]);
+    }, [currentSection]);
 
     // 确保在组件卸载前应用最后一次更新
     useEffect(() => {

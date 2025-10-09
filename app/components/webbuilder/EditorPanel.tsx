@@ -6,7 +6,6 @@ import type { PageMap } from '~/lib/stores/pages';
 import type { PageHistory, Section } from '~/types/actions';
 import type { DocumentProperties } from '~/types/editor';
 import { logger, renderLogger } from '~/utils/logger';
-import { isMobile } from '~/utils/mobile';
 import {
   EditorStudio,
   type OnChangeCallback,
@@ -84,7 +83,6 @@ export const EditorPanel = memo(
                     settings={editorSettings}
                     currentPage={currentPage}
                     currentSection={currentSection}
-                    autoFocusOnDocumentChange={!isMobile()}
                     onChange={onEditorChange}
                     onSave={onPageSave}
                     onReset={onPageReset}
