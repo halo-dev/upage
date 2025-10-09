@@ -104,6 +104,9 @@ export function useChatMessage({
 
   useEffect(() => {
     setStreamingState(status === 'streaming');
+    if (status === 'submitted') {
+      setProgressAnnotations([]);
+    }
   }, [status]);
 
   const addProgressMessage = (progress: ProgressAnnotation) => {
