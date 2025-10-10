@@ -37,6 +37,24 @@ export function useProject() {
       logger.error('保存项目失败: 页面或 Section 不能为空');
       return false;
     }
+    const isConsistent = projectPages.every((page) => {
+      const actionIds = page.actionIds;
+      const content = page.content;
+      if (actionIds.length === 0) {
+        return true;
+      }
+      if (!content) {
+        return false;
+      }
+      return true;
+    });
+    if (!isConsistent) {
+      logger.error('保存项目失败: 页面内容与 actions 不一致', {
+        projectPages,
+        projectSections,
+      });
+      return false;
+    }
     try {
       // 先保存在本地数据中
       saveEditorProject(messageId, projectPages, projectSections);

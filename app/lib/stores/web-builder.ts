@@ -112,8 +112,11 @@ export class WebBuilderStore {
   }
 
   async setDocumentContent(pageName: string, _html: string) {
+    if (_html.trim() === '') {
+      return;
+    }
     // 更新内容，但不会触发保存，不会保存至 pages 中。
-    this.editorStore.updateDocumentContent(pageName, _html ?? '');
+    this.editorStore.updateDocumentContent(pageName, _html);
   }
 
   /**
