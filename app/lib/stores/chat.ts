@@ -18,8 +18,9 @@ export interface ArtifactState {
 }
 
 export type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
-
-type Artifacts = MapStore<Record<string, ArtifactState>>;
+type ArtifactsByPageName = Map<string, ArtifactState>;
+type ArtifactsByMessageId = Map<string, ArtifactsByPageName>;
+type Artifacts = MapStore<ArtifactsByMessageId>;
 
 export class ChatStore {
   private globalExecutionQueue = Promise.resolve();
@@ -31,8 +32,8 @@ export class ChatStore {
   currentDescription: WritableAtom<string | undefined> =
     import.meta.hot?.data?.currentDescription ?? atom<string | undefined>(undefined);
 
-  artifacts: Artifacts = import.meta.hot?.data?.artifacts ?? map({});
-  artifactIdList: string[] = [];
+  artifacts: Artifacts = import.meta.hot?.data?.artifacts ?? map(new Map());
+  artifactIdList: { messageId: string; pageName: string }[] = [];
   actionAlert: WritableAtom<ActionAlert | undefined> =
     import.meta.hot?.data?.actionAlert ?? atom<ActionAlert | undefined>(undefined);
 
@@ -60,7 +61,12 @@ export class ChatStore {
   }
 
   get firstArtifact(): ArtifactState | undefined {
-    return this.getArtifact(this.artifactIdList[0]);
+    if (this.artifactIdList.length === 0) {
+      return undefined;
+    }
+
+    const { messageId, pageName } = this.artifactIdList[0];
+    return this.getArtifact(messageId, pageName);
   }
 
   get description() {
@@ -76,31 +82,30 @@ export class ChatStore {
   }
 
   abortAllActions() {
-    // TODO: what do we wanna do and how do we wanna recover from this?
     const artifacts = this.artifacts.get();
 
-    Object.values(artifacts).forEach((artifact) => {
-      const actions = artifact.runner.actions.get();
-
-      Object.values(actions).forEach((action) => {
-        if (action.status === 'running' || action.status === 'pending') {
-          action.abort();
-        }
+    artifacts.values().forEach((artifactByPageNames) => {
+      artifactByPageNames.values().forEach((artifact) => {
+        const actions = artifact.runner.actions.get();
+        Object.values(actions).forEach((action) => {
+          if (action.status === 'running' || action.status === 'pending') {
+            action.abort();
+          }
+        });
       });
     });
   }
 
   addArtifact({ messageId, name, title, id }: ArtifactCallbackData) {
-    const artifact = this.getArtifact(messageId);
+    const artifact = this.getArtifact(messageId, name);
     if (artifact) {
       return;
     }
 
-    if (!this.artifactIdList.includes(messageId)) {
-      this.artifactIdList.push(messageId);
+    if (!this.artifactIdList.includes({ messageId, pageName: name })) {
+      this.artifactIdList.push({ messageId, pageName: name });
     }
-
-    this.artifacts.setKey(messageId, {
+    const newArtifact = {
       id,
       name,
       title,
@@ -112,21 +117,56 @@ export class ChatStore {
 
         this.actionAlert.set(alert);
       }),
-    });
+    };
+
+    const artifactsByMessageId = this.artifacts.get();
+    let artifactsByPageName = artifactsByMessageId.get(messageId);
+    if (!artifactsByPageName) {
+      artifactsByPageName = new Map();
+      artifactsByMessageId.set(messageId, artifactsByPageName);
+    }
+
+    artifactsByPageName.set(name, newArtifact);
+
+    this.artifacts.set(artifactsByMessageId);
   }
 
-  updateArtifact({ messageId }: ArtifactCallbackData, state: Partial<ArtifactUpdateState>) {
-    const artifact = this.getArtifact(messageId);
+  updateArtifact({ messageId, name }: ArtifactCallbackData, state: Partial<ArtifactUpdateState>) {
+    const artifact = this.getArtifact(messageId, name);
     if (!artifact) {
       return;
     }
 
-    this.artifacts.setKey(messageId, { ...artifact, ...state });
+    const artifactsByMessageId = this.artifacts.get();
+    const artifactsByPageName = artifactsByMessageId.get(messageId);
+    if (!artifactsByPageName) {
+      return;
+    }
+    artifactsByPageName.set(name, { ...artifact, ...state });
+    artifactsByMessageId.set(messageId, artifactsByPageName);
+
+    this.artifacts.set(artifactsByMessageId);
   }
 
-  private getArtifact(id: string) {
+  private getArtifact(messageId: string, pageName: string) {
     const artifacts = this.artifacts.get();
-    return artifacts[id];
+    const artifactsByPageName = artifacts.get(messageId);
+    if (!artifactsByPageName) {
+      return undefined;
+    }
+
+    return artifactsByPageName.get(pageName);
+  }
+
+  private getArtifactByArtifactId(messageId: string, artifactId: string) {
+    const artifacts = this.artifacts.get();
+
+    const artifactsByPageName = artifacts.get(messageId);
+    if (!artifactsByPageName) {
+      return undefined;
+    }
+
+    return artifactsByPageName.values().find((artifact) => artifact.id === artifactId);
   }
 
   setReloadedMessages(messages: string[]) {
@@ -138,8 +178,8 @@ export class ChatStore {
   }
 
   private async _addAction(data: ActionCallbackData) {
-    const { messageId } = data;
-    const artifact = this.getArtifact(messageId);
+    const { messageId, artifactId } = data;
+    const artifact = this.getArtifactByArtifactId(messageId, artifactId);
 
     if (!artifact) {
       unreachable('Artifact not found');
@@ -157,9 +197,9 @@ export class ChatStore {
   }
 
   async _runAction(data: ActionCallbackData, isRunning: boolean = false) {
-    const { messageId } = data;
+    const { messageId, artifactId } = data;
 
-    const artifact = this.getArtifact(messageId);
+    const artifact = this.getArtifactByArtifactId(messageId, artifactId);
     if (!artifact) {
       unreachable('Artifact not found');
     }
