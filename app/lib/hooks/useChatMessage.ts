@@ -1,4 +1,5 @@
 import { useChat } from '@ai-sdk/react';
+import { useStore } from '@nanostores/react';
 import { useSearchParams } from '@remix-run/react';
 import { DefaultChatTransport, type FileUIPart } from 'ai';
 import { animate } from 'framer-motion';
@@ -10,6 +11,7 @@ import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger } from '~/utils/logger';
 import { pagesToArtifacts } from '~/utils/page';
 import {
+  aiState,
   getChatStarted,
   setAborted,
   setChatId,
@@ -36,6 +38,7 @@ export function useChatMessage({
   const SAVE_PROJECT_DELAY_MS = 1000;
 
   const [searchParams] = useSearchParams();
+  const { chatStarted } = useStore(aiState);
   const { saveProject } = useProject();
   const { refreshUsageStats } = useChatUsage();
   const { parsedMessages, parseMessages } = useMessageParser();
@@ -89,12 +92,17 @@ export function useChatMessage({
   useEffect(() => {
     if (messages.length > 0) {
       parseMessages(messages, isLoading);
+    }
+  }, [messages, isLoading, parseMessages]);
+
+  useEffect(() => {
+    if (currentChatId && chatStarted) {
       const url = new URL(window.location.href);
       url.pathname = `/chat/${currentChatId}`;
       window.history.replaceState({}, '', url);
       setChatId(currentChatId);
     }
-  }, [messages, isLoading, parseMessages]);
+  }, [currentChatId, chatStarted]);
 
   useEffect(() => {
     if (messages.length > 0) {
