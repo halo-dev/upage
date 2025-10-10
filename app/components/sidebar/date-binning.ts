@@ -5,7 +5,7 @@ import type { ServerChatItem } from '~/lib/hooks/useChatEntries';
 type Bin = { category: string; items: ServerChatItem[] };
 
 export function binDates(_list: ServerChatItem[]) {
-  const list = _list.toSorted((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+  const list = _list.slice().sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
 
   const binLookup: Record<string, Bin> = {};
   const bins: Array<Bin> = [];
