@@ -32,7 +32,6 @@ import { stripIndents } from './utils/strip-indent';
 import 'virtual:uno.css';
 import type { ComponentType } from 'react';
 import { useState } from 'react';
-import { isProduction } from './lib/stores/settings';
 
 // 定义连接设置类型
 export interface ConnectionSettings {
@@ -119,7 +118,6 @@ const inlineThemeCode = stripIndents`
 `;
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const production = useStore(isProduction);
   const data = useRouteLoaderData<{
     ENV: { OPERATING_ENV: string; MAX_UPLOAD_SIZE_MB: number };
   }>('root');
@@ -137,7 +135,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
-        {production && <script src="https://track.halo.run/api/script.js" data-site-id="12" defer></script>}
       </head>
       <body>
         <script
