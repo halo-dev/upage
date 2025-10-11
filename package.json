@@ -1,6 +1,6 @@
 {
   "name": "upage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "使用人工智能构建可视化网页",
   "sideEffects": false,
