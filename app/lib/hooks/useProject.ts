@@ -49,10 +49,13 @@ export function useProject() {
       return true;
     });
     if (!isConsistent) {
-      logger.error('保存项目失败: 页面内容与 actions 不一致', {
-        projectPages,
-        projectSections,
-      });
+      logger.error(
+        '保存项目失败: 页面内容与 actions 不一致',
+        JSON.stringify({
+          projectPages,
+          projectSections,
+        }),
+      );
       return false;
     }
     try {

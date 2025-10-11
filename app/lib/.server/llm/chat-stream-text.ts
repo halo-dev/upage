@@ -12,13 +12,14 @@ import type { ElementInfo } from '~/routes/api.chat/chat.server';
 import type { UPageUIMessage } from '~/types/message';
 import { approximatePromptTokenCount, encode } from '~/utils/token';
 import { MAX_TOKENS } from './constants';
+import type { SelectContextResult } from './select-context';
 import { tools } from './tools';
 
 export type ChatStreamTextProps = CallSettings & {
   messages: UPageUIMessage[];
   summary: string;
   pageSummary: string;
-  context?: Record<string, string[]>;
+  context?: Record<string, SelectContextResult>;
   model: LanguageModel;
   maxTokens?: number;
   elementInfo?: ElementInfo;
@@ -62,12 +63,18 @@ ${summary}
 
   if (context) {
     systemPrompt = `${systemPrompt}
-以下是根据用户的聊天记录和任务分析出的可能对此次任务有帮助的代码片段，按页面名称区分
+以下是根据用户的聊天记录和任务分析出的可能对此次任务有帮助的页面及其代码片段，按页面名称区分，多个页面使用 ------ 分割
 CONTEXT:
 ---
 ${Object.entries(context)
-  .map(([key, value]) => `${key}: ${value.join('\n')}\n`)
-  .join('\n')}
+  .map(
+    ([key, value]) => `
+  - 页面名称: ${value.pageName}
+  - 页面标题: ${value.pageTitle}
+  - 页面内容: ${value.sections.join('\n')}
+  `,
+  )
+  .join('------')}
 ---
     `;
   }

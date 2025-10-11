@@ -101,6 +101,26 @@ export class EditorBridge {
     });
   }
 
+  /**
+   * 更新页面属性
+   *
+   * @param pageName
+   * @param param1
+   * @returns
+   */
+  async updatePageAttributes(pageName: string, { title }: { title?: string } = {}) {
+    const page = this.#pages.get(pageName);
+    if (!page) {
+      return;
+    }
+    const actionIds = page.actionIds;
+    this.#emit('upsert_page', {
+      pageName,
+      title,
+      actionIds,
+    });
+  }
+
   async removePage(pageName: string) {
     this.#pages.delete(pageName);
 

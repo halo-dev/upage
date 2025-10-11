@@ -299,6 +299,11 @@ export class PagesStore {
     switch (type) {
       case 'add_page': {
         const { title: pageTitle, actionIds = [] } = payload;
+        const oldPage = this.pages.get()[pageName];
+        if (oldPage) {
+          throw new Error(`Page ${pageName} already exists`);
+        }
+
         this.pages.setKey(pageName, {
           name: pageName,
           title: pageTitle,
@@ -312,10 +317,12 @@ export class PagesStore {
       }
       case 'upsert_page': {
         const { title: pageTitle, actionIds = [] } = payload;
+        const oldPage = this.pages.get()[pageName];
         this.pages.setKey(pageName, {
           name: pageName,
           title: pageTitle,
-          actionIds,
+          actionIds: actionIds || oldPage?.actionIds,
+          content: oldPage?.content,
         });
         break;
       }

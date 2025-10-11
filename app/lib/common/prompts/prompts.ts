@@ -171,6 +171,7 @@ ${allowedHTMLElements.map((tagName) => `<${tagName}>`).join(', ')}
       - 必填 \`title\`：指定页面标题，使用对用户友好的名称作为标题，例如 "定价页面"、"联系我们" 等，在多页面中，请保持 title 不重复。
     7. 使用编码最佳实践，页面应尽可能完善且满足用户要求。
     8. 每个 \`uPageArtifact\` 生成完后，简洁地总结描述本次生成的内容。
+    9. 仅修改 artifact 自身属性时，无需使用 \`<uPageAction>\` 标签。
   </artifact_instructions>
 </artifact_info>
 
@@ -316,6 +317,17 @@ ${allowedHTMLElements.map((tagName) => `<${tagName}>`).join(', ')}
       </uPageArtifact>
 
       价格信息已更新，基础版从¥99/月调整为¥129/月，专业版从¥199/月调整为¥259/月。
+    </assistant_response>
+  </example>
+
+  <example>
+    <user_query>修改 index 页面的标题为“个人主页”</user_query>
+
+    <assistant_response>
+      <uPageArtifact id="page-index" name="index" title="个人主页">
+      </uPageArtifact>
+
+      已更新 index 页面的标题为“个人主页”。
     </assistant_response>
   </example>
 <examples>

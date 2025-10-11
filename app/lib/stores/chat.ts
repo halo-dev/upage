@@ -96,7 +96,7 @@ export class ChatStore {
     });
   }
 
-  addArtifact({ messageId, name, title, id }: ArtifactCallbackData) {
+  async addArtifact({ messageId, name, title, id }: ArtifactCallbackData) {
     const artifact = this.getArtifact(messageId, name);
     if (artifact) {
       return;
@@ -129,6 +129,8 @@ export class ChatStore {
     artifactsByPageName.set(name, newArtifact);
 
     this.artifacts.set(artifactsByMessageId);
+    const bridge = await editorBridge;
+    bridge.updatePageAttributes(name, { title });
   }
 
   updateArtifact({ messageId, name }: ArtifactCallbackData, state: Partial<ArtifactUpdateState>) {

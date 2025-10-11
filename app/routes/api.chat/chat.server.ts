@@ -11,7 +11,7 @@ import { ChatUsageStatus, recordUsage, updateUsageStatus } from '~/lib/.server/c
 import { chatStreamText } from '~/lib/.server/llm/chat-stream-text';
 import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS } from '~/lib/.server/llm/constants';
 import { createSummary } from '~/lib/.server/llm/create-summary';
-import { selectContext } from '~/lib/.server/llm/select-context';
+import { type SelectContextResult, selectContext } from '~/lib/.server/llm/select-context';
 import { structuredPageSnapshot } from '~/lib/.server/llm/structured-page-snapshot';
 import { createScopedLogger } from '~/lib/.server/logger';
 import { getHistoryChatMessages, saveChatMessages, updateDiscardedMessage } from '~/lib/.server/message';
@@ -157,7 +157,7 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
     });
 
     // 辅助 model 所获取的数据，用于后续的模型调用。
-    const minorModelData: { summary: string; context: Record<string, string[]>; pageSummary: string } = {
+    const minorModelData: { summary: string; context: Record<string, SelectContextResult>; pageSummary: string } = {
       summary: '',
       context: {},
       pageSummary: '',
