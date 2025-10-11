@@ -34,6 +34,7 @@ export interface ParserCallbacks {
 
 interface ElementFactoryProps {
   messageId: string;
+  pageName: string;
 }
 
 type ElementFactory = (props: ElementFactoryProps) => string;
@@ -207,7 +208,7 @@ export class StreamingMessageParser {
 
               const artifactFactory = this._options.artifactElement ?? createArtifactElement;
 
-              output += artifactFactory({ messageId });
+              output += artifactFactory({ messageId, pageName: artifactName });
 
               i = openTagEnd + 1;
             } else {

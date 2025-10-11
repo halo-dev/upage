@@ -77,6 +77,7 @@ export class WebBuilderStore {
       // 找到第一个页面并选中
       for (const [pageName] of Object.entries(pages)) {
         this.setSelectedPage(pageName);
+        this.setActiveSectionByPageName(pageName);
         break;
       }
     }
@@ -84,12 +85,12 @@ export class WebBuilderStore {
 
   setSelectedPage(pageName: string | undefined) {
     this.pagesStore.setActivePage(pageName);
+  }
 
-    if (pageName) {
-      const page = this.pagesStore.getPage(pageName);
-      if (page) {
-        this.setActiveSection(page.actionIds[page.actionIds.length - 1]);
-      }
+  setActiveSectionByPageName(pageName: string) {
+    const page = this.pagesStore.getPage(pageName);
+    if (page) {
+      this.setActiveSection(page.actionIds[page.actionIds.length - 1]);
     }
   }
 

@@ -5,7 +5,7 @@
 export interface UPageArtifactData {
   // artifact id，唯一
   id: string;
-  // 页面名称，最终渲染为页面文件名，如 `index.html`，不包含后缀。唯一
+  // 页面名称，如 `index`，最终渲染为页面文件名，唯一
   name: string;
   // 页面标题，最终渲染为页面标题
   title: string;

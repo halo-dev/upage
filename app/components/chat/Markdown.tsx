@@ -25,12 +25,16 @@ export const Markdown = memo(({ children, html = false, limitedMarkdown = false 
       div: ({ className, children, node, ...props }) => {
         if (className?.includes('__uPageArtifact__')) {
           const messageId = node?.properties.dataMessageId as string;
+          const pageName = node?.properties.dataPageName as string;
 
           if (!messageId) {
             logger.error(`Invalid message id ${messageId}`);
           }
+          if (!pageName) {
+            logger.error(`Invalid page name ${pageName}`);
+          }
 
-          return <Artifact messageId={messageId} />;
+          return <Artifact messageId={messageId} pageName={pageName} />;
         }
 
         if (className?.includes('__uPageThought__')) {

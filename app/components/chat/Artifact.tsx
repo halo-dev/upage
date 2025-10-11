@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react';
 import classNames from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { computed } from 'nanostores';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { type BundledLanguage, type BundledTheme, createHighlighter, type HighlighterGeneric } from 'shiki';
 import type { ActionState } from '~/lib/runtime/action-runner';
 import { webBuilderStore } from '~/lib/stores/web-builder';
@@ -22,18 +22,26 @@ if (import.meta.hot && import.meta.hot.data) {
 
 interface ArtifactProps {
   messageId: string;
+  pageName: string;
 }
 
-export const Artifact = memo(({ messageId }: ArtifactProps) => {
+export const Artifact = memo(({ messageId, pageName }: ArtifactProps) => {
   const userToggledActions = useRef(false);
   const [showActions, setShowActions] = useState(false);
   const [allActionFinished, setAllActionFinished] = useState(false);
 
   const artifacts = useStore(webBuilderStore.chatStore.artifacts);
-  const artifact = artifacts[messageId];
+  const artifact = useMemo(() => {
+    const artifactsByPageName = artifacts.get(messageId);
+    if (!artifactsByPageName) {
+      return undefined;
+    }
+
+    return artifactsByPageName.get(pageName);
+  }, [artifacts, messageId, pageName]);
 
   const actions = useStore(
-    computed(artifact.runner.actions, (actions) => {
+    computed(artifact?.runner.actions!, (actions) => {
       return Object.values(actions);
     }),
   );
@@ -44,11 +52,14 @@ export const Artifact = memo(({ messageId }: ArtifactProps) => {
   };
 
   useEffect(() => {
-    const actionsMap = artifact.runner.actions.get();
+    const actionsMap = artifact?.runner.actions.get();
+    if (!actionsMap) {
+      return;
+    }
 
     Object.entries(actionsMap).forEach(([actionId, action]) => {
       if (action.status === 'running' || action.status === 'pending') {
-        artifact.runner.actions.setKey(actionId, {
+        artifact?.runner.actions.setKey(actionId, {
           ...action,
           status: 'aborted',
         });
@@ -61,7 +72,7 @@ export const Artifact = memo(({ messageId }: ArtifactProps) => {
       setShowActions(true);
     }
 
-    if (actions.length !== 0 && artifact.type === 'bundled') {
+    if (actions.length !== 0 && artifact?.type === 'bundled') {
       const finished = !actions.find((action) => action.status !== 'complete');
 
       if (allActionFinished !== finished) {
@@ -80,7 +91,7 @@ export const Artifact = memo(({ messageId }: ArtifactProps) => {
             webBuilderStore.showWorkbench.set(!showWorkbench);
           }}
         >
-          {artifact.type == 'bundled' && (
+          {artifact?.type == 'bundled' && (
             <>
               <div className="p-4">
                 {allActionFinished ? (
@@ -101,7 +112,7 @@ export const Artifact = memo(({ messageId }: ArtifactProps) => {
         </button>
         <div className="bg-upage-elements-artifacts-borderColor w-[1px]" />
         <AnimatePresence>
-          {actions.length && artifact.type !== 'bundled' && (
+          {actions.length && artifact?.type !== 'bundled' && (
             <motion.button
               initial={{ width: 0 }}
               animate={{ width: 'auto' }}
@@ -118,7 +129,7 @@ export const Artifact = memo(({ messageId }: ArtifactProps) => {
         </AnimatePresence>
       </div>
       <AnimatePresence>
-        {artifact.type !== 'bundled' && showActions && actions.length > 0 && (
+        {artifact?.type !== 'bundled' && showActions && actions.length > 0 && (
           <motion.div
             className="actions"
             initial={{ height: 0 }}
@@ -152,6 +163,7 @@ function openArtifactInWebBuilder(pageName: string, rootDomId: string) {
     webBuilderStore.currentView.set('code');
   }
   webBuilderStore.setSelectedPage(pageName);
+  webBuilderStore.setActiveSectionByPageName(pageName);
   webBuilderStore.editorStore.scrollToElement(rootDomId);
 }
 
