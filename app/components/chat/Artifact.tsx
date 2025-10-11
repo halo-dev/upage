@@ -163,7 +163,6 @@ function openArtifactInWebBuilder(pageName: string, rootDomId: string) {
     webBuilderStore.currentView.set('code');
   }
   webBuilderStore.setSelectedPage(pageName);
-  webBuilderStore.setActiveSectionByPageName(pageName);
   webBuilderStore.editorStore.scrollToElement(rootDomId);
 }
 
