@@ -1,4 +1,4 @@
-import type { ModelInfo } from '~/lib/modules/llm/types';
+import type { ModelInfo } from '~/.server/modules/llm/types';
 
 export type ProviderInfo = {
   staticModels: ModelInfo[];

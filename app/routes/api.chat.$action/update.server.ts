@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from '@remix-run/node';
-import { getUserChatById, updateChat } from '~/lib/.server/chat';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { getUserChatById, updateChat } from '~/.server/service/chat';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.chat.update');

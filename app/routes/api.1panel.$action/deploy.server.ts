@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
-import { get1PanelConnectionSettings, save1PanelConnectionSettings } from '~/lib/.server/connectionSettings';
-import { createOrUpdateDeployment, getLatestDeployment } from '~/lib/.server/deployment';
-import { createScopedLogger } from '~/lib/.server/logger';
+import { get1PanelConnectionSettings, save1PanelConnectionSettings } from '~/.server/service/connection-settings';
+import { createOrUpdateDeployment, getLatestDeployment } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import {
   createWebsite,
   getWebsite,
@@ -11,7 +11,7 @@ import {
 } from '~/routes/api.1panel.$action/1panel.server';
 import type { _1PanelWebsite, _1PanelWebsiteInfo } from '~/types/1panel';
 import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { createScopedLogger } from '~/utils/logger';
 
 interface DeployRequestBody {
   websiteId: number;

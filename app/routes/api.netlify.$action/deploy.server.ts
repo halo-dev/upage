@@ -1,10 +1,10 @@
-import { getNetlifyConnectionSettings, saveNetlifyConnectionSettings } from '~/lib/.server/connectionSettings';
-import { createOrUpdateDeployment, getLatestDeployment } from '~/lib/.server/deployment';
-import { createScopedLogger } from '~/lib/.server/logger';
+import { getNetlifyConnectionSettings, saveNetlifyConnectionSettings } from '~/.server/service/connection-settings';
+import { createOrUpdateDeployment, getLatestDeployment } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment';
 import type { NetlifySiteInfo } from '~/types/netlify';
-import { errorResponse, successResponse } from '~/utils/api-response';
 import { binaryStringToUint8Array, isBinaryString } from '~/utils/file-utils';
+import { createScopedLogger } from '~/utils/logger';
 
 export type HandleDeployArgs = {
   request: Request;

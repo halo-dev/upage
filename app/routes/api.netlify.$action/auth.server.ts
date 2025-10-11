@@ -1,5 +1,5 @@
-import { deleteNetlifyConnectionSettings, saveNetlifyConnectionSettings } from '~/lib/.server/connectionSettings';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { deleteNetlifyConnectionSettings, saveNetlifyConnectionSettings } from '~/.server/service/connection-settings';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.netlify.auth');

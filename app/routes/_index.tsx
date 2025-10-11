@@ -1,8 +1,8 @@
 import { data, type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node';
-import { Chat } from '~/components/chat/Chat.client';
-import { Header } from '~/components/header/Header';
-import { getUser } from '~/lib/.server/auth';
-import { getUserUsageStats } from '~/lib/.server/chatUsage';
+import { Chat } from '~/.client/components/chat/Chat.client';
+import { Header } from '~/.client/components/header/Header';
+import { getUser } from '~/.server/service/auth';
+import { getUserUsageStats } from '~/.server/service/chat-usage';
 
 export const meta: MetaFunction = () => {
   return [{ title: 'UPage' }, { name: 'description', content: 'Talk with UPage, an AI assistant from Lxware' }];

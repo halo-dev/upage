@@ -1,10 +1,10 @@
-import { getVercelConnectionSettings, saveVercelConnectionSettings } from '~/lib/.server/connectionSettings';
-import { createOrUpdateDeployment, getLatestDeployment } from '~/lib/.server/deployment';
-import { createScopedLogger } from '~/lib/.server/logger';
+import { getVercelConnectionSettings, saveVercelConnectionSettings } from '~/.server/service/connection-settings';
+import { createOrUpdateDeployment, getLatestDeployment } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment';
 import type { VercelProjectInfo } from '~/types/vercel';
-import { errorResponse, successResponse } from '~/utils/api-response';
 import { isBinaryString } from '~/utils/file-utils';
+import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.vercel.deploy');
 

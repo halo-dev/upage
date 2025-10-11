@@ -17,17 +17,17 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Toaster } from 'sonner';
-import { getUser } from './lib/.server/auth';
-import { getUserUsageStats } from './lib/.server/chatUsage';
+import { getUser } from '~/.server/service/auth';
+import { getUserUsageStats } from '~/.server/service/chat-usage';
 import {
   get1PanelConnectionSettings,
   getNetlifyConnectionSettings,
   getVercelConnectionSettings,
-} from './lib/.server/connectionSettings';
-import { logStore } from './lib/stores/logs';
-import { themeStore } from './lib/stores/theme';
+} from '~/.server/service/connection-settings';
+import { logStore } from '~/stores/logs';
+import { themeStore } from '~/stores/theme';
+import { stripIndents } from '~/utils/strip-indent';
 import globalStyles from './styles/index.scss?url';
-import { stripIndents } from './utils/strip-indent';
 
 import 'virtual:uno.css';
 import type { ComponentType } from 'react';
@@ -236,7 +236,7 @@ const LazyAuthErrorToast = () => {
   const [AuthErrorToast, setAuthErrorToast] = useState<ComponentType | null>(null);
 
   useEffect(() => {
-    import('./components/AuthErrorToast.client').then((module) => {
+    import('~/.client/components/AuthErrorToast.client').then((module) => {
       setAuthErrorToast(() => module.AuthErrorToast);
     });
   }, []);

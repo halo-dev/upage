@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
-import { requireAuth } from '~/lib/.server/auth';
-import { errorResponse } from '~/utils/api-response';
+import { requireAuth } from '~/.server/service/auth';
+import { errorResponse } from '~/.server/utils/api-response';
 import { chatAction } from './chat.server';
 import { mockChat } from './mock-chat.server';
 

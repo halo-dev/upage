@@ -1,7 +1,7 @@
-import { getVercelConnectionSettings } from '~/lib/.server/connectionSettings';
-import { getDeploymentById, updateDeploymentStatus } from '~/lib/.server/deployment';
-import { request } from '~/lib/fetch';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { getVercelConnectionSettings } from '~/.server/service/connection-settings';
+import { getDeploymentById, updateDeploymentStatus } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
+import { request } from '~/.server/utils/fetch';
 import { createScopedLogger } from '~/utils/logger';
 import type { VercelAlias, VercelResponseAliases, VercelResponseError } from './type';
 

@@ -1,8 +1,8 @@
-import { getNetlifyConnectionSettings } from '~/lib/.server/connectionSettings';
-import { getDeploymentById, updateDeploymentStatus } from '~/lib/.server/deployment';
-import { request } from '~/lib/fetch';
+import { getNetlifyConnectionSettings } from '~/.server/service/connection-settings';
+import { getDeploymentById, updateDeploymentStatus } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
+import { request } from '~/.server/utils/fetch';
 import type { NetlifySite } from '~/types/netlify';
-import { errorResponse, successResponse } from '~/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 import { generateUUID } from '~/utils/uuid';
 

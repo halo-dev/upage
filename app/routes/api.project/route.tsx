@@ -1,9 +1,9 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
-import { createScopedLogger } from '~/lib/.server/logger';
-import type { PageCreateParams } from '~/lib/.server/page';
-import { savePagesAndSections } from '~/lib/.server/projectService';
-import type { SectionCreateParams } from '~/lib/.server/section';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import type { PageCreateParams } from '~/.server/service/page';
+import { savePagesAndSections } from '~/.server/service/project-service';
+import type { SectionCreateParams } from '~/.server/service/section';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
+import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.project');
 

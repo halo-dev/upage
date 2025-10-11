@@ -1,13 +1,13 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
-import { requireAuth } from '~/lib/.server/auth';
+import { requireAuth } from '~/.server/service/auth';
 import {
   deleteUserSetting,
   deleteUserSettings,
   getUserSetting,
   getUserSettings,
   setUserSetting,
-} from '~/lib/.server/userSettings';
-import { errorResponse, successResponse } from '~/utils/api-response';
+} from '~/.server/service/user-settings';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.user.settings');

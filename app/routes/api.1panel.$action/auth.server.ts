@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
-import { delete1PanelConnectionSettings, save1PanelConnectionSettings } from '~/lib/.server/connectionSettings';
+import { delete1PanelConnectionSettings, save1PanelConnectionSettings } from '~/.server/service/connection-settings';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { getWebsiteList } from '~/routes/api.1panel.$action/1panel.server';
-import { errorResponse, successResponse } from '~/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.1panel.auth');

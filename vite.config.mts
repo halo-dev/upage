@@ -43,6 +43,7 @@ export default defineConfig((config) => {
       UnoCSS(),
       tsconfigPaths(),
       chrome129IssuePlugin(),
+      excludeUploadsPlugin(),
     ],
     css: {
       preprocessorOptions: {
@@ -74,6 +75,28 @@ function chrome129IssuePlugin() {
 
         next();
       });
+    },
+  };
+}
+
+function excludeUploadsPlugin() {
+  return {
+    name: 'exclude-uploads',
+    apply: 'build' as const,
+    enforce: 'post' as const,
+    async closeBundle() {
+      const fs = await import('fs');
+      const path = await import('path');
+      const uploadsPath = path.resolve(process.cwd(), 'build/client/uploads');
+
+      if (fs.existsSync(uploadsPath)) {
+        try {
+          fs.rmSync(uploadsPath, { recursive: true, force: true });
+          console.log('✓ 已从构建产物中排除 uploads 目录');
+        } catch (error) {
+          console.warn('⚠ 删除 uploads 目录时出错:', error);
+        }
+      }
     },
   };
 }

@@ -6,21 +6,21 @@ import {
   generateId,
   type UIMessageStreamWriter,
 } from 'ai';
-import { upsertChat } from '~/lib/.server/chat';
-import { ChatUsageStatus, recordUsage, updateUsageStatus } from '~/lib/.server/chatUsage';
-import { chatStreamText } from '~/lib/.server/llm/chat-stream-text';
-import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS } from '~/lib/.server/llm/constants';
-import { createSummary } from '~/lib/.server/llm/create-summary';
-import { type SelectContextResult, selectContext } from '~/lib/.server/llm/select-context';
-import { structuredPageSnapshot } from '~/lib/.server/llm/structured-page-snapshot';
-import { createScopedLogger } from '~/lib/.server/logger';
-import { getHistoryChatMessages, saveChatMessages, updateDiscardedMessage } from '~/lib/.server/message';
-import { getPageByMessageId } from '~/lib/.server/page';
-import { CONTINUE_PROMPT } from '~/lib/common/prompts/prompts';
-import { DEFAULT_MODEL, DEFAULT_MODEL_DETAILS, getModel, MINOR_MODEL } from '~/lib/modules/constants';
+import { chatStreamText } from '~/.server/llm/chat-stream-text';
+import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS } from '~/.server/llm/constants';
+import { createSummary } from '~/.server/llm/create-summary';
+import { type SelectContextResult, selectContext } from '~/.server/llm/select-context';
+import { structuredPageSnapshot } from '~/.server/llm/structured-page-snapshot';
+import { DEFAULT_MODEL, DEFAULT_MODEL_DETAILS, getModel, MINOR_MODEL } from '~/.server/modules/constants';
+import { CONTINUE_PROMPT } from '~/.server/prompts/prompts';
+import { upsertChat } from '~/.server/service/chat';
+import { ChatUsageStatus, recordUsage, updateUsageStatus } from '~/.server/service/chat-usage';
+import { getHistoryChatMessages, saveChatMessages, updateDiscardedMessage } from '~/.server/service/message';
+import { getPageByMessageId } from '~/.server/service/page';
+import { approximateUsageFromContent } from '~/.server/utils/token';
 import type { Page } from '~/types/actions';
 import type { UPageUIMessage } from '~/types/message';
-import { approximateUsageFromContent } from '~/utils/token';
+import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.chat.chat');
 

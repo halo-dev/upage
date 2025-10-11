@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
-import { errorResponse } from '~/utils/api-response';
+import { errorResponse } from '~/.server/utils/api-response';
 import { appInfoAction, appInfoLoader } from './app-info.server';
 import { diskAction, diskLoader } from './disk.server';
 import { gitInfoLoader } from './git-info.server';

@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import type { _1PanelPaginationResponse, _1PanelResponse, _1PanelWebsite } from '~/types/1panel';
 import { isBinaryString } from '~/utils/file-utils';
 import { generateUUID } from '~/utils/uuid';
-import { request } from '../../lib/fetch';
+import { request } from '../../.server/utils/fetch';
 
 export interface _1PanelBaseParams {
   serverUrl: string;

@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
-import { requireAuth } from '~/lib/.server/auth';
-import { createScopedLogger } from '~/lib/.server/logger';
-import { errorResponse } from '~/utils/api-response';
+import { requireAuth } from '~/.server/service/auth';
+import { errorResponse } from '~/.server/utils/api-response';
+import { createScopedLogger } from '~/utils/logger';
 import { handleAuth } from './auth.server';
 import { deletePage } from './delete.server';
 import { handleDeploy } from './deploy.server';

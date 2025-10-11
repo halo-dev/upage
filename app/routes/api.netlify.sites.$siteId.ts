@@ -1,9 +1,9 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
-import { requireAuth } from '~/lib/.server/auth';
-import { getNetlifyConnectionSettings } from '~/lib/.server/connectionSettings';
-import { deleteDeploymentsByPlatformAndId } from '~/lib/.server/deployment';
+import { requireAuth } from '~/.server/service/auth';
+import { getNetlifyConnectionSettings } from '~/.server/service/connection-settings';
+import { deleteDeploymentsByPlatformAndId } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { DeploymentPlatformEnum } from '~/types/deployment';
-import { errorResponse, successResponse } from '~/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.netlify.sites');

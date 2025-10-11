@@ -1,8 +1,8 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
 import fs from 'fs';
-import { getUser } from '~/lib/.server/auth';
-import { createScopedLogger } from '~/lib/.server/logger';
-import { storageProvider } from '~/lib/storage/index.server';
+import { getUser } from '~/.server/service/auth';
+import { storageProvider } from '~/.server/storage/index.server';
+import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.assets');
 

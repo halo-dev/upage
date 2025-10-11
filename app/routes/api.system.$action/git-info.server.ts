@@ -1,5 +1,5 @@
 import { json, type LoaderFunction, type LoaderFunctionArgs } from '@remix-run/node';
-import { createScopedLogger } from '~/lib/.server/logger';
+import { createScopedLogger } from '~/utils/logger';
 
 interface GitInfo {
   local: {

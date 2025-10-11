@@ -1,5 +1,5 @@
 import type { LoaderFunctionArgs } from '@remix-run/node';
-import { logto } from '~/lib/.server/auth';
+import { logto } from '~/.server/service/auth';
 import { checkErrorLoader } from './check-error.server';
 import { userLoader } from './user.server';
 

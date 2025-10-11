@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from '@remix-run/node';
 import { data } from '@remix-run/node';
-import { getAuthError } from '~/lib/.server/auth';
+import { getAuthError } from '~/.server/service/auth';
 
 /**
  * 检查认证错误信息的路由

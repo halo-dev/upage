@@ -1,5 +1,5 @@
 import { data, type LoaderFunctionArgs } from '@remix-run/node';
-import { getUser } from '~/lib/.server/auth';
+import { getUser } from '~/.server/service/auth';
 
 /**
  * 用户信息API端点

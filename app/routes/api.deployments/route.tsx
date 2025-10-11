@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
-import { requireAuth } from '~/lib/.server/auth';
-import { getUserPlatformDeploymentsWithPagination } from '~/lib/.server/deployment';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { requireAuth } from '~/.server/service/auth';
+import { getUserPlatformDeploymentsWithPagination } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   try {

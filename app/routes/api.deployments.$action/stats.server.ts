@@ -1,5 +1,5 @@
-import { prisma } from '~/lib/.server/prisma';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { prisma } from '~/.server/service/prisma';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.deployments.stats');

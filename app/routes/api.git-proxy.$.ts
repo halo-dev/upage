@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { createScopedLogger } from '~/lib/.server/logger';
+import { createScopedLogger } from '~/utils/logger';
 
 // Allowed headers to forward to the target server
 const ALLOW_HEADERS = [

@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
-import { requireAuth } from '~/lib/.server/auth';
-import { getNetlifyConnectionSettings } from '~/lib/.server/connectionSettings';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { requireAuth } from '~/.server/service/auth';
+import { getNetlifyConnectionSettings } from '~/.server/service/connection-settings';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.netlify.deploys');

@@ -2,8 +2,8 @@ import {
   deleteVercelConnectionSettings,
   getVercelConnectionSettings,
   saveVercelConnectionSettings,
-} from '~/lib/.server/connectionSettings';
-import { errorResponse, successResponse } from '~/utils/api-response';
+} from '~/.server/service/connection-settings';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.vercel.auth');

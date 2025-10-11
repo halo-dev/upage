@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from '@remix-run/node';
-import { deleteChat, getUserChatById } from '~/lib/.server/chat';
-import { errorResponse, successResponse } from '~/utils/api-response';
+import { deleteChat, getUserChatById } from '~/.server/service/chat';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.chat.delete');

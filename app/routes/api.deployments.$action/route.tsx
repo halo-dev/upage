@@ -1,6 +1,6 @@
 import { type LoaderFunctionArgs } from '@remix-run/node';
-import { requireAuth } from '~/lib/.server/auth';
-import { errorResponse } from '~/utils/api-response';
+import { requireAuth } from '~/.server/service/auth';
+import { errorResponse } from '~/.server/utils/api-response';
 import { getDeploymentStats } from './stats.server';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {

@@ -1,7 +1,7 @@
 import { data, type LoaderFunctionArgs, redirect } from '@remix-run/node';
-import { getUser, requireAuth } from '~/lib/.server/auth';
-import { getUserChatById } from '~/lib/.server/chat';
-import { getChatDeployments } from '~/lib/.server/deployment';
+import { getUser, requireAuth } from '~/.server/service/auth';
+import { getUserChatById } from '~/.server/service/chat';
+import { getChatDeployments } from '~/.server/service/deployment';
 import { default as IndexRoute } from './_index';
 
 export async function loader(args: LoaderFunctionArgs) {
