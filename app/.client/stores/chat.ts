@@ -120,15 +120,16 @@ export class ChatStore {
     };
 
     const artifactsByMessageId = this.artifacts.get();
-    let artifactsByPageName = artifactsByMessageId.get(messageId);
-    if (!artifactsByPageName) {
-      artifactsByPageName = new Map();
-      artifactsByMessageId.set(messageId, artifactsByPageName);
-    }
+    const existingArtifactsByPageName = artifactsByMessageId.get(messageId);
+    const artifactsByPageName = existingArtifactsByPageName ? new Map(existingArtifactsByPageName) : new Map();
 
     artifactsByPageName.set(name, newArtifact);
 
-    this.artifacts.set(artifactsByMessageId);
+    // create new outer Map instance to trigger nanostores listener
+    const newArtifactsByMessageId = new Map(artifactsByMessageId);
+    newArtifactsByMessageId.set(messageId, artifactsByPageName);
+
+    this.artifacts.set(newArtifactsByMessageId);
     const bridge = await editorBridge;
     bridge.updatePageAttributes(name, { title });
   }
@@ -140,14 +141,19 @@ export class ChatStore {
     }
 
     const artifactsByMessageId = this.artifacts.get();
-    const artifactsByPageName = artifactsByMessageId.get(messageId);
-    if (!artifactsByPageName) {
+    const existingArtifactsByPageName = artifactsByMessageId.get(messageId);
+    if (!existingArtifactsByPageName) {
       return;
     }
-    artifactsByPageName.set(name, { ...artifact, ...state });
-    artifactsByMessageId.set(messageId, artifactsByPageName);
 
-    this.artifacts.set(artifactsByMessageId);
+    const artifactsByPageName = new Map(existingArtifactsByPageName);
+    artifactsByPageName.set(name, { ...artifact, ...state });
+
+    // create new outer Map instance to trigger nanostores listener
+    const newArtifactsByMessageId = new Map(artifactsByMessageId);
+    newArtifactsByMessageId.set(messageId, artifactsByPageName);
+
+    this.artifacts.set(newArtifactsByMessageId);
   }
 
   private getArtifact(messageId: string, pageName: string) {
