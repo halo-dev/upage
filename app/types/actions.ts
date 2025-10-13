@@ -1,5 +1,3 @@
-import type { Change } from 'diff';
-
 export interface Page {
   name: string;
   title: string;
@@ -37,15 +35,26 @@ export interface ActionAlert {
   source?: 'preview';
 }
 
-export interface PageHistory {
-  originalContent: string;
-  lastModified: number;
-  changes: Change[];
-  versions: {
-    timestamp: number;
-    content: string;
-  }[];
+export type ChangeSource = 'user' | 'auto-save' | 'initial';
 
-  // 记录变更来源
-  changeSource?: 'user' | 'auto-save' | 'external';
+export interface PageHistoryVersion {
+  // 版本号
+  version: number;
+  // 时间戳
+  timestamp: number;
+  // 内容
+  content: string;
+  // 变更来源
+  changeSource: ChangeSource;
+}
+
+export interface PageHistory {
+  // 最初的内容
+  originalContent: string;
+  // 最新修改时间
+  latestModified: number;
+  // 最新版本
+  latestVersion: number;
+  // 版本历史
+  versions: PageHistoryVersion[];
 }

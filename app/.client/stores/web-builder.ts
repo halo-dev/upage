@@ -4,7 +4,7 @@ import JSZip from 'jszip';
 import { atom, type WritableAtom } from 'nanostores';
 import { toast } from 'sonner';
 import { formatFile } from '~/.client/utils/prettier';
-import type { Page } from '~/types/actions';
+import type { ChangeSource, Page } from '~/types/actions';
 import type { PageMap } from '~/types/pages';
 import { base64ToBinary, getContentType, getExtensionFromMimeType, getFileName } from '~/utils/file-utils';
 import { createScopedLogger } from '~/utils/logger';
@@ -66,11 +66,16 @@ export class WebBuilderStore {
     });
   }
 
+  /**
+   * 手动设置页面数据，通常用于初始化页面数据。
+   * @param pages 页面数据
+   */
   setPages(pages: PageMap) {
     this.editorStore.setDocuments(pages, true);
     for (const [pageName, page] of Object.entries(pages)) {
       if (page) {
         this.pagesStore.setPage(pageName, page);
+        this.pagesStore.savePageHistory(pageName, page.content as string, 'initial');
       }
     }
 
@@ -121,27 +126,14 @@ export class WebBuilderStore {
     this.editorStore.updateDocumentContent(pageName, _html);
   }
 
-  /**
-   * 执行保存，将 editorStore 中的当前页面内容同步保存至 PagesStore 中。
-   * @returns
-   */
-  async saveCurrentDocument() {
-    const currentPage = this.editorStore.currentDocument.get();
-    if (!currentPage) {
-      return;
-    }
-
-    this.saveDocument(currentPage.name as string);
-  }
-
-  async saveDocument(pageName: string) {
+  async saveDocument(pageName: string, changeSource: ChangeSource) {
     const documents = this.editorStore.editorDocuments.get();
     const pageProperties = documents[pageName];
     if (pageProperties === undefined) {
       return;
     }
     // 触发 page 的保存
-    this.pagesStore.savePage(pageName, pageProperties.content as string).then(() => {
+    this.pagesStore.savePage(pageName, pageProperties.content as string, changeSource).then(() => {
       this.editorStore.removeUnsavedDocument(pageName, true);
     });
   }
@@ -164,9 +156,9 @@ export class WebBuilderStore {
     this.editorStore.updateDocumentContent(pageName as string, page.content as string);
   }
 
-  async saveAllPages() {
+  async saveAllPages(changeSource: ChangeSource) {
     for (const pageName of this.editorStore.unsavedDocuments.get()) {
-      await this.saveDocument(pageName);
+      await this.saveDocument(pageName, changeSource);
     }
   }
 

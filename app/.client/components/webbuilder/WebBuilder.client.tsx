@@ -251,7 +251,7 @@ export const WebBuilder = memo(() => {
     webBuilderStore.setSelectedPage(pageName);
   }, []);
 
-  const onAutoPageSave = useCallback<OnSaveCallback>(() => {
+  const onPageSave = useCallback<OnSaveCallback>(() => {
     if (isStreaming) {
       return;
     }
@@ -259,7 +259,7 @@ export const WebBuilder = memo(() => {
   }, [isStreaming]);
 
   const doPageSave = useCallback(() => {
-    webBuilderStore.saveAllPages().catch(() => {
+    webBuilderStore.saveAllPages('user').catch(() => {
       toast.error('文件内容更新失败');
     });
     const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
@@ -377,7 +377,7 @@ export const WebBuilder = memo(() => {
                     unsavedPages={unsavedPages}
                     onPageSelect={onPageSelect}
                     onEditorChange={onEditorChange}
-                    onPageSave={onAutoPageSave}
+                    onPageSave={onPageSave}
                     onPageReset={onPageReset}
                     onLoad={onLoad}
                     onReady={onReady}

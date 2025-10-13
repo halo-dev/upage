@@ -164,7 +164,7 @@ export const EditorStudio = memo(
       [onSave],
     );
 
-    const handleAutoSave = useCallback(async () => {
+    const handleSave = useCallback(async () => {
       const editor = editorRef.current;
       if (!editor) {
         return;
@@ -192,7 +192,7 @@ export const EditorStudio = memo(
         documents={documents}
         onLoad={handleLoad}
         onReady={handleEditorReady}
-        onSave={handleAutoSave}
+        onSave={handleSave}
         onContentChange={handleContentChange}
       />
     );
