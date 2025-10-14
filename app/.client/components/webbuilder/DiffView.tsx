@@ -395,7 +395,7 @@ const NoChangesView = memo(
                 rowHeight={24}
                 rowComponent={Row}
                 rowProps={{ codeBlocks, highlighter, language, theme }}
-                className="overflow-x-auto"
+                className="overflow-x-auto overflow-y-hidden!"
                 overscanCount={10}
               />
             ) : (
@@ -764,6 +764,7 @@ export const DiffView = memo(() => {
     }
 
     const history = pageHistory[selectedPage];
+    // 使用最新版本
     const lastVersion = history?.versions.find((version) => version.version === history.latestVersion);
     const lastVersionContent = normalizeContent(lastVersion?.content);
 
@@ -784,7 +785,7 @@ export const DiffView = memo(() => {
       }
     }
 
-    // 获取上一次由聊天所触发的历史版本(不含本次版本)
+    // 获取上一次由聊天所触发的历史版本(不含本次版本)，或者第一个初始化版本
     const autoSaveHistories = history?.versions.filter((version) => version.changeSource === 'auto-save') || [];
     let lastTimeChatVersionVersion = 0;
     if (autoSaveHistories.length > 1) {
