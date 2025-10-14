@@ -188,6 +188,7 @@ export const DeploymentRecordsDialog = memo(({ isOpen, onClose }: DeploymentReco
     [DeploymentPlatformEnum._1PANEL]: 'i-ph:browser',
     [DeploymentPlatformEnum.NETLIFY]: 'i-ph:cloud',
     [DeploymentPlatformEnum.VERCEL]: 'i-ph:triangle',
+    [DeploymentPlatformEnum.GITHUB]: 'i-mingcute:github-line',
   };
 
   // 状态配置类型

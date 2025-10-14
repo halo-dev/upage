@@ -1,553 +1,148 @@
+import { useStore } from '@nanostores/react';
+import { useRevalidator } from '@remix-run/react';
 import classNames from 'classnames';
-import Cookies from 'js-cookie';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/.client/components/ui/Button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '~/.client/components/ui/Collapsible';
+import { clearGitHubConnection, githubConnection, updateGitHubConnection } from '~/.client/stores/github';
 import { logStore } from '~/stores/logs';
+import { logger } from '~/utils/logger';
 import ConnectionBorder from './components/ConnectionBorder';
 
-interface GitHubUserResponse {
-  login: string;
-  avatar_url: string;
-  html_url: string;
-  name: string;
-  bio: string;
-  public_repos: number;
-  followers: number;
-  following: number;
-  created_at: string;
-  public_gists: number;
-}
-
-interface GitHubRepoInfo {
-  name: string;
-  full_name: string;
-  html_url: string;
-  description: string;
-  stargazers_count: number;
-  forks_count: number;
-  default_branch: string;
-  updated_at: string;
-  languages_url: string;
-}
-
-interface GitHubOrganization {
-  login: string;
-  avatar_url: string;
-  html_url: string;
-}
-
-interface GitHubEvent {
-  id: string;
-  type: string;
-  repo: {
-    name: string;
-  };
-  created_at: string;
-}
-
-interface GitHubLanguageStats {
-  [language: string]: number;
-}
-
-interface GitHubStats {
-  repos: GitHubRepoInfo[];
-  recentActivity: GitHubEvent[];
-  languages: GitHubLanguageStats;
-  totalGists: number;
-  publicRepos: number;
-  privateRepos: number;
-  stars: number;
-  forks: number;
-  followers: number;
-  publicGists: number;
-  privateGists: number;
-  lastUpdated: string;
-
-  // Keep these for backward compatibility
-  totalStars?: number;
-  totalForks?: number;
-  organizations?: GitHubOrganization[];
-}
-
-interface GitHubConnection {
-  user: GitHubUserResponse | null;
-  token: string;
-  tokenType: 'classic' | 'fine-grained';
-  stats?: GitHubStats;
-  rateLimit?: {
-    limit: number;
-    remaining: number;
-    reset: number;
-  };
-}
-
 export default function GitHubConnection() {
-  const [connection, setConnection] = useState<GitHubConnection>({
-    user: null,
+  const revalidator = useRevalidator();
+
+  const connection = useStore(githubConnection);
+  const [connectInfo, setConnectInfo] = useState<{ token: string; tokenType: 'classic' | 'fine-grained' }>({
     token: '',
     tokenType: 'classic',
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isConnecting, setIsConnecting] = useState(false);
   const [isFetchingStats, setIsFetchingStats] = useState(false);
   const [isStatsExpanded, setIsStatsExpanded] = useState(false);
-  const tokenTypeRef = React.useRef<'classic' | 'fine-grained'>('classic');
 
-  const fetchGithubUser = async (token: string) => {
+  useEffect(() => {
+    if (connection.isConnect) {
+      if (!connection.user || !connection.stats) {
+        fetchGitHubStats();
+      }
+    }
+  }, [connection.isConnect]);
+
+  const fetchGithubAuth = async (token: string, tokenType: 'classic' | 'fine-grained') => {
     try {
-      console.log('正在获取 GitHub 用户，使用令牌:', token.substring(0, 5) + '...');
-
-      // Use server-side API endpoint instead of direct GitHub API call
-      const response = await fetch(`/api/system/git-info?action=getUser`, {
-        method: 'GET',
+      const response = await fetch('/api/github/auth', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Include token in headers for validation
         },
+        body: JSON.stringify({
+          token,
+          tokenType,
+        }),
       });
 
       if (!response.ok) {
-        console.error('获取 GitHub 用户时出错。状态:', response.status);
-        throw new Error(`错误: ${response.status}`);
+        logger.error('获取 GitHub 用户时出错。状态:', response.status);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `错误: ${response.status}`);
       }
-
-      // Get rate limit information from headers
-      const rateLimit = {
-        limit: parseInt(response.headers.get('x-ratelimit-limit') || '0'),
-        remaining: parseInt(response.headers.get('x-ratelimit-remaining') || '0'),
-        reset: parseInt(response.headers.get('x-ratelimit-reset') || '0'),
-      };
-
-      const data = await response.json();
-      console.log('GitHub 用户 API 响应:', data);
-
-      const { user } = data as { user: GitHubUserResponse };
-
-      // Validate that we received a user object
-      if (!user || !user.login) {
-        console.error('收到无效的用户数据:', user);
-        throw new Error('收到无效的用户数据');
-      }
-
-      // Use the response data
-      setConnection((prev) => ({
-        ...prev,
-        user,
-        token,
-        tokenType: tokenTypeRef.current,
-        rateLimit,
-      }));
-
-      // Set cookies for client-side access
-      Cookies.set('githubUsername', user.login);
-      Cookies.set('githubToken', token);
-      Cookies.set('git:github.com', JSON.stringify({ username: token, password: 'x-oauth-basic' }));
-
-      // Store connection details in localStorage
-      localStorage.setItem(
-        'github_connection',
-        JSON.stringify({
-          user,
-          token,
-          tokenType: tokenTypeRef.current,
-        }),
-      );
-
-      logStore.logInfo('已连接到 GitHub', {
-        type: 'system',
-        message: `已连接到 GitHub，用户： ${user.login}`,
-      });
-
-      // Fetch additional GitHub stats
-      fetchGitHubStats(token);
+      fetchGitHubStats();
     } catch (error) {
-      console.error('Failed to fetch GitHub user:', error);
       logStore.logError(`GitHub 认证失败: ${error instanceof Error ? error.message : '未知错误'}`, {
         type: 'system',
         message: 'GitHub 认证失败',
       });
 
       toast.error(`认证失败: ${error instanceof Error ? error.message : '未知错误'}`);
-      throw error; // Rethrow to allow handling in the calling function
+      throw error;
     }
   };
 
-  const fetchGitHubStats = async (token: string) => {
+  const fetchGitHubStats = async () => {
     setIsFetchingStats(true);
 
     try {
-      // Get the current user first to ensure we have the latest value
-      const userResponse = await fetch('https://api.github.com/user', {
+      const response = await fetch('/api/github/stats', {
+        method: 'GET',
         headers: {
-          Authorization: `${connection.tokenType === 'classic' ? 'token' : 'Bearer'} ${token}`,
+          'Content-Type': 'application/json',
         },
       });
 
-      if (!userResponse.ok) {
-        if (userResponse.status === 401) {
-          toast.error('您的 GitHub 令牌已过期。请重新连接您的账户。');
-          handleDisconnect();
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
 
+        if (response.status === 401) {
+          toast.error('GitHub 令牌已过期，请重新连接您的账户');
+          handleDisconnect();
           return;
         }
 
-        throw new Error(`Failed to fetch user data: ${userResponse.statusText}`);
+        throw new Error(errorData.message || `获取统计信息失败: ${response.status}`);
       }
 
-      const userData = (await userResponse.json()) as any;
+      const data = await response.json();
+      const { user: userData, stats } = data.data;
 
-      // Fetch repositories with pagination
-      let allRepos: any[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore) {
-        const reposResponse = await fetch(`https://api.github.com/user/repos?per_page=100&page=${page}`, {
-          headers: {
-            Authorization: `${connection.tokenType === 'classic' ? 'token' : 'Bearer'} ${token}`,
-          },
-        });
-
-        if (!reposResponse.ok) {
-          throw new Error(`Failed to fetch repositories: ${reposResponse.statusText}`);
-        }
-
-        const repos = (await reposResponse.json()) as any[];
-        allRepos = [...allRepos, ...repos];
-
-        // Check if there are more pages
-        const linkHeader = reposResponse.headers.get('Link');
-        hasMore = linkHeader?.includes('rel="next"') ?? false;
-        page++;
-      }
-
-      // Calculate stats
-      const repoStats = await calculateRepoStats(allRepos);
-
-      // Fetch recent activity
-      const eventsResponse = await fetch(`https://api.github.com/users/${userData.login}/events?per_page=10`, {
-        headers: {
-          Authorization: `${connection.tokenType === 'classic' ? 'token' : 'Bearer'} ${token}`,
-        },
-      });
-
-      if (!eventsResponse.ok) {
-        throw new Error(`Failed to fetch events: ${eventsResponse.statusText}`);
-      }
-
-      const events = (await eventsResponse.json()) as any[];
-      const recentActivity = events.slice(0, 5).map((event: any) => ({
-        id: event.id,
-        type: event.type,
-        repo: event.repo.name,
-        created_at: event.created_at,
-      }));
-
-      // Calculate total stars and forks
-      const totalStars = allRepos.reduce((sum: number, repo: any) => sum + repo.stargazers_count, 0);
-      const totalForks = allRepos.reduce((sum: number, repo: any) => sum + repo.forks_count, 0);
-      const privateRepos = allRepos.filter((repo: any) => repo.private).length;
-
-      // Update the stats in the store
-      const stats: GitHubStats = {
-        repos: repoStats.repos,
-        recentActivity,
-        languages: repoStats.languages || {},
-        totalGists: repoStats.totalGists || 0,
-        publicRepos: userData.public_repos || 0,
-        privateRepos: privateRepos || 0,
-        stars: totalStars || 0,
-        forks: totalForks || 0,
-        followers: userData.followers || 0,
-        publicGists: userData.public_gists || 0,
-        privateGists: userData.private_gists || 0,
-        lastUpdated: new Date().toISOString(),
-
-        // For backward compatibility
-        totalStars: totalStars || 0,
-        totalForks: totalForks || 0,
-        organizations: [],
-      };
-
-      // Get the current user first to ensure we have the latest value
-      const currentConnection = JSON.parse(localStorage.getItem('github_connection') || '{}');
-      const currentUser = currentConnection.user || connection.user;
-
-      // Update connection with stats
-      const updatedConnection: GitHubConnection = {
-        user: currentUser,
-        token,
-        tokenType: connection.tokenType,
+      updateGitHubConnection({
+        user: userData,
         stats,
-        rateLimit: connection.rateLimit,
-      };
-
-      // Update localStorage
-      localStorage.setItem('github_connection', JSON.stringify(updatedConnection));
-
-      // Update state
-      setConnection(updatedConnection);
-
+      });
       toast.success('GitHub 统计已刷新');
     } catch (error) {
-      console.error('Error fetching GitHub stats:', error);
-      toast.error(`Failed to fetch GitHub stats: ${error instanceof Error ? error.message : '未知错误'}`);
+      logger.error('Error fetching GitHub stats:', error);
+      toast.error(`获取 GitHub 统计失败: ${error instanceof Error ? error.message : '未知错误'}`);
     } finally {
       setIsFetchingStats(false);
     }
   };
 
-  const calculateRepoStats = async (
-    repos: any[],
-  ): Promise<{ repos: GitHubRepoInfo[]; languages: GitHubLanguageStats; totalGists: number }> => {
-    // 构建基本仓库信息
-    const repoStats = {
-      repos: repos.map((repo: any) => ({
-        name: repo.name,
-        full_name: repo.full_name,
-        html_url: repo.html_url,
-        description: repo.description,
-        stargazers_count: repo.stargazers_count,
-        forks_count: repo.forks_count,
-        default_branch: repo.default_branch,
-        updated_at: repo.updated_at,
-        languages_url: repo.languages_url,
-      })),
-
-      languages: {} as Record<string, number>,
-      totalGists: 0,
-    };
-
-    // 首先使用仓库的主要语言属性构建基本的语言统计
-    repos.forEach((repo: any) => {
-      if (repo.language) {
-        if (!repoStats.languages[repo.language]) {
-          repoStats.languages[repo.language] = 0;
-        }
-        repoStats.languages[repo.language] += 1;
-      }
-    });
-
-    const topRepos = [...repos].sort((a, b) => b.stargazers_count - a.stargazers_count).slice(0, 10);
-
-    try {
-      const batchSize = 3;
-      for (let i = 0; i < topRepos.length; i += batchSize) {
-        const batch = topRepos.slice(i, i + batchSize);
-
-        const batchPromises = batch.map((repo) =>
-          fetch(repo.languages_url)
-            .then((response) => {
-              if (!response.ok) {
-                if (response.status === 429) {
-                  console.warn('GitHub API rate limit exceeded when fetching languages');
-                  throw new Error('Rate limit exceeded');
-                }
-                throw new Error(`Error fetching languages: ${response.status}`);
-              }
-              return response.json();
-            })
-            .then((languages: any) => {
-              const typedLanguages = languages as Record<string, number>;
-              Object.keys(typedLanguages).forEach((language) => {
-                if (!repoStats.languages[language]) {
-                  repoStats.languages[language] = 0;
-                }
-                repoStats.languages[language] += 1;
-              });
-            })
-            .catch((error) => {
-              console.error(`Error processing languages for ${repo.name}:`, error);
-            }),
-        );
-
-        await Promise.all(batchPromises);
-
-        if (i + batchSize < topRepos.length) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching repository languages:', error);
-    }
-
-    return repoStats;
-  };
-
-  useEffect(() => {
-    const loadSavedConnection = async () => {
-      setIsLoading(true);
-
-      const savedConnection = localStorage.getItem('github_connection');
-
-      if (savedConnection) {
-        try {
-          const parsed = JSON.parse(savedConnection);
-
-          if (!parsed.tokenType) {
-            parsed.tokenType = 'classic';
-          }
-
-          // Update the ref with the parsed token type
-          tokenTypeRef.current = parsed.tokenType;
-
-          // Set the connection
-          setConnection(parsed);
-
-          // If we have a token but no stats or incomplete stats, fetch them
-          if (
-            parsed.user &&
-            parsed.token &&
-            (!parsed.stats || !parsed.stats.repos || parsed.stats.repos.length === 0)
-          ) {
-            console.log('Fetching missing GitHub stats for saved connection');
-            await fetchGitHubStats(parsed.token);
-          }
-        } catch (error) {
-          console.error('Error parsing saved GitHub connection:', error);
-          localStorage.removeItem('github_connection');
-        }
-      }
-
-      setIsLoading(false);
-    };
-
-    loadSavedConnection();
-  }, []);
-
-  // Ensure cookies are updated when connection changes
-  useEffect(() => {
-    if (!connection) {
-      return;
-    }
-
-    const token = connection.token;
-    const data = connection.user;
-
-    if (token) {
-      Cookies.set('githubToken', token);
-      Cookies.set('git:github.com', JSON.stringify({ username: token, password: 'x-oauth-basic' }));
-    }
-
-    if (data) {
-      Cookies.set('githubUsername', data.login);
-    }
-  }, [connection]);
-
-  // Add function to update rate limits
-  const updateRateLimits = async (token: string) => {
-    try {
-      const response = await fetch('https://api.github.com/rate_limit', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (response.ok) {
-        const rateLimit = {
-          limit: parseInt(response.headers.get('x-ratelimit-limit') || '0'),
-          remaining: parseInt(response.headers.get('x-ratelimit-remaining') || '0'),
-          reset: parseInt(response.headers.get('x-ratelimit-reset') || '0'),
-        };
-
-        setConnection((prev) => ({
-          ...prev,
-          rateLimit,
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to fetch rate limits:', error);
-    }
-  };
-
-  // Add effect to update rate limits periodically
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (connection.token && connection.user) {
-      updateRateLimits(connection.token);
-      interval = setInterval(() => updateRateLimits(connection.token), 60000); // Update every minute
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [connection.token, connection.user]);
-
-  if (isLoading || isConnecting || isFetchingStats) {
+  if (isFetchingStats) {
     return <LoadingSpinner />;
   }
 
-  const handleConnect = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsConnecting(true);
-
+  const handleConnect = async (token: string, tokenType: 'classic' | 'fine-grained') => {
     try {
-      // Update the ref with the current state value before connecting
-      tokenTypeRef.current = connection.tokenType;
-
-      /*
-       * Save token type to localStorage even before connecting
-       * This ensures the token type is persisted even if connection fails
-       */
-      localStorage.setItem(
-        'github_connection',
-        JSON.stringify({
-          user: null,
-          token: connection.token,
-          tokenType: connection.tokenType,
-        }),
-      );
-
-      // Attempt to fetch the user info which validates the token
-      await fetchGithubUser(connection.token);
-
+      await fetchGithubAuth(token, tokenType);
+      revalidator.revalidate();
       toast.success('已成功连接到 GitHub');
     } catch (error) {
-      console.error('Failed to connect to GitHub:', error);
-
-      // Reset connection state on failure
-      setConnection({ user: null, token: connection.token, tokenType: connection.tokenType });
-
+      logger.error('Failed to connect to GitHub:', error);
+      setConnectInfo({ token, tokenType });
       toast.error(`Failed to connect to GitHub: ${error instanceof Error ? error.message : '未知错误'}`);
-    } finally {
-      setIsConnecting(false);
     }
   };
 
-  const handleDisconnect = () => {
-    localStorage.removeItem('github_connection');
+  const handleDisconnect = async () => {
+    try {
+      await fetch('/api/github/disconnect', {
+        method: 'DELETE',
+      });
 
-    // Remove all GitHub-related cookies
-    Cookies.remove('githubToken');
-    Cookies.remove('githubUsername');
-    Cookies.remove('git:github.com');
-
-    // Reset the token type ref
-    tokenTypeRef.current = 'classic';
-    setConnection({ user: null, token: '', tokenType: 'classic' });
-    toast.success('已断开与 GitHub 的连接');
+      clearGitHubConnection();
+      setConnectInfo({ token: '', tokenType: 'classic' });
+      revalidator.revalidate();
+      toast.success('已断开与 GitHub 的连接');
+    } catch (error) {
+      logger.error('断开连接失败:', error);
+      toast.error('断开连接失败');
+    }
   };
 
   return (
     <ConnectionBorder>
-      {!isConnecting && !connection.user && (
+      {!connection.isConnect && (
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-sm text-upage-elements-textSecondary dark:text-upage-elements-textSecondary mb-2">
               令牌类型
             </label>
             <select
-              value={connection.tokenType}
+              value={connectInfo.tokenType}
               onChange={(e) => {
                 const newTokenType = e.target.value as 'classic' | 'fine-grained';
-                tokenTypeRef.current = newTokenType;
-                setConnection((prev) => ({ ...prev, tokenType: newTokenType }));
+                setConnectInfo((prev) => ({ ...prev, tokenType: newTokenType }));
               }}
               className={classNames(
                 'w-full px-3 py-2 rounded-lg text-sm',
@@ -565,15 +160,15 @@ export default function GitHubConnection() {
 
           <div>
             <label className="block text-sm text-upage-elements-textSecondary dark:text-upage-elements-textSecondary mb-2">
-              {connection.tokenType === 'classic' ? 'Personal Access Token' : 'Fine-grained Token'}
+              {connectInfo.tokenType === 'classic' ? 'Personal Access Token' : 'Fine-grained Token'}
             </label>
             <input
               type="password"
-              value={connection.token}
-              onChange={(e) => setConnection((prev) => ({ ...prev, token: e.target.value }))}
-              disabled={isConnecting || !!connection.user}
+              value={connectInfo.token}
+              onChange={(e) => setConnectInfo((prev) => ({ ...prev, token: e.target.value }))}
+              disabled={revalidator.state === 'loading'}
               placeholder={`输入您的 GitHub ${
-                connection.tokenType === 'classic' ? 'personal access token' : 'fine-grained token'
+                connectInfo.tokenType === 'classic' ? 'personal access token' : 'fine-grained token'
               }`}
               className={classNames(
                 'w-full px-3 py-2 rounded-lg text-sm',
@@ -586,7 +181,7 @@ export default function GitHubConnection() {
             />
             <div className="mt-2 text-sm text-upage-elements-textSecondary">
               <a
-                href={`https://github.com/settings/tokens${connection.tokenType === 'fine-grained' ? '/beta' : '/new'}`}
+                href={`https://github.com/settings/tokens${connectInfo.tokenType === 'fine-grained' ? '/beta' : '/new'}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-upage-elements-link-text dark:text-upage-elements-link-text hover:text-upage-elements-link-textHover dark:hover:text-upage-elements-link-textHover flex items-center gap-1"
@@ -598,7 +193,7 @@ export default function GitHubConnection() {
               <span className="mx-2">•</span>
               <span>
                 需要的权限:{' '}
-                {connection.tokenType === 'classic'
+                {connectInfo.tokenType === 'classic'
                   ? 'repo, read:org, read:user'
                   : 'Repository access, Organization access'}
               </span>
@@ -608,10 +203,10 @@ export default function GitHubConnection() {
       )}
 
       <div className="flex items-center justify-between">
-        {!connection.user ? (
+        {!connection.isConnect && (
           <Button
-            onClick={handleConnect}
-            disabled={isConnecting || !connection.token}
+            onClick={() => handleConnect(connectInfo.token, connectInfo.tokenType)}
+            disabled={revalidator.state === 'loading' || !connectInfo.token}
             variant="default"
             className={classNames(
               'px-4 py-2 rounded-lg text-sm flex items-center gap-2',
@@ -620,7 +215,7 @@ export default function GitHubConnection() {
               'disabled:opacity-50 disabled:cursor-not-allowed',
             )}
           >
-            {isConnecting ? (
+            {revalidator.state === 'loading' ? (
               <>
                 <div className="i-ph:spinner-gap animate-spin size-4" />
                 连接中...
@@ -632,7 +227,9 @@ export default function GitHubConnection() {
               </>
             )}
           </Button>
-        ) : (
+        )}
+
+        {connection.isConnect && (
           <>
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-4">
@@ -642,20 +239,10 @@ export default function GitHubConnection() {
                     <span className="text-sm text-upage-elements-textPrimary dark:text-upage-elements-textPrimary">
                       已连接到 GitHub 使用{' '}
                       <span className="text-upage-elements-item-contentAccent dark:text-upage-elements-item-contentAccent font-medium">
-                        {connection.tokenType === 'classic' ? 'PAT' : 'Fine-grained Token'}
+                        {connectInfo.tokenType === 'classic' ? 'PAT' : 'Fine-grained Token'}
                       </span>
                     </span>
                   </div>
-                  {connection.rateLimit && (
-                    <div className="flex items-center gap-2 text-xs text-upage-elements-textSecondary">
-                      <div className="i-ph:chart-line-up w-3.5 h-3.5 text-upage-elements-icon-success" />
-                      <span>
-                        API 限制: {connection.rateLimit.remaining.toLocaleString()}/
-                        {connection.rateLimit.limit.toLocaleString()} • 重置时间:
-                        {Math.max(0, Math.floor((connection.rateLimit.reset * 1000 - Date.now()) / 60000))} min
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -668,10 +255,7 @@ export default function GitHubConnection() {
                   仪表盘
                 </Button>
                 <Button
-                  onClick={() => {
-                    fetchGitHubStats(connection.token);
-                    updateRateLimits(connection.token);
-                  }}
+                  onClick={() => fetchGitHubStats()}
                   disabled={isFetchingStats}
                   variant="outline"
                   className="flex items-center gap-2 hover:bg-upage-elements-item-backgroundActive/10 hover:text-upage-elements-textPrimary dark:hover:text-upage-elements-textPrimary transition-colors"
@@ -698,7 +282,7 @@ export default function GitHubConnection() {
         )}
       </div>
 
-      {connection.user && connection.stats && (
+      {connection.isConnect && connection?.user && (
         <div className="mt-6 border-t border-upage-elements-borderColor dark:border-upage-elements-borderColor pt-6">
           <div className="flex items-center gap-4 p-4 bg-upage-elements-background-depth-1 dark:bg-upage-elements-background-depth-1 rounded-lg mb-4">
             <img
@@ -733,42 +317,37 @@ export default function GitHubConnection() {
             </CollapsibleTrigger>
             <CollapsibleContent className="overflow-hidden">
               <div className="space-y-4 mt-4">
-                {/* Languages Section */}
                 <div className="mb-6">
-                  <h4 className="text-sm font-medium text-upage-elements-textPrimary mb-3">Top Languages</h4>
+                  <h4 className="text-sm font-medium text-upage-elements-textPrimary mb-3">主要语言</h4>
                   <div className="flex flex-wrap gap-2">
-                    {Object.entries(connection.stats.languages)
-                      .sort(([, a], [, b]) => b - a)
-                      .slice(0, 5)
-                      .map(([language]) => (
-                        <span
-                          key={language}
-                          className="px-3 py-1 text-xs rounded-full bg-upage-elements-sidebar-buttonBackgroundDefault text-upage-elements-sidebar-buttonText"
-                        >
-                          {language}
-                        </span>
-                      ))}
+                    {connection.stats?.languages &&
+                      Object.entries(connection.stats.languages)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5)
+                        .map(([language]) => (
+                          <span
+                            key={language}
+                            className="px-3 py-1 text-xs rounded-full bg-upage-elements-sidebar-buttonBackgroundDefault text-upage-elements-sidebar-buttonText"
+                          >
+                            {language}
+                          </span>
+                        ))}
                   </div>
                 </div>
 
-                {/* Additional Stats */}
                 <div className="grid grid-cols-4 gap-4 mb-6">
                   {[
                     {
-                      label: 'Member Since',
+                      label: '注册时间',
                       value: new Date(connection.user.created_at).toLocaleDateString(),
                     },
                     {
-                      label: 'Public Gists',
-                      value: connection.stats.publicGists,
+                      label: '组织数量',
+                      value: connection.stats?.organizations ? connection.stats.organizations.length : 0,
                     },
                     {
-                      label: 'Organizations',
-                      value: connection.stats.organizations ? connection.stats.organizations.length : 0,
-                    },
-                    {
-                      label: 'Languages',
-                      value: Object.keys(connection.stats.languages).length,
+                      label: '语言数量',
+                      value: connection.stats?.languages ? Object.keys(connection.stats.languages).length : 0,
                     },
                   ].map((stat, index) => (
                     <div
@@ -781,20 +360,19 @@ export default function GitHubConnection() {
                   ))}
                 </div>
 
-                {/* Repository Stats */}
                 <div className="mt-4">
                   <div className="space-y-4">
                     <div>
-                      <h5 className="text-sm font-medium text-upage-elements-textPrimary mb-2">Repository Stats</h5>
+                      <h5 className="text-sm font-medium text-upage-elements-textPrimary mb-2">仓库统计</h5>
                       <div className="grid grid-cols-2 gap-4">
                         {[
                           {
-                            label: 'Public Repos',
-                            value: connection.stats.publicRepos,
+                            label: '公开仓库',
+                            value: connection.stats?.publicRepos,
                           },
                           {
-                            label: 'Private Repos',
-                            value: connection.stats.privateRepos,
+                            label: '私有仓库',
+                            value: connection.stats?.privateRepos,
                           },
                         ].map((stat, index) => (
                           <div
@@ -809,24 +387,24 @@ export default function GitHubConnection() {
                     </div>
 
                     <div>
-                      <h5 className="text-sm font-medium text-upage-elements-textPrimary mb-2">Contribution Stats</h5>
+                      <h5 className="text-sm font-medium text-upage-elements-textPrimary mb-2">贡献统计</h5>
                       <div className="grid grid-cols-3 gap-4">
                         {[
                           {
-                            label: 'Stars',
-                            value: connection.stats.stars || 0,
+                            label: '星标',
+                            value: connection.stats?.totalStars || 0,
                             icon: 'i-ph:star',
                             iconColor: 'text-upage-elements-icon-warning',
                           },
                           {
-                            label: 'Forks',
-                            value: connection.stats.forks || 0,
+                            label: 'Fork',
+                            value: connection.stats?.totalForks || 0,
                             icon: 'i-ph:git-fork',
                             iconColor: 'text-upage-elements-icon-info',
                           },
                           {
-                            label: 'Followers',
-                            value: connection.stats.followers || 0,
+                            label: '关注者',
+                            value: connection.stats?.followers || 0,
                             icon: 'i-ph:users',
                             iconColor: 'text-upage-elements-icon-success',
                           },
@@ -850,12 +428,12 @@ export default function GitHubConnection() {
                       <div className="grid grid-cols-2 gap-4">
                         {[
                           {
-                            label: 'Public',
-                            value: connection.stats.publicGists,
+                            label: '公开 Gists',
+                            value: connection.stats?.publicGists,
                           },
                           {
-                            label: 'Private',
-                            value: connection.stats.privateGists || 0,
+                            label: '私有 Gists',
+                            value: connection.stats?.privateGists || 0,
                           },
                         ].map((stat, index) => (
                           <div
@@ -869,19 +447,20 @@ export default function GitHubConnection() {
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-upage-elements-borderColor">
-                      <span className="text-xs text-upage-elements-textSecondary">
-                        Last updated: {new Date(connection.stats.lastUpdated).toLocaleString()}
-                      </span>
-                    </div>
+                    {connection.stats?.lastUpdated && (
+                      <div className="pt-2 border-t border-upage-elements-borderColor">
+                        <span className="text-xs text-upage-elements-textSecondary">
+                          更新时间: {new Date(connection.stats.lastUpdated).toLocaleString()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Repositories Section */}
                 <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-upage-elements-textPrimary">Recent Repositories</h4>
+                  <h4 className="text-sm font-medium text-upage-elements-textPrimary">近期仓库</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {connection.stats.repos.map((repo) => (
+                    {connection.stats?.repos.map((repo) => (
                       <a
                         key={repo.full_name}
                         href={repo.html_url}
@@ -950,7 +529,7 @@ function LoadingSpinner() {
     <div className="flex items-center justify-center p-4">
       <div className="flex items-center gap-2">
         <div className="i-ph:spinner-gap-bold animate-spin size-4" />
-        <span className="text-upage-elements-textSecondary">加载仓库中...</span>
+        <span className="text-upage-elements-textSecondary">加载数据中...</span>
       </div>
     </div>
   );

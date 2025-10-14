@@ -22,7 +22,9 @@ export interface GitHubRepoInfo {
   default_branch: string;
   updated_at: string;
   language: string;
-  languages_url: string;
+  languages_url?: string;
+  private?: boolean;
+  languages: GitHubLanguageStats;
 }
 
 export interface GitHubContent {
@@ -83,19 +85,23 @@ export interface GitHubLanguageStats {
 }
 
 export interface GitHubStats {
-  repos: GitHubRepoInfo[];
+  publicRepos: number;
+  privateRepos: number;
+  publicGists: number;
+  privateGists: number;
+  lastUpdated: string;
+  followers: number;
   totalStars: number;
   totalForks: number;
   organizations: GitHubOrganization[];
-  recentActivity: GitHubEvent[];
-  languages: GitHubLanguageStats;
   totalGists: number;
+  repos: GitHubRepoInfo[];
+  languages: GitHubLanguageStats;
 }
 
-export interface GitHubConnection {
+export interface GitHubConnectionInfo {
+  isConnect: boolean;
   user: GitHubUserResponse | null;
-  token: string;
-  tokenType: 'classic' | 'fine-grained';
   stats?: GitHubStats;
 }
 
@@ -130,4 +136,47 @@ export interface RepositoryStats {
   languages: Record<string, number>;
   hasPackageJson: boolean;
   hasDependencies: boolean;
+}
+
+/**
+ * GitHub 推送请求
+ */
+export interface GitHubPushRequest {
+  repoName: string;
+  commitMessage: string;
+  files: Record<string, string>;
+  chatId: string;
+  isPrivate?: boolean;
+}
+
+/**
+ * GitHub 推送响应
+ */
+export interface GitHubPushResponse {
+  repo: {
+    id: number;
+    name: string;
+    full_name: string;
+    html_url: string;
+  };
+  commit: {
+    sha: string;
+    url: string;
+  };
+}
+
+/**
+ * GitHub 认证请求
+ */
+export interface GitHubAuthRequest {
+  token: string;
+  tokenType: 'classic' | 'fine-grained';
+}
+
+/**
+ * GitHub 认证响应
+ */
+export interface GitHubAuthResponse {
+  user: GitHubUserResponse;
+  isConnect: boolean;
 }

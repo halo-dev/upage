@@ -1,9 +1,6 @@
-import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
-import Cookies from 'js-cookie';
 import JSZip from 'jszip';
 import { atom, type WritableAtom } from 'nanostores';
 import { toast } from 'sonner';
-import { formatFile } from '~/.client/utils/prettier';
 import type { ChangeSource, Page } from '~/types/actions';
 import type { PageMap } from '~/types/pages';
 import { base64ToBinary, getContentType, getExtensionFromMimeType, getFileName } from '~/utils/file-utils';
@@ -206,115 +203,6 @@ export class WebBuilderStore {
     } catch (error) {
       console.error('Failed to delete page:', error);
       throw error;
-    }
-  }
-
-  async pushToGitHub(repoName: string, commitMessage?: string, githubUsername?: string, ghToken?: string) {
-    try {
-      // Use cookies if username and token are not provided
-      const githubToken = ghToken || Cookies.get('githubToken');
-      const owner = githubUsername || Cookies.get('githubUsername');
-
-      if (!githubToken || !owner) {
-        throw new Error('GitHub token or username is not set in cookies or provided.');
-      }
-
-      // Initialize Octokit with the auth token
-      const octokit = new Octokit({ auth: githubToken });
-
-      // Check if the repository already exists before creating it
-      let repo: RestEndpointMethodTypes['repos']['get']['response']['data'];
-
-      try {
-        const resp = await octokit.repos.get({ owner, repo: repoName });
-        repo = resp.data;
-      } catch (error) {
-        if (error instanceof Error && 'status' in error && error.status === 404) {
-          // Repository doesn't exist, so create a new one
-          const { data: newRepo } = await octokit.repos.createForAuthenticatedUser({
-            name: repoName,
-            private: false,
-            auto_init: true,
-          });
-          repo = newRepo;
-        } else {
-          console.log('cannot create repo!');
-          throw error; // Some other error occurred
-        }
-      }
-
-      // Get all pages
-      const pages = await this.getProjectFilesAsMap({
-        inline: false,
-      });
-      if (!pages || Object.keys(pages).length === 0) {
-        throw new Error('No pages found to push');
-      }
-
-      // Create blobs for each file
-      const blobs = await Promise.all(
-        Object.entries(pages).map(async ([path, content]) => {
-          if (path && content) {
-            const formatContent = await formatFile(path, content);
-            const { data: blob } = await octokit.git.createBlob({
-              owner: repo.owner.login,
-              repo: repo.name,
-              content: Buffer.from(formatContent).toString('base64'),
-              encoding: 'base64',
-            });
-            return { path, sha: blob.sha };
-          }
-
-          return null;
-        }),
-      );
-
-      const validBlobs = blobs.filter(Boolean); // Filter out any undefined blobs
-
-      if (validBlobs.length === 0) {
-        throw new Error('No valid files to push');
-      }
-
-      // Get the latest commit SHA (assuming main branch, update dynamically if needed)
-      const { data: ref } = await octokit.git.getRef({
-        owner: repo.owner.login,
-        repo: repo.name,
-        ref: `heads/${repo.default_branch || 'main'}`, // Handle dynamic branch
-      });
-      const latestCommitSha = ref.object.sha;
-
-      // Create a new tree
-      const { data: newTree } = await octokit.git.createTree({
-        owner: repo.owner.login,
-        repo: repo.name,
-        base_tree: latestCommitSha,
-        tree: validBlobs.map((blob) => ({
-          path: blob!.path,
-          mode: '100644',
-          type: 'blob',
-          sha: blob!.sha,
-        })),
-      });
-
-      // Create a new commit
-      const { data: newCommit } = await octokit.git.createCommit({
-        owner: repo.owner.login,
-        repo: repo.name,
-        message: commitMessage || 'Initial commit from your app',
-        tree: newTree.sha,
-        parents: [latestCommitSha],
-      });
-
-      // Update the reference
-      await octokit.git.updateRef({
-        owner: repo.owner.login,
-        repo: repo.name,
-        ref: `heads/${repo.default_branch || 'main'}`, // Handle dynamic branch
-        sha: newCommit.sha,
-      });
-    } catch (error) {
-      console.error('Error pushing to GitHub:', error);
-      throw error; // Rethrow the error for further handling
     }
   }
 

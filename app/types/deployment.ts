@@ -2,6 +2,7 @@ export enum DeploymentPlatformEnum {
   _1PANEL = '1panel',
   NETLIFY = 'netlify',
   VERCEL = 'vercel',
+  GITHUB = 'github',
 }
 
 export type DeploymentPlatform = (typeof DeploymentPlatformEnum)[keyof typeof DeploymentPlatformEnum];

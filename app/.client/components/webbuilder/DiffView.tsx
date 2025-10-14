@@ -6,8 +6,8 @@ import { createHighlighter } from 'shiki';
 import '~/styles/diff-view.css';
 import { webBuilderStore } from '~/.client/stores/web-builder';
 import { LRUCache } from '~/.client/utils/lru-cache';
-import { formatCode, normalizeContent } from '~/.client/utils/prettier';
 import { themeStore } from '~/stores/theme';
+import { formatCode, normalizeContent } from '~/utils/prettier';
 
 const highlightCache = new LRUCache<string, string>(1000);
 const formatCache = new LRUCache<string, string>(100);
