@@ -1,7 +1,5 @@
-import { Popover, Transition } from '@headlessui/react';
 import { useStore } from '@nanostores/react';
 import classNames from 'classnames';
-import { type Change, diffLines } from 'diff';
 import { type HTMLMotionProps, motion, type Variants } from 'framer-motion';
 import { memo, useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -26,6 +24,7 @@ import type { PageMap } from '~/types/pages';
 import { renderLogger } from '~/utils/logger';
 import { DiffView } from './DiffView';
 import { EditorPanel } from './EditorPanel';
+import { PageModifiedDropdown } from './PageModifiedDropdown';
 import { Preview } from './Preview';
 
 const viewTransition = { ease: cubicEasingFn };
@@ -61,154 +60,6 @@ const workbenchVariants = {
     },
   },
 } satisfies Variants;
-
-const PageModifiedDropdown = memo(({ onSelectPage }: { onSelectPage: (pageName: string) => void }) => {
-  const pageHistory = useStore(webBuilderStore.pagesStore.pageHistory);
-  const modifiedPages = Object.entries(pageHistory);
-  const hasChanges = modifiedPages.length > 0;
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredPages = useMemo(() => {
-    return modifiedPages.filter(([pageName]) => pageName.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [modifiedPages, searchQuery]);
-
-  return (
-    <div className="flex items-center gap-2">
-      <Popover className="relative">
-        {({ open }: { open: boolean }) => (
-          <>
-            <Popover.Button className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-upage-elements-background-depth-2 hover:bg-upage-elements-background-depth-3 transition-colors text-upage-elements-textPrimary border border-upage-elements-borderColor">
-              <span className="font-medium">更改页面</span>
-              {hasChanges && (
-                <span className="size-5 rounded-full bg-accent-500/20 text-accent-500 text-xs flex items-center justify-center border border-accent-500/30">
-                  {modifiedPages.length}
-                </span>
-              )}
-            </Popover.Button>
-            <Transition
-              show={open}
-              enter="transition duration-100 ease-out"
-              enterFrom="transform scale-95 opacity-0"
-              enterTo="transform scale-100 opacity-100"
-              leave="transition duration-75 ease-out"
-              leaveFrom="transform scale-100 opacity-100"
-              leaveTo="transform scale-95 opacity-0"
-            >
-              <Popover.Panel className="absolute right-0 z-20 mt-2 w-80 origin-top-right rounded-xl bg-upage-elements-background-depth-2 shadow-xl border border-upage-elements-borderColor">
-                <div className="p-2">
-                  <div className="relative mx-2 mb-2">
-                    <input
-                      type="text"
-                      placeholder="搜索页面..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-upage-elements-background-depth-1 border border-upage-elements-borderColor focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
-                    <div className="absolute left-2 top-1/2 -translate-y-1/2 text-upage-elements-textTertiary">
-                      <div className="i-ph:magnifying-glass" />
-                    </div>
-                  </div>
-
-                  <div className="max-h-60 overflow-y-auto">
-                    {filteredPages.length > 0 ? (
-                      filteredPages.map(([pageName, history]) => {
-                        return (
-                          <button
-                            key={pageName}
-                            onClick={() => onSelectPage(pageName)}
-                            className="w-full px-3 py-2 text-left rounded-md hover:bg-upage-elements-background-depth-1 transition-colors group bg-transparent"
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className="shrink-0 size-5 text-upage-elements-textTertiary">
-                                <div className="i-ph:file-text" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex flex-col min-w-0">
-                                    <span className="truncate text-sm font-medium text-upage-elements-textPrimary">
-                                      {pageName.split('/').pop()}
-                                    </span>
-                                    <span className="truncate text-xs text-upage-elements-textTertiary">
-                                      {pageName}
-                                    </span>
-                                  </div>
-                                  {(() => {
-                                    // Calculate diff stats
-                                    const { additions, deletions } = (() => {
-                                      if (!history.originalContent) {
-                                        return { additions: 0, deletions: 0 };
-                                      }
-
-                                      const normalizedOriginal = history.originalContent.replace(/\r\n/g, '\n');
-                                      const normalizedCurrent =
-                                        history.versions[history.versions.length - 1]?.content.replace(/\r\n/g, '\n') ||
-                                        '';
-
-                                      if (normalizedOriginal === normalizedCurrent) {
-                                        return { additions: 0, deletions: 0 };
-                                      }
-
-                                      const changes = diffLines(normalizedOriginal, normalizedCurrent, {
-                                        newlineIsToken: false,
-                                        ignoreWhitespace: true,
-                                      });
-
-                                      return changes.reduce(
-                                        (acc: { additions: number; deletions: number }, change: Change) => {
-                                          if (change.added) {
-                                            acc.additions += change.value.split('\n').length;
-                                          }
-
-                                          if (change.removed) {
-                                            acc.deletions += change.value.split('\n').length;
-                                          }
-
-                                          return acc;
-                                        },
-                                        { additions: 0, deletions: 0 },
-                                      );
-                                    })();
-
-                                    const showStats = additions > 0 || deletions > 0;
-
-                                    return (
-                                      showStats && (
-                                        <div className="flex items-center gap-1 text-xs shrink-0">
-                                          {additions > 0 && <span className="text-green-500">+{additions}</span>}
-                                          {deletions > 0 && <span className="text-red-500">-{deletions}</span>}
-                                        </div>
-                                      )
-                                    );
-                                  })()}
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className="flex flex-col items-center justify-center p-4 text-center">
-                        <div className="size-12 mb-2 text-upage-elements-textTertiary">
-                          <div className="i-ph:file-dashed" />
-                        </div>
-                        <p className="text-sm font-medium text-upage-elements-textPrimary">
-                          {searchQuery ? '没有匹配的页面' : '没有修改的页面'}
-                        </p>
-                        <p className="text-xs text-upage-elements-textTertiary mt-1">
-                          {searchQuery ? '尝试其他搜索' : '更改将在此处显示'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Popover.Panel>
-            </Transition>
-          </>
-        )}
-      </Popover>
-    </div>
-  );
-});
 
 export const WebBuilder = memo(() => {
   renderLogger.trace('webBuilder');
@@ -251,7 +102,7 @@ export const WebBuilder = memo(() => {
     webBuilderStore.setSelectedPage(pageName);
   }, []);
 
-  const onAutoPageSave = useCallback<OnSaveCallback>(() => {
+  const onPageSave = useCallback<OnSaveCallback>(() => {
     if (isStreaming) {
       return;
     }
@@ -259,7 +110,7 @@ export const WebBuilder = memo(() => {
   }, [isStreaming]);
 
   const doPageSave = useCallback(() => {
-    webBuilderStore.saveAllPages().catch(() => {
+    webBuilderStore.saveAllPages('user').catch(() => {
       toast.error('文件内容更新失败');
     });
     const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
@@ -377,7 +228,7 @@ export const WebBuilder = memo(() => {
                     unsavedPages={unsavedPages}
                     onPageSelect={onPageSelect}
                     onEditorChange={onEditorChange}
-                    onPageSave={onAutoPageSave}
+                    onPageSave={onPageSave}
                     onPageReset={onPageReset}
                     onLoad={onLoad}
                     onReady={onReady}

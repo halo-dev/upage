@@ -3,7 +3,8 @@ import { atom, computed, type MapStore, map, type WritableAtom } from 'nanostore
 import { type EditorBridge, type EventPayload, editorBridge } from '~/.client/bridge';
 import { computePageModifications, diffPages } from '~/.client/utils/diff';
 import { isValidContent } from '~/.client/utils/html-parse';
-import type { Page, PageHistory } from '~/types/actions';
+import { normalizeContent } from '~/.client/utils/prettier';
+import type { ChangeSource, Page, PageHistory } from '~/types/actions';
 import type { PageMap, PageSection, SectionMap } from '~/types/pages';
 import { createScopedLogger } from '~/utils/logger';
 
@@ -156,69 +157,67 @@ export class PagesStore {
     this.modifiedPages.clear();
   }
 
-  async savePage(pageName: string, content: string) {
+  async savePage(pageName: string, content: string, changeSource: ChangeSource) {
     const page = this.getPage(pageName);
     if (!page) {
       return false;
     }
-    // 保存上一次的页面内容
-    this.savePageHistory(pageName, content);
     try {
       this.pages.setKey(pageName, { ...page, content });
       logger.info('Page updated');
+      // 保存上一次的页面内容
+      this.savePageHistory(pageName, content, changeSource);
     } catch (error) {
       logger.error('Failed to update page content\n\n', error);
-
       throw error;
     }
   }
 
-  async savePageHistory(pageName: string, newContent: string) {
+  async savePageHistory(pageName: string, newContent: string, changeSource: ChangeSource) {
     const page = this.getPage(pageName);
     if (!page) {
       return;
     }
-
     const pageHistory = this.pageHistory.get()[pageName];
     // 如果不存在历史记录，则创建一个新的历史记录
-    const normalizedCurrentContent = newContent?.replace(/\r\n/g, '\n').trim();
-    const originalContent = pageHistory?.originalContent || page.content!;
+    if (!pageHistory) {
+      const newHistory: PageHistory = {
+        originalContent: newContent,
+        latestVersion: 1,
+        latestModified: Date.now(),
+        versions: [
+          {
+            version: 1,
+            timestamp: Date.now(),
+            content: newContent,
+            changeSource,
+          },
+        ],
+      };
+      this.pageHistory.setKey(pageName, newHistory);
+      return;
+    }
+
+    const lastVersion = pageHistory.versions.find((version) => version.version === pageHistory.latestVersion);
+    if (!lastVersion) {
+      return;
+    }
+    // 如果存在历史记录，则检查自上次版本以来是否有实际变化
+    const originalContent = lastVersion?.content || page.content!;
     if (!originalContent) {
       return;
     }
-    const normalizedOriginalContent = (pageHistory?.originalContent || page.content!).replace(/\r\n/g, '\n').trim();
-    if (!pageHistory) {
-      if (normalizedCurrentContent !== normalizedOriginalContent) {
-        const newChanges = diffLines(page.content!, newContent);
-        const newHistory: PageHistory = {
-          originalContent: page.content!,
-          lastModified: Date.now(),
-          changes: newChanges,
-          versions: [
-            {
-              timestamp: Date.now(),
-              content: newContent,
-            },
-          ],
-          changeSource: 'auto-save',
-        };
-        this.pageHistory.setKey(pageName, newHistory);
-      }
-      return;
-    }
-
-    // 如果存在历史记录，则检查自上次版本以来是否有实际变化
-    const lastVersion = pageHistory.versions[pageHistory.versions.length - 1];
-    const normalizedLastContent = lastVersion?.content.replace(/\r\n/g, '\n').trim();
+    const normalizedCurrentContent = normalizeContent(newContent);
+    const normalizedLastContent = normalizeContent(lastVersion?.content);
     if (normalizedCurrentContent === normalizedLastContent) {
       return;
     }
 
-    const unifiedDiff = diffPages(pageName, pageHistory.originalContent, newContent);
+    const unifiedDiff = diffPages(pageName, lastVersion.content, newContent);
     if (!unifiedDiff) {
       return;
     }
-    const newChanges = diffLines(pageHistory.originalContent, newContent);
+    const newChanges = diffLines(lastVersion.content, newContent);
 
     // 检查是否有显著变化
     const hasSignificantChanges = newChanges.some(
@@ -230,16 +229,17 @@ export class PagesStore {
 
     const newHistory: PageHistory = {
       originalContent: pageHistory.originalContent,
-      lastModified: Date.now(),
-      changes: [...pageHistory.changes, ...newChanges].slice(-100), // Limitar histórico de mudanças
+      latestVersion: pageHistory.latestVersion + 1,
+      latestModified: Date.now(),
       versions: [
         ...pageHistory.versions,
         {
+          version: pageHistory.latestVersion + 1,
           timestamp: Date.now(),
           content: newContent,
+          changeSource,
         },
-      ].slice(-10), // 只保留最近的 10 个版本
-      changeSource: 'auto-save',
+      ].slice(-20), // 只保留最近的 20 个版本
     };
 
     this.pageHistory.setKey(pageName, newHistory);

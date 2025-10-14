@@ -1,101 +1,17 @@
 import { useStore } from '@nanostores/react';
 import { type Change, diffLines } from 'diff';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { List, type RowComponentProps } from 'react-window';
 import { createHighlighter } from 'shiki';
 import '~/styles/diff-view.css';
 import { webBuilderStore } from '~/.client/stores/web-builder';
-import { formatCode } from '~/.client/utils/prettier';
+import { LRUCache } from '~/.client/utils/lru-cache';
+import { formatCode, normalizeContent } from '~/.client/utils/prettier';
 import { themeStore } from '~/stores/theme';
 
-// 高亮结果缓存，使用 Map 存储已高亮的代码行
-const highlightCache = new Map<string, string>();
-// 格式化结果缓存，使用 Map 存储已格式化的代码
-const formatCache = new Map<string, string>();
-
-// 差异计算结果缓存
-const diffCache = new Map<string, ReturnType<typeof processChanges>>();
-
-interface VirtualizedListProps<T> {
-  items: T[];
-  renderItem: (item: T, index: number) => React.ReactNode;
-  itemHeight: number;
-  className?: string;
-  overscan?: number;
-}
-
-function VirtualizedList<T>({ items, renderItem, itemHeight, className = '', overscan = 20 }: VirtualizedListProps<T>) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 50 });
-  const [renderedItems, setRenderedItems] = useState<React.ReactNode[]>([]);
-  const [isRendering, setIsRendering] = useState(false);
-  const totalHeight = items.length * itemHeight;
-
-  const handleScroll = useCallback(() => {
-    if (!containerRef.current) {
-      return;
-    }
-
-    const { scrollTop, clientHeight } = containerRef.current;
-    const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
-    const end = Math.min(items.length, Math.ceil((scrollTop + clientHeight) / itemHeight) + overscan);
-
-    setVisibleRange({ start, end });
-  }, [items.length, itemHeight, overscan]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
-      return;
-    }
-
-    container.addEventListener('scroll', handleScroll);
-    handleScroll();
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-    };
-  }, [handleScroll]);
-
-  useEffect(() => {
-    handleScroll();
-  }, [items.length, handleScroll]);
-
-  useEffect(() => {
-    if (isRendering) {
-      return;
-    }
-
-    setIsRendering(true);
-
-    setTimeout(() => {
-      const visibleItems = items.slice(visibleRange.start, visibleRange.end);
-      const newRenderedItems = visibleItems.map((item, index) => {
-        const actualIndex = visibleRange.start + index;
-        return (
-          <div
-            key={actualIndex}
-            style={{ position: 'absolute', top: actualIndex * itemHeight, height: itemHeight, width: '100%' }}
-          >
-            {renderItem(item, actualIndex)}
-          </div>
-        );
-      });
-
-      setRenderedItems(newRenderedItems);
-      setIsRendering(false);
-    }, 0);
-  }, [items, visibleRange, itemHeight, renderItem, isRendering]);
-
-  return (
-    <div
-      ref={containerRef}
-      className={`virtualized-list ${className}`}
-      style={{ position: 'relative', height: '100%', overflow: 'hidden' }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>{renderedItems}</div>
-    </div>
-  );
-}
+const highlightCache = new LRUCache<string, string>(1000);
+const formatCache = new LRUCache<string, string>(100);
+const diffCache = new LRUCache<string, ReturnType<typeof processChanges>>(50);
 
 interface CodeComparisonProps {
   beforeCode?: string;
@@ -148,34 +64,36 @@ const FullscreenOverlay = memo(({ isFullscreen, children }: { isFullscreen: bool
 
 const processChanges = (beforeCode?: string, afterCode?: string) => {
   try {
-    const normalizeContent = (content: string): string[] => {
+    const normalizeContent = (content?: string): string[] => {
+      if (!content) {
+        return [];
+      }
       return content
         .replace(/\r\n/g, '\n')
         .split('\n')
         .map((line) => line.trimEnd());
     };
 
-    if (!beforeCode || !afterCode) {
-      return {
-        beforeLines: [],
-        afterLines: [],
-        hasChanges: false,
-        lineChanges: { before: new Set(), after: new Set() },
-        unifiedBlocks: [],
-      };
-    }
-
     const beforeLines = normalizeContent(beforeCode);
     const afterLines = normalizeContent(afterCode);
 
-    if (beforeLines.join('\n') === afterLines.join('\n')) {
-      return {
-        beforeLines,
-        afterLines,
-        hasChanges: false,
-        lineChanges: { before: new Set(), after: new Set() },
-        unifiedBlocks: [],
-      };
+    if (beforeLines.length === afterLines.length) {
+      let isEqual = true;
+      for (let idx = 0; idx < beforeLines.length; idx++) {
+        if (beforeLines[idx] !== afterLines[idx]) {
+          isEqual = false;
+          break;
+        }
+      }
+      if (isEqual) {
+        return {
+          beforeLines,
+          afterLines,
+          hasChanges: false,
+          lineChanges: { before: new Set(), after: new Set() },
+          unifiedBlocks: [],
+        };
+      }
     }
 
     const lineChanges = {
@@ -376,20 +294,19 @@ const processChanges = (beforeCode?: string, afterCode?: string) => {
 
 const lineNumberStyles =
   'w-9 shrink-0 pl-2 py-1 text-left font-mono text-upage-elements-textTertiary border-r border-upage-elements-borderColor bg-upage-elements-background-depth-1';
-const lineContentStyles =
-  'px-1 py-1 font-mono whitespace-pre flex-1 group-hover:bg-upage-elements-background-depth-2 text-upage-elements-textPrimary';
+const lineContentStyles = 'px-1 py-1 font-mono whitespace-pre flex-1 text-upage-elements-textPrimary';
 const diffPanelStyles = 'h-full overflow-auto diff-panel-content';
 
 // Updated color styles for better consistency
 const diffLineStyles = {
-  added: 'bg-green-500/10 dark:bg-green-500/20 border-l-4 border-green-500',
-  removed: 'bg-red-500/10 dark:bg-red-500/20 border-l-4 border-red-500',
+  added: 'bg-green-50/30 dark:bg-green-500/5 border-l-4 border-green-500',
+  removed: 'bg-red-50/30 dark:bg-red-500/5 border-l-4 border-red-500',
   unchanged: '',
 };
 
 const changeColorStyles = {
-  added: 'text-green-700 dark:text-green-500 bg-green-500/10 dark:bg-green-500/20',
-  removed: 'text-red-700 dark:text-red-500 bg-red-500/10 dark:bg-red-500/20',
+  added: 'text-green-800 dark:text-green-400 bg-green-500/35 dark:bg-green-500/45 px-0.5 rounded font-medium',
+  removed: 'text-red-800 dark:text-red-400 bg-red-500/35 dark:bg-red-500/45 px-0.5 rounded font-medium',
   unchanged: 'text-upage-elements-textPrimary',
 };
 
@@ -427,20 +344,36 @@ const NoChangesView = memo(
       }));
     }, [beforeCode]);
 
-    const renderCodeLine = useCallback(
-      (block: DiffBlock, index: number) => (
-        <CodeLine
-          key={`unchanged-${index}`}
-          lineNumber={block.lineNumber}
-          content={block.content}
-          type={block.type}
-          highlighter={highlighter}
-          language={language}
-          block={block}
-          theme={theme}
-        />
-      ),
-      [highlighter, language, theme],
+    const Row = useCallback(
+      ({
+        index,
+        style,
+        codeBlocks,
+        highlighter,
+        language,
+        theme,
+      }: RowComponentProps<{
+        codeBlocks: DiffBlock[];
+        highlighter: any;
+        language: string;
+        theme: string;
+      }>) => {
+        const block = codeBlocks[index];
+        return (
+          <div style={style}>
+            <CodeLine
+              lineNumber={block.lineNumber}
+              content={block.content}
+              type={block.type}
+              highlighter={highlighter}
+              language={language}
+              block={block}
+              theme={theme}
+            />
+          </div>
+        );
+      },
+      [],
     );
 
     return (
@@ -456,12 +389,14 @@ const NoChangesView = memo(
           </div>
           <div className="overflow-auto max-h-96">
             {codeBlocks.length > 0 ? (
-              <VirtualizedList
-                items={codeBlocks}
-                renderItem={renderCodeLine}
-                itemHeight={24}
-                className="overflow-x-auto"
-                overscan={10}
+              <List
+                defaultHeight={384}
+                rowCount={codeBlocks.length}
+                rowHeight={24}
+                rowComponent={Row}
+                rowProps={{ codeBlocks, highlighter, language, theme }}
+                className="overflow-x-auto overflow-y-hidden!"
+                overscanCount={10}
               />
             ) : (
               <div className="p-4 text-center text-upage-elements-textTertiary">无内容</div>
@@ -473,13 +408,25 @@ const NoChangesView = memo(
   },
 );
 
+const simpleHash = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+};
+
 const useProcessChanges = (beforeCode?: string, afterCode?: string) => {
   return useMemo(() => {
-    if (!beforeCode || !afterCode) {
+    if (!beforeCode && !afterCode) {
       return processChanges(beforeCode, afterCode);
     }
 
-    const cacheKey = `${beforeCode}:${afterCode}`;
+    const beforeHash = beforeCode ? `${simpleHash(beforeCode)}:${beforeCode.length}` : 'empty';
+    const afterHash = afterCode ? `${simpleHash(afterCode)}:${afterCode.length}` : 'empty';
+    const cacheKey = `${beforeHash}:${afterHash}`;
 
     if (diffCache.has(cacheKey)) {
       return diffCache.get(cacheKey)!;
@@ -489,6 +436,58 @@ const useProcessChanges = (beforeCode?: string, afterCode?: string) => {
     diffCache.set(cacheKey, result);
     return result;
   }, [beforeCode, afterCode]);
+};
+
+const getHighlightedContent = (
+  content: string,
+  language: string,
+  currentTheme: string,
+  highlighter: any,
+  type: 'added' | 'removed' | 'unchanged',
+  charChanges?: Array<{ value: string; type: 'added' | 'removed' | 'unchanged' }>,
+): string | null => {
+  if (!highlighter) {
+    return null;
+  }
+
+  if (type === 'unchanged' || !charChanges) {
+    const cacheKey = `${content}:${language}:${currentTheme}`;
+
+    if (highlightCache.has(cacheKey)) {
+      return highlightCache.get(cacheKey)!;
+    }
+
+    const highlighted = highlighter
+      .codeToHtml(content, { lang: language, theme: currentTheme })
+      .replace(/<\/?pre[^>]*>/g, '')
+      .replace(/<\/?code[^>]*>/g, '');
+
+    highlightCache.set(cacheKey, highlighted);
+    return highlighted;
+  }
+
+  const fragments: string[] = [];
+
+  for (const change of charChanges) {
+    const changeClass = changeColorStyles[change.type];
+    const cacheKey = `${change.value}:${language}:${currentTheme}:${change.type}`;
+
+    let highlighted;
+    if (highlightCache.has(cacheKey)) {
+      highlighted = highlightCache.get(cacheKey)!;
+    } else {
+      highlighted = highlighter
+        .codeToHtml(change.value, { lang: language, theme: currentTheme })
+        .replace(/<\/?pre[^>]*>/g, '')
+        .replace(/<\/?code[^>]*>/g, '');
+
+      highlightCache.set(cacheKey, highlighted);
+    }
+
+    fragments.push(`<span class="${changeClass}">${highlighted}</span>`);
+  }
+
+  return fragments.join('');
 };
 
 const CodeLine = memo(
@@ -512,68 +511,13 @@ const CodeLine = memo(
     const bgColor = diffLineStyles[type];
     const currentTheme = theme === 'dark' ? 'github-dark' : 'github-light';
 
-    const [isHighlighted, setIsHighlighted] = useState(false);
-    const [highlightedContent, setHighlightedContent] = useState<string | null>(null);
-
-    useEffect(() => {
-      if (!highlighter) {
-        return;
-      }
-
-      const timeoutId = setTimeout(() => {
-        if (type === 'unchanged' || !block.charChanges) {
-          const cacheKey = `${content}:${language}:${currentTheme}`;
-
-          if (highlightCache.has(cacheKey)) {
-            setHighlightedContent(highlightCache.get(cacheKey)!);
-            setIsHighlighted(true);
-            return;
-          }
-
-          const highlighted = highlighter
-            .codeToHtml(content, { lang: language, theme: currentTheme })
-            .replace(/<\/?pre[^>]*>/g, '')
-            .replace(/<\/?code[^>]*>/g, '');
-
-          highlightCache.set(cacheKey, highlighted);
-          setHighlightedContent(highlighted);
-          setIsHighlighted(true);
-        } else {
-          const fragments: string[] = [];
-
-          for (let i = 0; i < block.charChanges!.length; i++) {
-            const change = block.charChanges![i];
-            const changeClass = changeColorStyles[change.type];
-
-            const cacheKey = `${change.value}:${language}:${currentTheme}:${change.type}`;
-
-            let highlighted;
-            if (highlightCache.has(cacheKey)) {
-              highlighted = highlightCache.get(cacheKey);
-            } else {
-              highlighted = highlighter
-                .codeToHtml(change.value, { lang: language, theme: currentTheme })
-                .replace(/<\/?pre[^>]*>/g, '')
-                .replace(/<\/?code[^>]*>/g, '');
-
-              highlightCache.set(cacheKey, highlighted);
-            }
-
-            fragments.push(`<span class="${changeClass}">${highlighted}</span>`);
-          }
-
-          setHighlightedContent(fragments.join(''));
-          setIsHighlighted(true);
-        }
-      }, 10);
-
-      return () => {
-        clearTimeout(timeoutId);
-      };
-    }, [content, language, currentTheme, highlighter, type, block.charChanges]);
+    const highlightedContent = useMemo(
+      () => getHighlightedContent(content, language, currentTheme, highlighter, type, block.charChanges),
+      [content, language, currentTheme, highlighter, type, block.charChanges],
+    );
 
     const renderContent = () => {
-      if (isHighlighted && highlightedContent) {
+      if (highlightedContent) {
         return <span dangerouslySetInnerHTML={{ __html: highlightedContent }} />;
       }
 
@@ -718,20 +662,50 @@ const InlineDiffComparison = memo(({ beforeCode, afterCode, pageName, language }
     }
   }, [hasChanges, loadHighlighter]);
 
-  const renderCodeLine = useCallback(
-    (block: DiffBlock, index: number) => (
-      <CodeLine
-        key={`${block.lineNumber}-${index}`}
-        lineNumber={block.lineNumber}
-        content={block.content}
-        type={block.type}
-        highlighter={highlighter}
-        language={language}
-        block={block}
-        theme={theme}
-      />
-    ),
-    [highlighter, language, theme],
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        setContainerHeight(containerRef.current.clientHeight);
+      }
+    };
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
+
+  const Row = useCallback(
+    ({
+      index,
+      style,
+      unifiedBlocks,
+      highlighter,
+      language,
+      theme,
+    }: RowComponentProps<{
+      unifiedBlocks: DiffBlock[];
+      highlighter: any;
+      language: string;
+      theme: string;
+    }>) => {
+      const block = unifiedBlocks[index];
+      return (
+        <div style={style}>
+          <CodeLine
+            lineNumber={block.lineNumber}
+            content={block.content}
+            type={block.type}
+            highlighter={highlighter}
+            language={language}
+            block={block}
+            theme={theme}
+          />
+        </div>
+      );
+    },
+    [],
   );
 
   if (error) {
@@ -749,17 +723,17 @@ const InlineDiffComparison = memo(({ beforeCode, afterCode, pageName, language }
           beforeCode={beforeCode}
           afterCode={afterCode}
         />
-        <div className={diffPanelStyles}>
+        <div ref={containerRef} className={diffPanelStyles}>
           {hasChanges ? (
-            <div className="overflow-x-auto min-w-full">
-              <VirtualizedList
-                items={unifiedBlocks}
-                renderItem={renderCodeLine}
-                itemHeight={24}
-                className="overflow-x-auto"
-                overscan={30}
-              />
-            </div>
+            <List
+              defaultHeight={containerHeight}
+              rowCount={unifiedBlocks.length}
+              rowHeight={24}
+              rowComponent={Row}
+              rowProps={{ unifiedBlocks, highlighter, language, theme }}
+              className="overflow-x-auto"
+              overscanCount={30}
+            />
           ) : (
             <NoChangesView beforeCode={beforeCode} language={language} highlighter={highlighter} theme={theme} />
           )}
@@ -771,18 +745,13 @@ const InlineDiffComparison = memo(({ beforeCode, afterCode, pageName, language }
 
 export const DiffView = memo(() => {
   const pageHistory = useStore(webBuilderStore.pagesStore.pageHistory);
-  const pages = useStore(webBuilderStore.pagesStore.pages);
   const selectedPage = useStore(webBuilderStore.pagesStore.activePage);
-  const currentPage = useStore(webBuilderStore.pagesStore.currentPage);
   const currentView = useStore(webBuilderStore.currentView);
-  const [formattedContent, setFormattedContent] = useState<string>('');
-  const [effectiveOriginalContent, setEffectiveOriginalContent] = useState<string>('');
+
   const [shouldProcess, setShouldProcess] = useState(false);
+  const [compareVersionContent, setCompareVersionContent] = useState<string>('');
+  const [baselineVersionContent, setBaselineVersionContent] = useState<string>('');
 
-  // 存当前页面内容的键，用于检测内容是否变化缓
-  const contentCacheKey = useRef<string | null>(null);
-
-  // 当视图切换到 diff 时，标记需要处理
   useEffect(() => {
     if (currentView === 'diff') {
       setShouldProcess(true);
@@ -790,59 +759,69 @@ export const DiffView = memo(() => {
   }, [currentView]);
 
   useEffect(() => {
-    if (!selectedPage || !currentPage || currentView !== 'diff' || !shouldProcess) {
+    if (currentView !== 'diff' || !selectedPage || !shouldProcess) {
       return;
     }
 
-    const page = pages[selectedPage];
-    const originalContent = page && 'content' in page ? page.content : '';
-
     const history = pageHistory[selectedPage];
-    const originalContentToFormat = history?.originalContent || originalContent;
+    // 使用最新版本
+    const lastVersion = history?.versions.find((version) => version.version === history.latestVersion);
+    const lastVersionContent = normalizeContent(lastVersion?.content);
 
-    if (currentPage?.content) {
-      const currentContent = currentPage.content as string;
-
-      if (formatCache.has(currentContent)) {
-        setFormattedContent(formatCache.get(currentContent)!);
-
-        contentCacheKey.current = currentContent;
+    if (lastVersionContent) {
+      const lastVersionCacheKey = `${selectedPage}:${history?.latestVersion}`;
+      if (formatCache.has(lastVersionCacheKey)) {
+        setCompareVersionContent(formatCache.get(lastVersionCacheKey)!);
       } else {
-        formatCode(currentContent, { parser: 'html' })
+        formatCode(lastVersionContent, { parser: 'html' })
           .then((formatted) => {
-            formatCache.set(currentContent, formatted);
-            setFormattedContent(formatted);
-
-            contentCacheKey.current = currentContent;
+            formatCache.set(lastVersionCacheKey, formatted);
+            setCompareVersionContent(formatted);
           })
           .catch((error) => {
             console.error('格式化当前内容失败:', error);
-            setFormattedContent(currentContent);
-            contentCacheKey.current = currentContent;
+            setCompareVersionContent(lastVersionContent);
           });
       }
     }
 
-    if (originalContentToFormat) {
-      if (formatCache.has(originalContentToFormat)) {
-        setEffectiveOriginalContent(formatCache.get(originalContentToFormat)!);
+    // 获取上一次由聊天所触发的历史版本(不含本次版本)，或者第一个初始化版本
+    const autoSaveHistories = history?.versions.filter((version) => version.changeSource === 'auto-save') || [];
+    let lastTimeChatVersionVersion = 0;
+    if (autoSaveHistories.length > 1) {
+      lastTimeChatVersionVersion = autoSaveHistories[autoSaveHistories.length - 2].version;
+    } else {
+      const firstHistory = history?.versions[0];
+      if (firstHistory && firstHistory.changeSource === 'initial') {
+        lastTimeChatVersionVersion = firstHistory.version;
       } else {
-        formatCode(originalContentToFormat, { parser: 'html' })
+        lastTimeChatVersionVersion = 0;
+      }
+    }
+    const lastTimeChatVersion = history?.versions.find((version) => version.version === lastTimeChatVersionVersion);
+    const lastTimeChatVersionContent = normalizeContent(lastTimeChatVersion?.content);
+
+    if (lastTimeChatVersionContent) {
+      const lastTimeChatVersionCacheKey = `${selectedPage}:${lastTimeChatVersionVersion}`;
+      if (formatCache.has(lastTimeChatVersionCacheKey)) {
+        setBaselineVersionContent(formatCache.get(lastTimeChatVersionCacheKey)!);
+      } else {
+        formatCode(lastTimeChatVersionContent, { parser: 'html' })
           .then((formatted) => {
-            formatCache.set(originalContentToFormat, formatted);
-            setEffectiveOriginalContent(formatted);
+            formatCache.set(lastTimeChatVersionCacheKey, formatted);
+            setBaselineVersionContent(formatted);
           })
           .catch((error) => {
             console.error('格式化原始内容失败:', error);
-            setEffectiveOriginalContent(originalContentToFormat);
+            setBaselineVersionContent(lastTimeChatVersionContent);
           });
       }
     }
 
     setShouldProcess(false);
-  }, [currentPage?.content, selectedPage, currentView, shouldProcess, pageHistory, pages]);
+  }, [selectedPage, currentView, shouldProcess, pageHistory]);
 
-  if (!selectedPage || !currentPage) {
+  if (!selectedPage) {
     return (
       <div className="flex size-full justify-center items-center bg-upage-elements-background-depth-1 text-upage-elements-textPrimary">
         选择一个页面来查看差异
@@ -854,8 +833,8 @@ export const DiffView = memo(() => {
     return (
       <div className="h-full overflow-hidden">
         <InlineDiffComparison
-          beforeCode={effectiveOriginalContent}
-          afterCode={formattedContent}
+          beforeCode={baselineVersionContent}
+          afterCode={compareVersionContent}
           language={'html'}
           pageName={selectedPage}
           lightTheme="github-light"

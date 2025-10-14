@@ -25,7 +25,7 @@ export function useProject() {
     }
 
     // 保存之前，先保存所有页面
-    await webBuilderStore.saveAllPages();
+    await webBuilderStore.saveAllPages('auto-save');
     const projectPages = Object.values(webBuilderStore.pagesStore.pages.get()).filter((page) => page !== undefined);
     const projectSections = Object.values(webBuilderStore.pagesStore.sections.get())
       .filter((section) => section !== undefined)

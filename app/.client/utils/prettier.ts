@@ -50,3 +50,7 @@ export function getParser(filePath: string): BuiltInParserName | undefined {
       return undefined;
   }
 }
+
+export function normalizeContent(content?: string) {
+  return content?.replace(/\r\n/g, '\n').trim();
+}
