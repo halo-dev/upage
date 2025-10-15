@@ -2,7 +2,7 @@ import prettier, { type BuiltInParserName, type Options } from 'prettier';
 import * as html from 'prettier/plugins/html';
 import * as css from 'prettier/plugins/postcss';
 import * as javascript from 'prettier/plugins/typescript';
-import { path } from '../../utils/path';
+import { path } from './path';
 
 const ignoreFiles = ['tailwindcss.js', 'iconify-icon.min.js'];
 

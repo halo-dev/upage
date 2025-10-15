@@ -29,6 +29,15 @@ export const VERCEL_SETTINGS = {
 };
 
 /**
+ * GitHub 连接设置
+ */
+export const GITHUB_SETTINGS = {
+  CATEGORY: 'connectivity',
+  TOKEN_KEY: 'github_token',
+  TOKEN_TYPE_KEY: 'github_token_type',
+};
+
+/**
  * 获取1Panel连接设置
  * @param userId 用户ID
  * @returns 包含serverUrl和apiKey的对象，如果未设置则返回null
@@ -214,6 +223,82 @@ export async function deleteVercelConnectionSettings(userId: string): Promise<vo
     logger.info(`[Vercel] 删除用户 ${userId} 的连接设置成功`);
   } catch (error) {
     logger.error(`[Vercel] 删除用户 ${userId} 的连接设置失败:`, error);
+    throw error;
+  }
+}
+
+/**
+ * 获取 GitHub 连接设置
+ * @param userId 用户ID
+ * @returns 包含 token 和 tokenType 的对象，如果未设置则返回 null
+ */
+export async function getGitHubConnectionSettings(
+  userId: string,
+): Promise<{ token: string; tokenType: 'classic' | 'fine-grained' } | null> {
+  try {
+    const tokenSetting = await getUserSetting(userId, GITHUB_SETTINGS.CATEGORY, GITHUB_SETTINGS.TOKEN_KEY);
+    const tokenTypeSetting = await getUserSetting(userId, GITHUB_SETTINGS.CATEGORY, GITHUB_SETTINGS.TOKEN_TYPE_KEY);
+
+    if (!tokenSetting) {
+      return null;
+    }
+
+    return {
+      token: tokenSetting.value,
+      tokenType: (tokenTypeSetting?.value as 'classic' | 'fine-grained') || 'classic',
+    };
+  } catch (error) {
+    logger.error(`[GitHub] 获取用户 ${userId} 的连接设置失败:`, error);
+    return null;
+  }
+}
+
+/**
+ * 保存 GitHub 连接设置
+ * @param userId 用户ID
+ * @param token 访问令牌
+ * @param tokenType 令牌类型
+ */
+export async function saveGitHubConnectionSettings(
+  userId: string,
+  token: string,
+  tokenType: 'classic' | 'fine-grained' = 'classic',
+): Promise<void> {
+  try {
+    await setUserSetting({
+      userId,
+      category: GITHUB_SETTINGS.CATEGORY,
+      key: GITHUB_SETTINGS.TOKEN_KEY,
+      value: token,
+      isSecret: true,
+    });
+
+    await setUserSetting({
+      userId,
+      category: GITHUB_SETTINGS.CATEGORY,
+      key: GITHUB_SETTINGS.TOKEN_TYPE_KEY,
+      value: tokenType,
+    });
+
+    logger.info(`[GitHub] 保存用户 ${userId} 的连接设置成功`);
+  } catch (error) {
+    logger.error(`[GitHub] 保存用户 ${userId} 的连接设置失败:`, error);
+    throw error;
+  }
+}
+
+/**
+ * 删除 GitHub 连接设置
+ * @param userId 用户ID
+ */
+export async function deleteGitHubConnectionSettings(userId: string): Promise<void> {
+  try {
+    await deleteUserSetting(userId, GITHUB_SETTINGS.CATEGORY, GITHUB_SETTINGS.TOKEN_KEY);
+    await deleteUserSetting(userId, GITHUB_SETTINGS.CATEGORY, GITHUB_SETTINGS.TOKEN_TYPE_KEY);
+
+    logger.info(`[GitHub] 删除用户 ${userId} 的连接设置成功`);
+  } catch (error) {
+    logger.error(`[GitHub] 删除用户 ${userId} 的连接设置失败:`, error);
     throw error;
   }
 }

@@ -9,7 +9,7 @@ import type {
   OnReadyCallback,
   OnSaveCallback,
 } from '~/.client/components/editor/Editor';
-import { PushToGitHubDialog } from '~/.client/components/header/connections/components/PushToGitHubDialog';
+import { PushToGitHubDialog } from '~/.client/components/header/PushToGitHubDialog';
 import { IconButton } from '~/.client/components/ui/IconButton';
 import { PanelHeaderButton } from '~/.client/components/ui/PanelHeaderButton';
 import { Slider, type SliderOptions } from '~/.client/components/ui/Slider';
@@ -247,23 +247,7 @@ export const WebBuilder = memo(() => {
             </div>
           </div>
         </div>
-        <PushToGitHubDialog
-          isOpen={isPushDialogOpen}
-          onClose={() => setIsPushDialogOpen(false)}
-          onPush={async (repoName, username, token) => {
-            try {
-              const commitMessage = prompt('请输入提交信息:', 'Initial commit') || 'Initial commit';
-              await webBuilderStore.pushToGitHub(repoName, commitMessage, username, token);
-
-              const repoUrl = `https://github.com/${username}/${repoName}`;
-              return repoUrl;
-            } catch (error) {
-              console.error('Error pushing to GitHub:', error);
-              toast.error('GitHub 推送失败');
-              throw error;
-            }
-          }}
-        />
+        <PushToGitHubDialog isOpen={isPushDialogOpen} onClose={() => setIsPushDialogOpen(false)} />
       </motion.div>
     )
   );

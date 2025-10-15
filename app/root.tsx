@@ -21,6 +21,7 @@ import { getUser } from '~/.server/service/auth';
 import { getUserUsageStats } from '~/.server/service/chat-usage';
 import {
   get1PanelConnectionSettings,
+  getGitHubConnectionSettings,
   getNetlifyConnectionSettings,
   getVercelConnectionSettings,
 } from '~/.server/service/connection-settings';
@@ -38,6 +39,7 @@ export interface ConnectionSettings {
   _1PanelConnection: boolean;
   netlifyConnection: boolean;
   vercelConnection: boolean;
+  githubConnection: boolean;
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -49,20 +51,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
     _1PanelConnection: false,
     netlifyConnection: false,
     vercelConnection: false,
+    githubConnection: false,
   };
 
   if (userId) {
     // 获取用户连接设置
-    const [_1PanelSettings, netlifySettings, vercelSettings] = await Promise.all([
+    const [_1PanelSettings, netlifySettings, vercelSettings, githubSettings] = await Promise.all([
       get1PanelConnectionSettings(userId),
       getNetlifyConnectionSettings(userId),
       getVercelConnectionSettings(userId),
+      getGitHubConnectionSettings(userId),
     ]);
 
     connectionSettings = {
       _1PanelConnection: !!_1PanelSettings,
       netlifyConnection: !!netlifySettings,
       vercelConnection: !!vercelSettings,
+      githubConnection: !!githubSettings,
     };
   }
 
