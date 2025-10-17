@@ -1,0 +1,84 @@
+name: ❓ 问题咨询
+description: 询问关于 UPage 使用、配置或其他方面的问题
+title: "[Question]: "
+labels: ["question", "需要回复"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您的提问！在提交之前，请先查看[文档](https://docs.upage.ai/)和[常见问题](https://docs.upage.ai/faq)，可能已经有答案了。
+
+        如果您的问题比较复杂或需要深入讨论，也欢迎加入我们的技术交流群。
+
+  - type: textarea
+    id: question
+    attributes:
+      label: 问题描述
+      description: 请清晰地描述您的问题
+      placeholder: |
+        例如：
+        我想了解如何在 UPage 中配置使用本地部署的 Ollama 模型？
+        需要设置哪些环境变量？
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 背景信息
+      description: 请提供一些背景信息，帮助我们更好地理解您的问题
+      placeholder: |
+        例如：
+        - 您的使用场景
+        - 您想要实现的目标
+        - 已经尝试过的配置或操作
+    validations:
+      required: false
+
+  - type: textarea
+    id: attempted-solutions
+    attributes:
+      label: 已尝试的解决方法
+      description: 您是否已经尝试过一些解决方法？如果有，请描述一下
+      placeholder: |
+        例如：
+        1. 我尝试设置了 LLM_PROVIDER=Ollama
+        2. 但是不确定 PROVIDER_BASE_URL 应该填什么
+        3. 查看了文档但没有找到详细的配置说明
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 部署方式
+      description: 您是如何部署 UPage 的？
+      options:
+        - Docker
+        - 1Panel 应用商店
+        - 源码部署
+        - 其他（请在下方补充说明）
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment-details
+    attributes:
+      label: 环境详情
+      description: |
+        请提供您的环境信息（可选但推荐），例如：
+        - 操作系统及版本
+        - UPage 版本
+        - 相关的配置信息（请注意不要暴露敏感信息如 API Key）
+      placeholder: |
+        例如：
+        - 操作系统：Ubuntu 22.04
+        - UPage 版本：1.0.1
+        - Docker 版本：24.0.5
+        - Ollama 版本：0.1.23
+      render: shell
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他补充信息
+      description: 请提供任何其他可能有助于回答您问题的信息
+      placeholder: 例如：相关的截图、配置文件内容（请隐藏敏感信息）等

@@ -1,0 +1,54 @@
+name: ✨ 功能请求
+description: 为 UPage 提出新功能或改进建议
+title: "[Feature]: "
+labels: ["enhancement", "待评估"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您为 UPage 提出新想法！我们重视每一个功能建议。
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: 功能描述
+      description: 请清晰、简洁地描述您希望添加的功能
+      placeholder: 例如：期望增加对其他 AI 提供商的支持
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: 使用场景
+      description: 请描述这个功能在什么情况下会被使用，以及它能解决什么问题
+      placeholder: |
+        例如：
+        作为一名前端开发者，我经常需要将 UPage 生成的页面集成到现有的 Vue 项目中。
+        如果能够直接导出为 Vue 组件格式，就可以省去手动转换的工作，提高开发效率。
+    validations:
+      required: false
+
+  - type: dropdown
+    id: willingness-to-contribute
+    attributes:
+      label: 参与意愿
+      description: 如果这个功能被采纳，您是否愿意参与开发？
+      options:
+        - 愿意提交 PR 实现这个功能
+        - 愿意提供技术建议和测试
+        - 仅提出建议，暂时无法参与开发
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他补充信息
+      description: |
+        请提供任何其他有助于理解这个功能请求的信息，例如：
+        - 参考的类似产品或功能
+        - 相关的截图或示意图
+        - 技术实现的初步想法
+      placeholder: 例如：Figma 的插件系统提供了类似的导出功能，可以作为参考
+

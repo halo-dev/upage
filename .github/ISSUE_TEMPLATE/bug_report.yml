@@ -1,0 +1,152 @@
+name: 🐛 错误反馈
+description: 报告 UPage 使用过程中遇到的问题
+title: "[Bug]: "
+labels: ["bug", "待分类"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您花时间填写此错误报告！请尽可能详细地描述问题，以便我们快速定位和解决。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 请简要描述您遇到的问题
+      placeholder: 例如：在生成多页面网站时，页面跳转功能无法正常工作
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: 复现步骤
+      description: 请详细描述如何复现此问题
+      placeholder: |
+        1. 打开 UPage 并登录
+        2. 在对话框中输入"生成一个包含首页和关于页的网站"
+        3. 点击生成按钮
+        4. 观察生成的页面...
+    validations:
+      required: false
+
+  - type: input
+    id: upage-version
+    attributes:
+      label: UPage 版本
+      description: 请输入 UPage 的具体版本号
+      placeholder: 例如：1.0.1
+    validations:
+      required: false
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: 浏览器及其版本
+      description: 请输入浏览器及其具体版本号
+      placeholder: 例如：Chrome 120.0.6099.129, Firefox 120.0.6099.129
+    validations:
+      required: false
+
+  - type: dropdown
+    id: llm-provider
+    attributes:
+      label: AI 提供商
+      description: 请选择您使用的 AI 提供商
+      options:
+        - 豆包（DouBao）
+        - 文心一言 (Enrie)
+        - 通义千问 (Qwen)
+        - 智谱 AI (ZhiPu)
+        - 月之暗面 (Kimi)
+        - Amazon Bedrock
+        - Anthropic Claude
+        - Cohere
+        - DeepSeek
+        - Github
+        - Google
+        - Groq
+        - HuggingFace
+        - Hyperbolic
+        - LM Studio
+        - Mistral
+        - Ollama
+        - OpenRouter
+        - OpenAI
+        - Perplexity
+        - xAI
+        - 其他（请在下方补充说明）
+    validations:
+      required: false
+
+  - type: input
+    id: primary-model
+    attributes:
+      label: 主要模型
+      description: 请输入您使用的主要 LLM 模型名称（用于构建页面）
+      placeholder: 例如：deepseek-chat、gpt-4、claude-3-opus-20240229
+    validations:
+      required: false
+
+  - type: input
+    id: secondary-model
+    attributes:
+      label: 次要模型
+      description: 请输入您使用的次要 LLM 模型名称（用于执行其他任务）
+      placeholder: 例如：deepseek-chat、gpt-3.5-turbo、claude-3-haiku-20240307
+    validations:
+      required: false
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: 问题复现频率
+      description: 该问题是偶尔出现还是每次都会出现？
+      options:
+        - 必现（每次都会出现）
+        - 偶现（有时会出现）
+        - 不常见（很少出现）
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志信息
+      description: |
+        请提供相关的日志信息。您可以：
+        1. 从浏览器开发者工具的控制台复制错误信息
+        2. 如果是服务端问题，请从服务器的 `logs/` 目录中获取日志
+
+        请将日志内容粘贴在下方的代码块中
+      placeholder: |
+        请粘贴日志内容，例如：
+        [2025-10-17 10:30:45] ERROR: Failed to generate page
+        Error: Connection timeout to AI provider
+            at generatePage (chat.server.ts:123)
+            at processRequest (route.tsx:45)
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图或录屏
+      description: |
+        如果可能，请提供截图或录屏来帮助说明问题。
+        您可以直接将图片或 GIF 拖拽到此处。
+      placeholder: 拖拽图片或 GIF 到此处，或粘贴图片链接
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他补充信息
+      description: |
+        请提供任何其他可能有助于我们理解问题的信息，例如：
+        - 操作系统及版本
+        - UPage 部署方式（Docker、1Panel 等）
+        - 网络环境（是否使用代理等）
+        - 其他特殊配置
+      placeholder: 例如：使用 Docker 部署在 Ubuntu 22.04 系统上
+
