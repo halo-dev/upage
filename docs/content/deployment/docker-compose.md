@@ -43,7 +43,7 @@ UPage 所有数据与日志均存储在此目录中，请妥善保管。
 version: "3.9"
 services:
   upage:
-    image: upage-ai:production
+    image: halohub/upage:latest
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
