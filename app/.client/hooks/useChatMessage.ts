@@ -1,27 +1,22 @@
 import { useChat } from '@ai-sdk/react';
-import { useStore } from '@nanostores/react';
 import { useSearchParams } from '@remix-run/react';
 import { DefaultChatTransport, type FileUIPart } from 'ai';
-import { animate } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import {
-  aiState,
-  getChatStarted,
-  setAborted,
-  setChatId,
-  setChatStarted,
-  setShowChat,
-  setStreamingState,
-  updateParseMessages,
-} from '~/.client/stores/ai-state';
-import { type SendChatMessageParams, setSendChatMessage } from '~/.client/stores/chat-message';
-import { webBuilderStore } from '~/.client/stores/web-builder';
-import { cubicEasingFn } from '~/.client/utils/easings';
 import { pagesToArtifacts } from '~/.client/utils/page';
 import type { ChatMessage } from '~/types/chat';
 import type { ProgressAnnotation, UPageUIMessage } from '~/types/message';
 import { createScopedLogger } from '~/utils/logger';
+import {
+  getChatStarted,
+  setAborted,
+  setChatStarted,
+  setShowChat,
+  setStreamingState,
+  updateParseMessages,
+} from '../stores/ai-state';
+import { type SendChatMessageParams, setSendChatMessage } from '../stores/chat-message';
+import { webBuilderStore } from '../stores/web-builder';
 import { useChatUsage } from './useChatUsage';
 import { useMessageParser } from './useMessageParser';
 import { useProject } from './useProject';
@@ -38,12 +33,12 @@ export function useChatMessage({
   const SAVE_PROJECT_DELAY_MS = 1000;
 
   const [searchParams] = useSearchParams();
-  const { chatStarted } = useStore(aiState);
   const { saveProject } = useProject();
   const { refreshUsageStats } = useChatUsage();
   const { parsedMessages, parseMessages } = useMessageParser();
   const [progressAnnotations, setProgressAnnotations] = useState<ProgressAnnotation[]>([]);
   const { id, messages, status, stop, sendMessage } = useChat<UPageUIMessage>({
+    id: initialId,
     messages: initialMessages as unknown as UPageUIMessage[],
     transport: new DefaultChatTransport({
       api: '/api/chat',
@@ -78,10 +73,6 @@ export function useChatMessage({
     return status === 'streaming';
   }, [status]);
 
-  const currentChatId = useMemo(() => {
-    return initialId || id;
-  }, [initialId, id]);
-
   useEffect(() => {
     setSendChatMessage(sendChatMessage);
     if (initialMessages && initialMessages.length > 0) {
@@ -94,15 +85,6 @@ export function useChatMessage({
       parseMessages(messages, isLoading);
     }
   }, [messages, isLoading, parseMessages]);
-
-  useEffect(() => {
-    if (currentChatId && chatStarted) {
-      const url = new URL(window.location.href);
-      url.pathname = `/chat/${currentChatId}`;
-      window.history.replaceState({}, '', url);
-      setChatId(currentChatId);
-    }
-  }, [currentChatId, chatStarted]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -149,11 +131,6 @@ export function useChatMessage({
     if (getChatStarted()) {
       return;
     }
-
-    await Promise.all([
-      animate('#examples', { opacity: 0, display: 'none' }, { duration: 0.1 }),
-      animate('#intro', { opacity: 0, flex: 1 }, { duration: 0.2, ease: cubicEasingFn }),
-    ]);
 
     setChatStarted(true);
   };
@@ -211,7 +188,7 @@ export function useChatMessage({
       },
       {
         body: {
-          chatId: currentChatId,
+          chatId: id,
           rewindTo: searchParams.get('rewindTo'),
         },
       },

@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import { type ForwardedRef, forwardRef, memo } from 'react';
+import WithTooltip from './Tooltip';
 
 type IconSize = 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 
@@ -43,27 +44,29 @@ export const IconButton = memo(
       ref: ForwardedRef<HTMLButtonElement>,
     ) => {
       return (
-        <button
-          ref={ref}
-          className={classNames(
-            'flex items-center text-upage-elements-item-contentDefault bg-transparent enabled:hover:text-upage-elements-item-contentActive rounded-md p-1 enabled:hover:bg-upage-elements-item-backgroundActive disabled:cursor-not-allowed',
-            {
-              [classNames('opacity-30', disabledClassName)]: disabled,
-            },
-            className,
-          )}
-          title={title}
-          disabled={disabled}
-          onClick={(event) => {
-            if (disabled) {
-              return;
-            }
+        <WithTooltip tooltip={title} position="bottom" maxWidth={220} delay={500}>
+          <button
+            ref={ref}
+            className={classNames(
+              'flex items-center text-upage-elements-item-contentDefault bg-transparent enabled:hover:text-upage-elements-item-contentActive rounded-md p-1 enabled:hover:bg-upage-elements-item-backgroundActive disabled:cursor-not-allowed',
+              {
+                [classNames('opacity-30', disabledClassName)]: disabled,
+              },
+              className,
+            )}
+            title={title}
+            disabled={disabled}
+            onClick={(event) => {
+              if (disabled) {
+                return;
+              }
 
-            onClick?.(event);
-          }}
-        >
-          {children ? children : <div className={classNames(icon, getIconSize(size), iconClassName)}></div>}
-        </button>
+              onClick?.(event);
+            }}
+          >
+            {children ? children : <div className={classNames(icon, getIconSize(size), iconClassName)}></div>}
+          </button>
+        </WithTooltip>
       );
     },
   ),

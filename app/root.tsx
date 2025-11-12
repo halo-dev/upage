@@ -141,7 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <script dangerouslySetInnerHTML={{ __html: inlineThemeCode }} />
       </head>
-      <body>
+      <body className="bg-upage-elements-background-depth-1 transition-colors duration-200">
         <script
           dangerouslySetInnerHTML={{
             __html: `window.ENV = ${JSON.stringify(data?.ENV || {})}`,
@@ -184,7 +184,7 @@ export function ErrorBoundary() {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="bg-upage-elements-background-depth-1 transition-colors duration-200">
         <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
           <div className="max-w-md">
             <h1 className="text-2xl font-bold mb-4">发生错误</h1>

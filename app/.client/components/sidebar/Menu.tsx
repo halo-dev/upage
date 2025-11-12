@@ -1,4 +1,5 @@
 import { useStore } from '@nanostores/react';
+import { TooltipProvider } from '@radix-ui/react-tooltip';
 import classNames from 'classnames';
 import { motion, type Variants } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -39,7 +40,7 @@ const menuVariants = {
 
 type DialogContent = { type: 'delete'; item: ServerChatItem } | { type: 'bulkDelete'; items: ServerChatItem[] } | null;
 
-export const Menu = memo(() => {
+export const Menu = memo(({ className }: { className?: string }) => {
   const { duplicateCurrentChat, deleteChat, deleteSelectedItems } = useChatOperate();
   const { entries, isLoading, loadChatEntries } = useChatEntries();
   const { chatId } = useStore(aiState);
@@ -192,7 +193,7 @@ export const Menu = memo(() => {
   );
 
   return (
-    <>
+    <TooltipProvider>
       <motion.div
         ref={menuRef}
         initial="closed"
@@ -200,9 +201,10 @@ export const Menu = memo(() => {
         variants={menuVariants}
         style={{ width: '300px' }}
         className={classNames(
-          'flex selection-accent flex-col side-menu absolute h-full',
-          'bg-upage-elements-background-depth-1 border-r border-gray-100 dark:border-gray-800/50',
+          'flex selection-accent flex-col side-menu absolute',
+          'bg-upage-elements-background-depth-1 border-r rounded border-gray-100 dark:border-gray-800/50',
           'shadow-sm text-sm',
+          className,
           isSettingsOpen ? 'z-40' : 'z-sidebar',
         )}
       >
@@ -376,6 +378,6 @@ export const Menu = memo(() => {
       </motion.div>
 
       {import.meta.env.MODE === 'development' && <ControlPanel open={isSettingsOpen} onClose={handleSettingsClose} />}
-    </>
+    </TooltipProvider>
   );
 });

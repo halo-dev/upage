@@ -1,24 +1,21 @@
 import { useStore } from '@nanostores/react';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useLoaderData } from '@remix-run/react';
+import { useLoaderData, useLocation, useNavigate } from '@remix-run/react';
 import classNames from 'classnames';
 import { useAnimate } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { ClientOnly } from 'remix-utils/client-only';
-import { useShortcuts, useSnapScroll } from '~/.client/hooks';
+import { useEffect, useRef, useState } from 'react';
+import { useSnapScroll } from '~/.client/hooks';
 import { useChatMessage } from '~/.client/hooks/useChatMessage';
 import { aiState, setChatId, setChatStarted } from '~/.client/stores/ai-state';
 import { webBuilderStore } from '~/.client/stores/web-builder';
 import type { ChatMessage, ChatWithMessages } from '~/types/chat';
 import { renderLogger } from '~/utils/logger';
-import { Menu } from '../sidebar/Menu.client';
-import { WebBuilder } from '../webbuilder/WebBuilder.client';
+import { WebBuilder } from '../webbuilder/WebBuilder';
 import styles from './BaseChat.module.scss';
 import ChatAlert from './ChatAlert';
 import { ChatTextarea } from './ChatTextarea';
-import { ExamplePrompts } from './ExamplePrompts';
 import FilePreview from './FilePreview';
-import { Messages } from './Messages.client';
+import { Messages } from './Messages';
 import ProgressCompilation from './ProgressCompilation';
 import { ScreenshotStateManager } from './ScreenshotStateManager';
 
@@ -27,27 +24,61 @@ export type ImageData = {
   base64?: string;
 };
 
-export function Chat() {
+export function Chat({ className }: { className?: string }) {
   renderLogger.trace('Chat');
-  const { id, chat } = useLoaderData<{ id?: string; chat: ChatWithMessages }>();
+  const location = useLocation();
+  const locationState = location.state as { message?: string; files?: File[] };
 
-  const { showChat, chatStarted } = useStore(aiState);
+  const { id, chat } = useLoaderData<{ id: string; chat?: ChatWithMessages }>();
+  const navigate = useNavigate();
+  const { showChat } = useStore(aiState);
   const actionAlert = useStore(webBuilderStore.chatStore.alert);
-  useShortcuts();
   const [animationScope] = useAnimate();
   const [scrollRef] = useSnapScroll();
+
   const { progressAnnotations, abort, sendChatMessage } = useChatMessage({
     initialId: id,
     initialMessages: chat?.messages as unknown as ChatMessage[],
   });
-  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
 
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const hasProcessedStateRef = useRef(false);
+
+  // Generally, entering from the homepage will carry messages and files.
+  useEffect(() => {
+    if (hasProcessedStateRef.current || !locationState) {
+      return;
+    }
+
+    const hasContent = locationState.message || locationState.files;
+    if (!hasContent) {
+      return;
+    }
+
+    hasProcessedStateRef.current = true;
+
+    if (locationState.files) {
+      setUploadFiles(locationState.files);
+    }
+
+    if (locationState.message) {
+      sendChatMessage({
+        messageContent: locationState.message,
+        files: locationState.files || [],
+      });
+    }
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.key]);
+
+  // Set the global chat ID
   useEffect(() => {
     if (id) {
       setChatId(id);
     }
   }, [id]);
 
+  // Based on the chat information, set messages
   useEffect(() => {
     if (!chat) {
       return;
@@ -73,41 +104,21 @@ export function Chat() {
           <div
             ref={animationScope}
             data-chat-visible={showChat}
-            className={classNames(styles.BaseChat, 'relative flex size-full overflow-hidden')}
+            className={classNames(styles.BaseChat, 'relative h-full', className)}
           >
-            <ClientOnly>{() => <Menu />}</ClientOnly>
-            <div ref={scrollRef} className="flex flex-col lg:flex-row size-full">
-              <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:w-[var(--chat-width)] h-full')}>
-                {!chatStarted && (
-                  <div id="intro" className="mt-[18vh] max-w-chat mx-auto text-center px-4 lg:px-0">
-                    <h1 className="text-3xl lg:text-6xl font-bold text-upage-elements-textPrimary mb-4 animate-fade-in">
-                      使用 UPage 构建网站
-                    </h1>
-                    <p className="text-md lg:text-xl mb-8 text-upage-elements-textSecondary animate-fade-in animation-delay-200">
-                      将想法快速转变成现实，并通过可视化实时呈现。
-                    </p>
-                  </div>
+            <div ref={scrollRef} className="flex flex-col lg:flex-row w-full h-full">
+              <div
+                className={classNames(
+                  styles.Chat,
+                  'flex flex-col flex-grow lg:w-[var(--chat-width)] w-full h-[calc(100vh-var(--header-height))]',
                 )}
-                <div
-                  className={classNames('pt-6 px-1 sm:px-2', {
-                    'h-full flex flex-col': chatStarted,
-                  })}
-                >
-                  <ClientOnly>
-                    {() => {
-                      return chatStarted ? (
-                        <Messages
-                          ref={scrollRef}
-                          className="flex flex-col w-full flex-1 max-w-chat mb-6 mx-auto z-1 overflow-y-auto"
-                        />
-                      ) : null;
-                    }}
-                  </ClientOnly>
-                  <div
-                    className={classNames('flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt mb-6', {
-                      'sticky bottom-2': chatStarted,
-                    })}
-                  >
+              >
+                <div className="pt-6 px-1 sm:px-2 h-full flex flex-col gap-6">
+                  <Messages
+                    ref={scrollRef}
+                    className="flex flex-col flex-1 w-full max-w-chat mx-auto overflow-y-auto"
+                  />
+                  <div className="flex flex-col gap-4 w-full max-w-chat mx-auto bottom-6 relative">
                     <div className="bg-upage-elements-background-depth-2">
                       {actionAlert && (
                         <ChatAlert
@@ -129,9 +140,7 @@ export function Chat() {
                           setUploadFiles?.(uploadFiles.filter((_, i) => i !== index));
                         }}
                       />
-                      <ClientOnly>
-                        {() => <ScreenshotStateManager uploadFiles={uploadFiles} setUploadFiles={setUploadFiles} />}
-                      </ClientOnly>
+                      <ScreenshotStateManager uploadFiles={uploadFiles} setUploadFiles={setUploadFiles} />
                       <ChatTextarea
                         onStopMessage={abort}
                         onSendMessage={handleSendMessage}
@@ -141,14 +150,8 @@ export function Chat() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col justify-center gap-5">
-                  {!chatStarted &&
-                    ExamplePrompts((_event, messageInput) => {
-                      handleSendMessage?.(messageInput);
-                    })}
-                </div>
               </div>
-              <ClientOnly>{() => <WebBuilder />}</ClientOnly>
+              <WebBuilder />
             </div>
           </div>
         </Tooltip.Provider>

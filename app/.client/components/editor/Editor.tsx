@@ -43,7 +43,7 @@ export const EditorStudio = memo(
 
     const pendingSectionRef = useRef<Section | null>(null);
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const { getLoadProject } = useChatHistory();
+    const chatHistory = useChatHistory();
 
     const updateComponents = useCallback((editor: Editor, section: Section) => {
       if (!editor) {
@@ -184,7 +184,7 @@ export const EditorStudio = memo(
       if (editorRef.current && onLoad) {
         onLoad(editorRef.current);
       }
-    }, [getLoadProject]);
+    }, [chatHistory]);
 
     return (
       <EditorComponent

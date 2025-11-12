@@ -1,6 +1,5 @@
 import { data, type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node';
-import { Chat } from '~/.client/components/chat/Chat.client';
-import { Header } from '~/.client/components/header/Header';
+import { Home } from '~/.client/components/Home';
 import { getUser } from '~/.server/service/auth';
 import { getUserUsageStats } from '~/.server/service/chat-usage';
 
@@ -28,9 +27,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
  */
 export default function Index() {
   return (
-    <div className="flex flex-col size-full bg-upage-elements-background-depth-1">
-      <Header />
-      <Chat />
+    <div className="relative flex flex-col size-full">
+      <section className="relative flex-1 flex items-center flex-col">
+        <Home className="w-full" />
+      </section>
     </div>
   );
 }

@@ -8,7 +8,11 @@ const EXAMPLE_PROMPTS = [
   { text: '使用 Tailwind CSS 制作一个响应式的导航栏' },
 ];
 
-export function ExamplePrompts(sendMessage?: { (event: React.UIEvent, messageInput?: string): void | undefined }) {
+export function ExamplePrompts({
+  sendMessage,
+}: {
+  sendMessage: (event: React.UIEvent, messageInput?: string) => void;
+}) {
   return (
     <div id="examples" className="relative flex flex-col gap-9 w-full max-w-3xl mx-auto flex justify-center mt-6">
       <div

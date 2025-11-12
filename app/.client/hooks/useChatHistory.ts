@@ -1,4 +1,4 @@
-import { useLoaderData, useSearchParams } from '@remix-run/react';
+import { useRouteLoaderData, useSearchParams } from '@remix-run/react';
 import { useCallback } from 'react';
 import type { Page, Section } from '~/types/actions';
 import type { ChatWithMessages } from '~/types/chat';
@@ -11,7 +11,11 @@ export interface ProjectData {
 }
 
 export function useChatHistory() {
-  const { chat } = useLoaderData<{ chat?: ChatWithMessages }>();
+  const routeData = useRouteLoaderData<{ chat?: ChatWithMessages }>('routes/_layout.chat.$id');
+  if (!routeData) {
+    return;
+  }
+  const { chat } = routeData;
   const { loadEditorProject } = useEditorStorage();
   const [searchParams] = useSearchParams();
 

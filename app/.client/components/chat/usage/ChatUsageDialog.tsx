@@ -189,7 +189,7 @@ export const ChatUsageDialog = memo(({ isOpen, onClose }: ChatUsageDialogProps) 
                       <div className={cardClasses}>
                         <div className="text-sm text-upage-elements-textSecondary mb-1">输出 Token</div>
                         <div className="text-2xl font-bold text-upage-elements-textPrimary flex items-center">
-                          <span className="i-ph:import-duotone size-6 text-amber-500 dark:text-amber-400 mr-2" />
+                          <span className="i-bx:import size-6 text-amber-500 dark:text-amber-400 mr-2" />
                           {formatLargeNumber(usageStats.total._sum.outputTokens)}
                         </div>
                       </div>

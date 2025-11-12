@@ -7,7 +7,7 @@ import { useChatHistory } from '~/.client/hooks/useChatHistory';
 import { webBuilderStore } from '~/.client/stores/web-builder';
 
 export function ChatDescription() {
-  const { getChatLatestDescription } = useChatHistory();
+  const chatHistory = useChatHistory();
   const description = useStore(webBuilderStore.chatStore.description);
 
   const {
@@ -21,7 +21,7 @@ export function ChatDescription() {
     setCurrentDescription,
     updateChatDescription,
   } = useEditChatDescription({
-    initialDescription: getChatLatestDescription() || '',
+    initialDescription: chatHistory?.getChatLatestDescription?.() || '',
   });
 
   useEffect(() => {

@@ -1,8 +1,11 @@
+import type { UserInfoResponse } from '@logto/node';
+import type { Deployment } from '@prisma/client';
 import { data, type LoaderFunctionArgs, redirect } from '@remix-run/node';
+import { Chat } from '~/.client/components/chat/Chat';
 import { getUser, requireAuth } from '~/.server/service/auth';
 import { getUserChatById } from '~/.server/service/chat';
 import { getChatDeployments } from '~/.server/service/deployment';
-import { default as IndexRoute } from './_index';
+import type { ChatWithMessages } from '~/types/chat';
 
 export async function loader(args: LoaderFunctionArgs) {
   // 添加权限验证
@@ -21,10 +24,27 @@ export async function loader(args: LoaderFunctionArgs) {
   if (!id || !userId) {
     return redirect('/');
   }
+  const deployments = await getChatDeployments(id);
+
+  let resultData: {
+    id?: string;
+    user?: UserInfoResponse;
+    deployments?: Deployment[];
+    chat?: ChatWithMessages;
+  } = {
+    id: args.params.id,
+    user: authResult.userInfo,
+    deployments,
+    chat: undefined,
+  };
   const chat = await getUserChatById(id, userId);
   if (!chat) {
-    return redirect('/');
+    return data(resultData);
   }
+  resultData = {
+    ...resultData,
+    chat: chat as unknown as ChatWithMessages,
+  };
 
   const url = new URL(args.request.url);
   const rewindTo = url.searchParams.get('rewindTo') || '';
@@ -32,13 +52,9 @@ export async function loader(args: LoaderFunctionArgs) {
     chat.messages = chat.messages.slice(0, chat.messages.findIndex((message) => message.id === rewindTo) + 1);
   }
 
-  const deployments = await getChatDeployments(id);
-  return data({
-    id: args.params.id,
-    chat,
-    user: authResult.userInfo,
-    deployments,
-  });
+  return data(resultData);
 }
 
-export default IndexRoute;
+export default function Templates() {
+  return <Chat />;
+}

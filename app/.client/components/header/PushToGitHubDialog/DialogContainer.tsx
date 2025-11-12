@@ -51,7 +51,7 @@ export function DialogContainer({
               transition={{ duration: 0.2 }}
               className={`w-[90vw] ${width} my-4`}
             >
-              <div className="bg-white dark:bg-[#1E1E1E] rounded-lg border border-[#E5E5E5] dark:border-[#333333] shadow-xl max-h-[calc(85vh-2rem)] flex flex-col">
+              <div className="bg-white dark:bg-gray-950 border border-gray-200/50 dark:border-gray-800/50 rounded-lg shadow-lg max-h-[calc(85vh-2rem)] flex flex-col">
                 <div className="p-6 overflow-y-auto flex-1">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">

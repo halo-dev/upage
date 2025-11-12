@@ -5,13 +5,13 @@ import { ClientOnly } from 'remix-utils/client-only';
 import { useAuth, usePromptEnhancer } from '~/.client/hooks';
 import { aiState } from '~/.client/stores/ai-state';
 import { IconButton } from '../ui/IconButton';
-import { SendButton } from './SendButton.client';
+import { SendButton } from './SendButton';
 
 interface ChatTextareaProps {
   uploadFiles: File[];
   setUploadFiles: (files: File[]) => void;
   onSendMessage: (message: string) => void;
-  onStopMessage: () => void;
+  onStopMessage?: () => void;
 }
 
 const TEXTAREA_MIN_HEIGHT = 76;

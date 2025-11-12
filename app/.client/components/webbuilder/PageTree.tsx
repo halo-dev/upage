@@ -34,13 +34,7 @@ export const PageTree = memo(({ pages = {}, onPageSelect, selectedPage, classNam
   }, [pages]);
 
   return (
-    <div
-      className={classNames(
-        'text-sm rounded-md border border-upage-elements-borderColor',
-        className,
-        'overflow-y-auto modern-scrollbar',
-      )}
-    >
+    <div className={classNames('text-sm rounded-md overflow-y-auto modern-scrollbar', className)}>
       <div className="p-2 border-b border-upage-elements-borderColor bg-upage-elements-background-depth-1">
         <h3 className="font-medium text-upage-elements-textPrimary">页面列表</h3>
       </div>

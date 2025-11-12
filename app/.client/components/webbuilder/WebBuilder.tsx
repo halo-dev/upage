@@ -78,7 +78,7 @@ export const WebBuilder = memo(() => {
 
   const isSmallViewport = useViewport(1024);
   const { saveProject } = useProject();
-  const { getLoadProject } = useChatHistory();
+  const chatHistory = useChatHistory();
 
   const setSelectedView = useCallback(
     (view: WebBuilderViewType) => {
@@ -140,14 +140,14 @@ export const WebBuilder = memo(() => {
 
   // 处理保存的数据，将其转为编辑器可直接使用的格式
   const handleLoadProject = useCallback(async (): Promise<Page[]> => {
-    const projectData = await getLoadProject();
+    const projectData = await chatHistory?.getLoadProject?.();
     // 新版本数据
     if (projectData?.pages) {
       // html 为 pages 中 index 的 content
       return projectData.pages;
     }
     return [];
-  }, [getLoadProject]);
+  }, [chatHistory]);
 
   return (
     chatStarted && (

@@ -96,7 +96,7 @@ export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy }: D
               transition={{ duration: 0.2 }}
               className="w-[90vw] md:w-[650px] my-4"
             >
-              <div className="bg-white dark:bg-[#0A0A0A] rounded-lg border border-[#E5E5E5] dark:border-[#1A1A1A] shadow-xl max-h-[calc(85vh-2rem)] flex flex-col">
+              <div className="bg-white dark:bg-gray-950 border border-gray-200/50 dark:border-gray-800/50 rounded-lg shadow-lg max-h-[calc(85vh-2rem)] flex flex-col">
                 <div className="p-6 overflow-y-auto flex-1">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">

@@ -72,7 +72,7 @@ export const MinimalAvatarDropdown = ({}: MinimalAvatarDropdownProps) => {
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <motion.button
-            className="size-8 rounded-full bg-transparent flex items-center justify-center focus:outline-none"
+            className="size-8 rounded-full text-upage-elements-item-contentDefault bg-transparent flex items-center justify-center focus:outline-none"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -85,7 +85,7 @@ export const MinimalAvatarDropdown = ({}: MinimalAvatarDropdownProps) => {
                 decoding="sync"
               />
             ) : (
-              <div className="size-full rounded-full flex items-center justify-center bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500">
+              <div className="size-full flex items-center justify-center">
                 <div className="i-ph:user-circle-fill size-8" />
               </div>
             )}
@@ -96,9 +96,7 @@ export const MinimalAvatarDropdown = ({}: MinimalAvatarDropdownProps) => {
           <DropdownMenu.Content
             className={classNames(
               'min-w-[240px] z-[250]',
-              'bg-white dark:bg-[#141414]',
-              'rounded-lg shadow-lg',
-              'border border-gray-200/50 dark:border-gray-800/50',
+              'bg-white dark:bg-gray-950 border border-gray-200/50 dark:border-gray-800/50 rounded-lg shadow-lg',
               'animate-in fade-in-0 zoom-in-95',
               'p-1.5 space-y-1.5',
             )}
