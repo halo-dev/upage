@@ -1,4 +1,3 @@
-import qrcode from 'node_modules/qrcode/build/qrcode?raw';
 import { getLocalStorage } from '~/.client/persistence';
 import closeIcon from './icons/close.svg?raw';
 import copyIcon from './icons/copy.svg?raw';
@@ -6,6 +5,7 @@ import shareIcon from './icons/share.svg?raw';
 import twitterIcon from './icons/twitter.svg?raw';
 import wechatIcon from './icons/wechat.svg?raw';
 import weiboIcon from './icons/weibo.svg?raw';
+import qrcode from './qrcode?raw';
 
 export function UPageShare() {
   const recommend = getLocalStorage('recommend');
