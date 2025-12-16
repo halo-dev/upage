@@ -1,5 +1,6 @@
 import { getNetlifyConnectionSettings, saveNetlifyConnectionSettings } from '~/.server/service/connection-settings';
 import { createOrUpdateDeployment, getLatestDeployment } from '~/.server/service/deployment';
+import { convertFilesToStringRecord, generateDeploymentFiles } from '~/.server/service/files-generator';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';
 import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment';
@@ -13,9 +14,13 @@ export type HandleDeployArgs = {
 
 interface DeployRequestBody {
   siteId?: string;
-  files: Record<string, string>;
+  messageId: string;
   chatId: string;
   token?: string;
+  attach?: {
+    uPageHtml?: string;
+    [key: string]: unknown;
+  };
 }
 
 /**
@@ -47,7 +52,19 @@ const logger = createScopedLogger('api.netlify.deploy');
 
 export async function handleDeploy({ request, userId }: HandleDeployArgs) {
   try {
-    const { siteId, files, token: requestToken, chatId } = (await request.json()) as DeployRequestBody;
+    const { siteId, messageId, token: requestToken, chatId, attach } = (await request.json()) as DeployRequestBody;
+
+    if (!messageId || !chatId) {
+      return errorResponse(400, '缺少必要参数');
+    }
+
+    const deploymentFiles = await generateDeploymentFiles({
+      messageId,
+      inner: false,
+      attachBody: attach?.uPageHtml,
+    });
+
+    const files = convertFilesToStringRecord(deploymentFiles);
 
     let connectionSettings = await getNetlifyConnectionSettings(userId);
 

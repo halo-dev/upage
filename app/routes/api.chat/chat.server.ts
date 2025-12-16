@@ -16,11 +16,11 @@ import { CONTINUE_PROMPT } from '~/.server/prompts/prompts';
 import { upsertChat } from '~/.server/service/chat';
 import { ChatUsageStatus, recordUsage, updateUsageStatus } from '~/.server/service/chat-usage';
 import { getHistoryChatMessages, saveChatMessages, updateDiscardedMessage } from '~/.server/service/message';
-import { getPageByMessageId } from '~/.server/service/page';
+import { getPageV2ByMessageId } from '~/.server/service/page-v2';
 import { createScopedLogger } from '~/.server/utils/logger';
 import { approximateUsageFromContent } from '~/.server/utils/token';
-import type { Page } from '~/types/actions';
 import type { UPageUIMessage } from '~/types/message';
+import type { PageData } from '~/types/pages';
 
 const logger = createScopedLogger('api.chat.chat');
 
@@ -205,9 +205,9 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
 
       // 获取最后一条历史消息所对应的 page
       const lastMessage = previousMessages[previousMessages.length - 1];
-      const pageData = await getPageByMessageId(lastMessage.id);
+      const pageData = await getPageV2ByMessageId(lastMessage.id);
       if (pageData) {
-        const pages = pageData.pages as unknown as Page[];
+        const pages = pageData as unknown as PageData[];
         // 根据用户摘要和所有的页面数据，让 AI 根据摘要、用户消息、页面数据，选择一部分待修改的页面和待修改的 section。
         writer.write({
           type: 'data-progress',

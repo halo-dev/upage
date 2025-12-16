@@ -108,8 +108,10 @@ model Message {
   updatedAt DateTime @updatedAt
 
   chat            Chat             @relation("ChatToMessages", fields: [chatId], references: [id], onDelete: Cascade)
-  // 关联的页面
+  // 关联的页面（一对一，已废弃）
   page            Page?            @relation("MessageToPage")
+  // 关联的页面 V2（新版，多个）
+  pagesV2         PageV2[]         @relation("MessageToPagesV2")
   // 关联的部分
   sections        Section[]        @relation("MessageToSections")
 
@@ -117,6 +119,7 @@ model Message {
   @@index([userId])
 }
 
+// 页面模型（旧版，仅用于兼容，已废弃）
 model Page {
   id        String   @id @default(uuid())
   // 关联的消息 ID
@@ -134,10 +137,86 @@ model Page {
   @@index([messageId])
 }
 
+// 页面模型 V2（新版，扁平化结构）
+// 一个 Message 可以有多个 PageV2，代表当前消息的多个页面
+model PageV2 {
+  id          String   @id @default(uuid())
+  // 关联的消息 ID
+  messageId   String
+  // 页面名称（如 "index", "about"）
+  name        String
+  // 页面标题
+  title       String
+  // 页面 body 内容（HTML）
+  content     String
+  // 关联的 action ID 数组
+  actionIds   Json? /// @type {Array<string>}
+  // head 中的 meta 标签
+  headMeta    Json? /// @type {Array<{name?: string, content?: string, charset?: string, httpEquiv?: string, property?: string, [key: string]: any}>}
+  // head 中的 link 标签
+  headLinks   Json? /// @type {Array<{rel: string, href: string, type?: string, [key: string]: any}>}
+  // head 中的 script 标签
+  headScripts Json? /// @type {Array<{src?: string, content?: string, type?: string, async?: boolean, defer?: boolean}>}
+  // head 中的 style 标签
+  headStyles  Json? /// @type {Array<{content: string, media?: string}>}
+  // head 中的其他原始内容
+  headRaw     String?
+  // 页面排序
+  sort        Int      @default(0)
+  // 创建时间
+  createdAt   DateTime @default(now())
+  // 更新时间
+  updatedAt   DateTime @updatedAt
+
+  // 关联的消息
+  message  Message     @relation("MessageToPagesV2", fields: [messageId], references: [id], onDelete: Cascade)
+  // 关联的 Section
+  sections Section[]   @relation("PageV2ToSections")
+  // 关联的资源
+  assets   PageAsset[] @relation("PageV2ToAssets")
+
+  @@index([messageId])
+  @@index([name])
+  @@index([messageId, name])
+}
+
+
+// 页面资源表，用于存储页面关联的资源文件（仅支持 PageV2）
+// 页面资源与 PageV2 具有关联关系
+model PageAsset {
+  id          String   @id @default(uuid())
+  // 关联的页面 ID（PageV2）
+  pageId      String
+  // 文件名（如 "style.css", "logo.png"）
+  filename    String
+  // 存储路径（相对或绝对路径）
+  storagePath String
+  // 访问 URL
+  url         String
+  // 文件 MIME 类型
+  fileType    String
+  // 文件大小（字节）
+  fileSize    Int
+  // 排序
+  sort        Int      @default(0)
+  // 创建时间
+  createdAt   DateTime @default(now())
+  // 更新时间
+  updatedAt   DateTime @updatedAt
+
+  // 关联的页面（PageV2）
+  page    PageV2  @relation("PageV2ToAssets", fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@index([filename])
+}
+
 model Section {
   id        String   @id @default(uuid())
   // 所属消息 ID
   messageId String
+  // 所属页面 ID（可选，关联到新版 PageV2）
+  pageV2Id  String?
   // 部分类型，通常为 "section"
   type      String   @default("section")
   // 操作类型：add, update, remove 等
@@ -146,7 +225,7 @@ model Section {
   actionId  String
   // 页面名称
   pageName  String   @default("")
-  // Section 内容 (HTML/CSS)
+  // Section 内容 (HTML/CSS/JS)
   content   String
   // DOM ID
   domId     String
@@ -154,6 +233,8 @@ model Section {
   rootDomId String?
   // 排序顺序
   sort      Int      @default(0)
+  // 放置位置：head 或 body
+  placement String   @default("body")
   // 创建时间
   createdAt DateTime @default(now())
   // 更新时间
@@ -161,10 +242,14 @@ model Section {
 
   // 关联的消息
   message Message @relation("MessageToSections", fields: [messageId], references: [id], onDelete: Cascade)
+  // 关联的页面（新版 PageV2）
+  pageV2  PageV2? @relation("PageV2ToSections", fields: [pageV2Id], references: [id], onDelete: Cascade)
 
   @@index([messageId])
+  @@index([pageV2Id])
   @@index([domId])
   @@index([rootDomId])
+  @@index([placement])
 }
 
 // 部署记录表，记录用户将代码部署到各平台的信息

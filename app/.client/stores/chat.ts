@@ -19,6 +19,7 @@ export interface ArtifactState {
 
 export type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
 type ArtifactsByPageName = Map<string, ArtifactState>;
+// messageId -> ArtifactsByPageName
 type ArtifactsByMessageId = Map<string, ArtifactsByPageName>;
 type Artifacts = MapStore<ArtifactsByMessageId>;
 

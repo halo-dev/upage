@@ -83,6 +83,11 @@ export async function getChatById(id: string) {
           include: {
             sections: true,
             page: true,
+            pagesV2: {
+              include: {
+                assets: true,
+              },
+            },
           },
         },
       },
@@ -197,9 +202,9 @@ export async function updateChat(id: string, params: ChatUpdateParams) {
  * @param id 聊天ID
  * @returns 删除结果
  *
- * 注意：由于在 Prisma Schema 中配置了级联删除关系：
+ * 注意：由于在Prisma Schema中配置了级联删除关系：
  *
- * 1. 删除 Chat 会自动级联删除所有关联的 Message 记录
+ * 1. 删除Chat会自动级联删除所有关联的Message记录
  * 2. 删除 Message 会自动级联删除关联的 Section 记录
  */
 export async function deleteChat(id: string) {
@@ -281,6 +286,11 @@ export async function getUserChatById(id: string, userId: string) {
           include: {
             sections: true,
             page: true,
+            pagesV2: {
+              include: {
+                assets: true,
+              },
+            },
           },
         },
       },

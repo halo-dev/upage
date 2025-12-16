@@ -1,8 +1,10 @@
 import type { MapStore } from 'nanostores';
-import type { Page } from '~/types/actions';
-import type { SectionMap } from '~/types/pages';
+import type { PageData, SectionMap } from '~/types/pages';
 
-export const pagesToArtifacts = (pages: { [pageName: string]: Page }, sections: MapStore<SectionMap>): string => {
+export const pagesToArtifacts = (
+  pages: { [pageName: string]: Omit<PageData, 'messageId'> },
+  sections: MapStore<SectionMap>,
+): string => {
   return Object.keys(pages)
     .map((pageName) => {
       const page = pages[pageName];

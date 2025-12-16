@@ -1,9 +1,8 @@
-import JSZip from 'jszip';
 import { atom, type WritableAtom } from 'nanostores';
 import { toast } from 'sonner';
 import { createScopedLogger } from '~/.client/utils/logger';
-import type { ChangeSource, Page } from '~/types/actions';
-import type { PageMap } from '~/types/pages';
+import type { ChangeSource } from '~/types/actions';
+import type { PageData, PageMap } from '~/types/pages';
 import { base64ToBinary, getContentType, getExtensionFromMimeType, getFileName } from '~/utils/file-utils';
 import { ChatStore } from './chat';
 import { EditorStore } from './editor';
@@ -208,24 +207,30 @@ export class WebBuilderStore {
 
   async exportToZip(prefix: string = 'upage_export') {
     try {
-      const projectFiles = await this.getProjectFiles({ inline: false });
-      if (projectFiles.length === 0) {
-        toast.error('没有可导出的文件');
+      const currentMessageId = this.chatStore.currentMessageId.get();
+      if (!currentMessageId) {
+        toast.error('没有找到当前消息');
         return;
       }
 
-      const zip = new JSZip();
-      projectFiles.forEach((file: ExportEditorFile) => {
-        if (file.mimeType?.startsWith('text/') || file.filename.endsWith('.js')) {
-          zip.file(file.filename, file.content);
-        } else {
-          zip.file(file.filename, file.content, { binary: true });
-        }
+      const formData = new FormData();
+      formData.append('messageId', currentMessageId);
+
+      const response = await fetch('/api/project/export', {
+        method: 'POST',
+        body: formData,
       });
 
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || '导出失败');
+      }
 
-      const url = URL.createObjectURL(zipBlob);
+      // get ZIP file
+      const blob = await response.blob();
+
+      // download file
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${prefix}_${Date.now()}.zip`;
@@ -233,9 +238,11 @@ export class WebBuilderStore {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      toast.success('导出成功');
     } catch (error) {
       logger.error('导出 HTML 文件失败', error);
-      toast.error('导出 HTML 文件失败');
+      toast.error(error instanceof Error ? error.message : '导出 HTML 文件失败');
     }
   }
 
@@ -313,7 +320,10 @@ export class WebBuilderStore {
     return files;
   }
 
-  private createProjectHead(page: Page, pathMode: 'relative' | 'absolute' = 'relative'): Document {
+  private createProjectHead(
+    page: Omit<PageData, 'messageId'>,
+    pathMode: 'relative' | 'absolute' = 'relative',
+  ): Document {
     const basePath = pathMode === 'relative' ? './' : '/';
     const doc = document.implementation.createHTMLDocument('');
     const head = doc.head;

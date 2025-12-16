@@ -1,15 +1,9 @@
+import type { Deployment } from '@prisma/client';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useEffect, useState } from 'react';
-import { useChatDeployment } from '~/.client/hooks/useChatDeployment';
-import { DeploymentPlatformEnum } from '~/types/deployment';
+import { useMemo } from 'react';
 
-export function _1PanelDeploymentLink() {
-  const { getDeploymentByPlatform } = useChatDeployment();
-  const [deploymentUrl, setDeploymentUrl] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    setDeploymentUrl(getDeploymentByPlatform(DeploymentPlatformEnum._1PANEL)?.url || '');
-  }, [getDeploymentByPlatform]);
+export function _1PanelDeploymentLink({ deployment }: { deployment: Deployment | undefined }) {
+  const deploymentUrl = useMemo(() => deployment?.url, [deployment]);
 
   return (
     deploymentUrl && (

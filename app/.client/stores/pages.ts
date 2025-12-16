@@ -4,8 +4,8 @@ import { type EditorBridge, type EventPayload, editorBridge } from '~/.client/br
 import { computePageModifications, diffPages } from '~/.client/utils/diff';
 import { isValidContent } from '~/.client/utils/html-parse';
 import { createScopedLogger } from '~/.client/utils/logger';
-import type { ChangeSource, Page, PageHistory } from '~/types/actions';
-import type { PageMap, PageSection, SectionMap } from '~/types/pages';
+import type { ChangeSource, PageHistory } from '~/types/actions';
+import type { PageData, PageMap, PageSection, SectionMap } from '~/types/pages';
 import { normalizeContent } from '~/utils/prettier';
 
 const logger = createScopedLogger('PagesStore');
@@ -122,7 +122,7 @@ export class PagesStore {
     });
   }
 
-  getPage(pageName: string) {
+  getPage(pageName: string): Omit<PageData, 'messageId'> | undefined {
     return this.pages.get()[pageName];
   }
 
@@ -131,7 +131,7 @@ export class PagesStore {
   }
 
   getModifiedPages() {
-    let modifiedPages: { [pageName: string]: Page } | undefined = undefined;
+    let modifiedPages: { [pageName: string]: Omit<PageData, 'messageId'> } | undefined = undefined;
 
     for (const [pageName, originalContent] of this.modifiedPages) {
       const page = this.pages.get()[pageName];
@@ -300,6 +300,7 @@ export class PagesStore {
         }
 
         this.pages.setKey(pageName, {
+          id: crypto.randomUUID(),
           name: pageName,
           title: pageTitle,
           content: '',
@@ -314,10 +315,11 @@ export class PagesStore {
         const { title: pageTitle, actionIds = [] } = payload;
         const oldPage = this.pages.get()[pageName];
         this.pages.setKey(pageName, {
+          id: oldPage?.id || crypto.randomUUID(),
           name: pageName,
           title: pageTitle,
           actionIds: actionIds || oldPage?.actionIds,
-          content: oldPage?.content,
+          content: oldPage?.content || '',
         });
         break;
       }
@@ -415,7 +417,7 @@ export class PagesStore {
     this.activePage.set(pageName);
   }
 
-  setPage(pageName: string, page: Page) {
+  setPage(pageName: string, page: Omit<PageData, 'messageId'>) {
     const oldPage = this.getPage(pageName);
     if (!oldPage) {
       return;

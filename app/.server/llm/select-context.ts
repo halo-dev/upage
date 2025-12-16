@@ -1,7 +1,7 @@
 import { type CallSettings, generateText, type LanguageModel } from 'ai';
 import { createScopedLogger } from '~/.server/utils/logger';
-import type { Page } from '~/types/actions';
 import type { UPageUIMessage } from '~/types/message';
+import type { PageData } from '~/types/pages';
 
 const logger = createScopedLogger('select-context');
 
@@ -19,7 +19,7 @@ export async function selectContext({
   abortSignal,
 }: {
   messages: UPageUIMessage[];
-  pages: Page[];
+  pages: PageData[];
   summary: string;
   model: LanguageModel;
 } & CallSettings) {

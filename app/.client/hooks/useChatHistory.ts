@@ -1,12 +1,14 @@
 import { useRouteLoaderData, useSearchParams } from '@remix-run/react';
 import { useCallback } from 'react';
-import type { Page, Section } from '~/types/actions';
+import type { Section } from '~/types/actions';
 import type { ChatWithMessages } from '~/types/chat';
+import type { PageAssetData, PageData } from '~/types/pages';
 import { useEditorStorage } from '../persistence/editor';
 
 export interface ProjectData {
-  pages?: Page[];
+  pages?: PageData[];
   sections?: Section[];
+  assets?: PageAssetData[];
   projectData?: any;
 }
 
@@ -25,11 +27,10 @@ export function useChatHistory() {
    * @returns 项目数据。
    */
   const getLoadProject = useCallback(async (): Promise<ProjectData | undefined> => {
-    // 加载最新数据
-    const pages = await loadEditorProject();
-    if (pages) {
+    const projectData = await loadEditorProject();
+    if (projectData) {
       return {
-        pages,
+        pages: projectData.pages,
       };
     }
     if (!chat) {
@@ -45,18 +46,18 @@ export function useChatHistory() {
     const currentMessageId = searchParams.get('rewindTo');
     if (currentMessageId) {
       const data = messages?.find((message) => message.id === currentMessageId);
-      const pages = data?.page?.pages;
+      const pages = data?.pagesV2 as unknown as PageData[];
       if (pages) {
         return {
-          pages: pages as unknown as Page[],
+          pages,
         };
       }
     }
     // 没有指定消息 ID，返回最新的项目数据
     const lastMessage = messages[messages.length - 1];
-    if (lastMessage.page) {
+    if (lastMessage.pagesV2) {
       return {
-        pages: lastMessage.page.pages as unknown as Page[],
+        pages: lastMessage.pagesV2 as unknown as PageData[],
       };
     }
   }, [chat, searchParams]);

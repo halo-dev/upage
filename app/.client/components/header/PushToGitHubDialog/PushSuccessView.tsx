@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { formatSize } from '~/.client/utils/format';
+import { formatFileSize } from '~/utils/file-utils';
 
 interface PushSuccessViewProps {
   repoUrl: string;
@@ -53,7 +53,7 @@ export function PushSuccessView({ repoUrl, pushedFiles, onClose }: PushSuccessVi
               >
                 <span className="font-mono truncate flex-1">{file.path}</span>
                 <span className="text-xs text-upage-elements-textSecondary dark:text-upage-elements-textSecondary-dark ml-2">
-                  {formatSize(file.size)}
+                  {formatFileSize(file.size)}
                 </span>
               </div>
             ))}

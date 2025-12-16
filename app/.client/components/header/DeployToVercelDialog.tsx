@@ -1,21 +1,20 @@
 import { useStore } from '@nanostores/react';
+import type { Deployment } from '@prisma/client';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import VercelConnection from '~/.client/components/header/connections/VercelConnection';
-import { useChatDeployment } from '~/.client/hooks/useChatDeployment';
 import { vercelConnection } from '~/.client/stores/vercel';
-import { DeploymentPlatformEnum } from '~/types/deployment';
 
 interface DeployToVercelDialogProps {
   isOpen: boolean;
   deploying: boolean;
   onClose: () => void;
   onDeploy: () => Promise<void>;
+  deployment: Deployment | undefined;
 }
 
-export function DeployToVercelDialog({ deploying, isOpen, onClose, onDeploy }: DeployToVercelDialogProps) {
-  const { getDeploymentByPlatform } = useChatDeployment();
+export function DeployToVercelDialog({ deploying, isOpen, onClose, onDeploy, deployment }: DeployToVercelDialogProps) {
   const connection = useStore(vercelConnection);
   const [isVercelConnected, setIsVercelConnected] = useState(false);
   const [showConnectionForm, setShowConnectionForm] = useState(false);
@@ -53,8 +52,6 @@ export function DeployToVercelDialog({ deploying, isOpen, onClose, onDeploy }: D
       setShowConnectionForm(false);
     }
   };
-
-  const deploymentInfo = getDeploymentByPlatform(DeploymentPlatformEnum.VERCEL);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -111,7 +108,7 @@ export function DeployToVercelDialog({ deploying, isOpen, onClose, onDeploy }: D
                   </div>
                 </div>
 
-                <div className="p-4 border-t border-[#E5E5E5] dark:border-[#1A1A1A] bg-white dark:bg-[#0A0A0A] sticky bottom-0">
+                <div className="p-4 border-t sticky bottom-0">
                   <div className="flex justify-end">
                     {!isVercelConnected ? (
                       <motion.button
@@ -142,7 +139,7 @@ export function DeployToVercelDialog({ deploying, isOpen, onClose, onDeploy }: D
                         ) : (
                           <>
                             <div className="i-ph:rocket-launch size-4" />
-                            {!!deploymentInfo?.id ? '覆盖已有网站' : '部署到 Vercel'}
+                            {!!deployment?.id ? '覆盖已有网站' : '部署到 Vercel'}
                           </>
                         )}
                       </motion.button>

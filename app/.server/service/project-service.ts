@@ -1,73 +1,24 @@
 import { createScopedLogger } from '~/.server/utils/logger';
-import type { Page } from '~/types/actions';
-import { createOrUpdatePages, getPageByMessageId } from './page';
-import { createSection, deleteMessageSections, getMessageSections, type SectionCreateParams } from './section';
+import { createOrUpdatePagesV2, type PageV2CreateParams } from './page-v2';
+import { createOrUpdateManySections, type SectionCreateParams } from './section';
 
 const logger = createScopedLogger('projectService');
 
 /**
- * 保存项目数据接口
+ * Save pages data
+ *
+ * @param params save pages parameters
+ * @returns save result
  */
-export interface SaveProjectParams {
-  messageId: string;
-  projectData: Record<string, any>;
-}
-
-/**
- * 保存项目部分接口
- */
-export interface SaveSectionsParams {
-  messageId: string;
-  sections: SectionCreateParams[];
-}
-
-/**
- * 保存页面数据接口
- */
-export interface SavePagesParams {
-  messageId: string;
-  pages: Page[];
-}
-
-/**
- * 保存项目和部分数据接口
- */
-export interface SaveProjectAndSectionsParams {
-  messageId: string;
-  projectData: Record<string, any>;
-  sections: SectionCreateParams[];
-}
-
-/**
- * 保存页面和部分数据接口
- */
-export interface SavePagesAndSectionsParams {
-  messageId: string;
-  pages: Page[];
-  sections: SectionCreateParams[];
-}
-
-/**
- * 保存页面数据
- * @param params 保存页面参数
- * @returns 保存结果
- */
-export async function savePages(params: SavePagesParams) {
-  const { messageId, pages } = params;
-
+async function saveOrUpdatePages(pages: PageV2CreateParams[]) {
   try {
-    // 检查页面是否已存在
-    const existingPage = await getPageByMessageId(messageId);
+    const createdPages = await createOrUpdatePagesV2(pages);
 
-    // 创建或更新页面
-    const page = await createOrUpdatePages(messageId, pages);
-
-    if (existingPage) {
-      logger.info(`更新了消息 ${messageId} 的页面`);
-      return { success: true, message: '页面已更新', id: page.id };
+    if (createdPages) {
+      logger.info(`批量创建或更新了 ${createdPages.length} 个页面`);
+      return createdPages;
     } else {
-      logger.info(`创建了消息 ${messageId} 的页面: ${page.id}`);
-      return { success: true, message: '页面已创建', id: page.id };
+      logger.error('保存页面数据失败: 页面创建或更新失败');
     }
   } catch (error) {
     logger.error('保存页面数据失败:', error);
@@ -76,39 +27,22 @@ export async function savePages(params: SavePagesParams) {
 }
 
 /**
- * 保存项目部分数据
- * @param params 保存部分参数
- * @returns 保存结果
+ * Save project sections data
+ *
+ * @param params save sections parameters
+ * @returns save result
  */
-export async function saveSections(params: SaveSectionsParams) {
-  const { messageId, sections } = params;
-
+async function saveOrUpdateSections(sections: SectionCreateParams[]) {
   try {
-    // 获取现有部分
-    const existingSections = await getMessageSections(messageId);
+    // batch create saveSections
+    const savedSections = await createOrUpdateManySections(sections);
 
-    // 如果有现有部分，则先删除
-    if (existingSections.length > 0) {
-      await deleteMessageSections(messageId);
-      logger.info(`删除了消息 ${messageId} 的现有部分数据`);
+    if (savedSections) {
+      logger.info(`批量创建或更新了 ${savedSections.length} 个部分`);
+      return savedSections;
+    } else {
+      logger.error('保存部分数据失败: 部分创建或更新失败');
     }
-
-    // 创建新部分
-    const createdSections = await Promise.all(
-      sections.map((section) =>
-        createSection({
-          ...section,
-          messageId,
-        }),
-      ),
-    );
-
-    logger.info(`为消息 ${messageId} 创建了 ${createdSections.length} 个部分`);
-    return {
-      success: true,
-      message: `已保存 ${createdSections.length} 个部分`,
-      count: createdSections.length,
-    };
   } catch (error) {
     logger.error('保存部分数据失败:', error);
     throw error;
@@ -116,20 +50,31 @@ export async function saveSections(params: SaveSectionsParams) {
 }
 
 /**
- * 保存页面和部分数据
- * @param params 保存页面和部分参数
- * @returns 保存结果
+ * Save pages and sections data
+ *
+ * @param params save pages and sections parameters
  */
-export async function savePagesAndSections(params: SavePagesAndSectionsParams) {
-  const { messageId, pages, sections } = params;
-
+export async function saveOrUpdateProject(pages: PageV2CreateParams[], sections: SectionCreateParams[]) {
   try {
-    // 保存页面数据
-    const pagesResult = await savePages({ messageId, pages });
+    const validPages = pages.filter((page) => page.name && page.content);
+    const validSections = sections.filter((section) => section.pageName && section.content);
 
-    // 保存部分数据
-    const sectionsResult = await saveSections({ messageId, sections });
+    if (validPages.length === 0 || validSections.length === 0) {
+      throw new Error('保存页面和部分数据失败: 页面或部分数据无效');
+    }
 
+    // save or update pages
+    const pagesResult = await saveOrUpdatePages(validPages);
+    const pageV2IdMap = new Map(pagesResult?.map((page) => [page.name, page.id]) || []);
+
+    const saveSections: SectionCreateParams[] = validSections.map((section) => {
+      const pageV2Id = pageV2IdMap.get(section.pageName);
+      return {
+        ...section,
+        pageV2Id: pageV2Id || undefined,
+      };
+    });
+    const sectionsResult = await saveOrUpdateSections(saveSections);
     return {
       success: true,
       pages: pagesResult,

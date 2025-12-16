@@ -20,8 +20,7 @@ import { aiState } from '~/.client/stores/ai-state';
 import { type WebBuilderViewType, webBuilderStore } from '~/.client/stores/web-builder';
 import { cubicEasingFn } from '~/.client/utils/easings';
 import { renderLogger } from '~/.client/utils/logger';
-import type { Page } from '~/types/actions';
-import type { PageMap } from '~/types/pages';
+import type { PageData, PageMap } from '~/types/pages';
 import { DiffView } from './DiffView';
 import { EditorPanel } from './EditorPanel';
 import { PageModifiedDropdown } from './PageModifiedDropdown';
@@ -139,7 +138,7 @@ export const WebBuilder = memo(() => {
   }, []);
 
   // 处理保存的数据，将其转为编辑器可直接使用的格式
-  const handleLoadProject = useCallback(async (): Promise<Page[]> => {
+  const handleLoadProject = useCallback(async (): Promise<PageData[]> => {
     const projectData = await chatHistory?.getLoadProject?.();
     // 新版本数据
     if (projectData?.pages) {

@@ -7,6 +7,8 @@ const logger = createScopedLogger('page.server');
 
 /**
  * 页面创建参数接口
+ *
+ * @deprecated 使用 PageData 代替
  */
 export interface PageCreateParams extends Page {
   messageId: string;
@@ -14,6 +16,8 @@ export interface PageCreateParams extends Page {
 
 /**
  * 页面更新参数接口
+ *
+ * @deprecated 使用 PageData 代替
  */
 export interface PageUpdateParams {
   pages?: Page[];
@@ -23,6 +27,8 @@ export interface PageUpdateParams {
  * 创建新的页面
  * @param params 页面创建参数
  * @returns 创建的页面记录
+ *
+ * @deprecated 使用 PageV2 createPageV2 代替
  */
 export async function createPage(params: PageCreateParams) {
   const { messageId, name, title, content, actionIds } = params;
@@ -56,6 +62,8 @@ export async function createPage(params: PageCreateParams) {
  * 创建或更新页面
  * @param params 页面创建参数
  * @returns 创建或更新的页面记录
+ *
+ * @deprecated 使用 PageV2 createOrUpdatePageV2 代替
  */
 export async function createOrUpdatePage(params: PageCreateParams) {
   const { messageId, name, title, content, actionIds } = params;
@@ -89,6 +97,8 @@ export async function createOrUpdatePage(params: PageCreateParams) {
  * @param messageId 消息ID
  * @param pages 页面数组
  * @returns 创建的页面记录
+ *
+ * @deprecated 使用 PageV2 createPagesV2 代替
  */
 export async function createPages(messageId: string, pages: Page[]) {
   try {
@@ -112,6 +122,8 @@ export async function createPages(messageId: string, pages: Page[]) {
  * @param messageId 消息ID
  * @param pages 页面数组
  * @returns 创建或更新的页面记录
+ *
+ * @deprecated 使用 PageV2 createOrUpdatePagesV2 代替
  */
 export async function createOrUpdatePages(messageId: string, pages: Page[]) {
   try {
@@ -132,6 +144,8 @@ export async function createOrUpdatePages(messageId: string, pages: Page[]) {
  * 根据ID获取页面
  * @param id 页面ID
  * @returns 页面记录
+ *
+ * @deprecated 使用 PageV2 getPageV2ById 代替
  */
 export async function getPageById(id: string) {
   try {
@@ -150,6 +164,8 @@ export async function getPageById(id: string) {
  * 根据消息ID获取页面
  * @param messageId 消息ID
  * @returns 页面记录
+ *
+ * @deprecated 使用 PageV2 getPageV2ByMessageId 代替
  */
 export async function getPageByMessageId(messageId: string) {
   try {
@@ -164,6 +180,14 @@ export async function getPageByMessageId(messageId: string) {
   }
 }
 
+/**
+ * 根据消息ID和页面名称获取页面
+ * @param messageId 消息ID
+ * @param name 页面名称
+ * @returns 页面记录
+ *
+ * @deprecated 使用 PageV2 getPageV2ByMessageIdAndName 代替
+ */
 export async function getPageByMessageIdAndName(messageId: string, name: string): Promise<JsonObject | null> {
   try {
     const page = await getPageByMessageId(messageId);
@@ -190,6 +214,8 @@ export async function getPageByMessageIdAndName(messageId: string, name: string)
  * @param id 页面ID
  * @param params 更新参数
  * @returns 更新后的页面记录
+ *
+ * @deprecated 使用 PageV2 updatePageV2 代替
  */
 export async function updatePage(id: string, params: PageUpdateParams) {
   try {
@@ -217,6 +243,8 @@ export async function updatePage(id: string, params: PageUpdateParams) {
  * @param messageId 消息ID
  * @param params 更新参数
  * @returns 更新后的页面记录
+ *
+ * @deprecated 使用 PageV2 updatePageV2ByMessageId 代替
  */
 export async function updatePageByMessageId(messageId: string, params: PageUpdateParams) {
   try {
@@ -243,6 +271,8 @@ export async function updatePageByMessageId(messageId: string, params: PageUpdat
  * 删除页面
  * @param id 页面ID
  * @returns 删除结果
+ *
+ * @deprecated 使用 PageV2 deletePageV2 代替
  */
 export async function deletePage(id: string) {
   try {
@@ -262,6 +292,8 @@ export async function deletePage(id: string) {
  * 根据消息ID删除页面
  * @param messageId 消息ID
  * @returns 删除结果
+ *
+ * @deprecated 使用 PageV2 deletePageV2ByMessageId 代替
  */
 export async function deletePageByMessageId(messageId: string) {
   try {

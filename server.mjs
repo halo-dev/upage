@@ -39,7 +39,7 @@ app.use(
 // 配置全局限流中间件
 const globalLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 分钟
-  limit: 100, // 每个 IP 每分钟最多 100 个请求
+  limit: 1000, // 每个 IP 每分钟最多 1000 个请求
   standardHeaders: 'draft-7', // 返回标准的 RateLimit 头信息
   legacyHeaders: false, // 禁用旧的 X-RateLimit 头信息
   message: '请求过于频繁，请稍后再试',
@@ -49,7 +49,7 @@ const globalLimiter = rateLimit({
 // 针对聊天 API 的特殊限流中间件
 const chatApiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  limit: 2, // 每个 IP 每分钟最多 2 个聊天请求
+  limit: 5, // 每个 IP 每分钟最多 5 个聊天请求
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: '聊天请求过于频繁，请稍后再试',

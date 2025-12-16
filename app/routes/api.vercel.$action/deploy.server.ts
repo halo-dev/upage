@@ -1,5 +1,6 @@
 import { getVercelConnectionSettings, saveVercelConnectionSettings } from '~/.server/service/connection-settings';
 import { createOrUpdateDeployment, getLatestDeployment } from '~/.server/service/deployment';
+import { convertFilesToStringRecord, generateDeploymentFiles } from '~/.server/service/files-generator';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';
 import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment';
@@ -96,9 +97,13 @@ export async function getVercelDeployByProjectId({ request, userId }: GetVercelD
 
 interface DeployRequestBody {
   projectId?: string;
-  files: Record<string, string>;
+  messageId: string;
   chatId: string;
   token?: string;
+  attach?: {
+    uPageHtml?: string;
+    [key: string]: unknown;
+  };
 }
 
 export type HandleVercelDeployArgs = {
@@ -109,7 +114,19 @@ export type HandleVercelDeployArgs = {
 // Existing action function for POST requests
 export async function handleVercelDeploy({ request, userId }: HandleVercelDeployArgs) {
   try {
-    const { projectId, files, token: requestToken, chatId } = (await request.json()) as DeployRequestBody;
+    const { projectId, messageId, token: requestToken, chatId, attach } = (await request.json()) as DeployRequestBody;
+
+    if (!messageId || !chatId) {
+      return errorResponse(400, '缺少必要参数');
+    }
+
+    const generatedFiles = await generateDeploymentFiles({
+      messageId,
+      inner: false,
+      attachBody: attach?.uPageHtml,
+    });
+
+    const files = convertFilesToStringRecord(generatedFiles);
 
     // 从用户设置中获取连接信息
     let connectionSettings = await getVercelConnectionSettings(userId);

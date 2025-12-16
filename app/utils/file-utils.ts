@@ -1,5 +1,22 @@
 export const MAX_FILES = 1000;
 
+export const generateId = () => Math.random().toString(36).substring(2, 15);
+
+/**
+ * 格式化文件大小
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) {
+    return '0 B';
+  }
+
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+}
+
 export const isBinaryFile = async (file: File): Promise<boolean> => {
   const chunkSize = 1024;
   const buffer = new Uint8Array(await file.slice(0, chunkSize).arrayBuffer());
@@ -107,26 +124,78 @@ export function getContentType(filePath: string): string {
   return contentTypeMap[extension || ''] || 'application/octet-stream';
 }
 
+const mimeTypes: Record<string, string> = {
+  // HTML/CSS/JS
+  html: 'text/html',
+  htm: 'text/html',
+  css: 'text/css',
+  js: 'text/javascript',
+  mjs: 'text/javascript',
+  ts: 'text/typescript',
+  tsx: 'text/typescript',
+  jsx: 'text/javascript',
+
+  // JSON/XML
+  json: 'application/json',
+  xml: 'application/xml',
+  svg: 'image/svg+xml',
+
+  // 文本
+  txt: 'text/plain',
+  md: 'text/markdown',
+  yaml: 'text/yaml',
+  yml: 'text/yaml',
+
+  // 图片
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  bmp: 'image/bmp',
+  ico: 'image/x-icon',
+
+  // 视频
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  ogg: 'video/ogg',
+  mov: 'video/quicktime',
+  avi: 'video/x-msvideo',
+
+  // 音频
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  aac: 'audio/aac',
+  m4a: 'audio/mp4',
+
+  // 字体
+  woff: 'font/woff',
+  woff2: 'font/woff2',
+  ttf: 'font/ttf',
+  otf: 'font/otf',
+  eot: 'application/vnd.ms-fontobject',
+
+  // 其他
+  pdf: 'application/pdf',
+  zip: 'application/zip',
+};
+
+/**
+ * 获取文件的 MIME 类型
+ */
+export function getMimeType(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase();
+
+  return mimeTypes[ext || ''] || 'application/octet-stream';
+}
+
 /**
  * 根据 MIME 类型获取文件扩展名
  * @param mimeType MIME 类型
  * @returns 文件扩展名
  */
 export function getExtensionFromMimeType(mimeType: string): string {
-  switch (mimeType) {
-    case 'image/jpeg':
-      return '.jpg';
-    case 'image/png':
-      return '.png';
-    case 'image/gif':
-      return '.gif';
-    case 'image/svg+xml':
-      return '.svg';
-    case 'image/webp':
-      return '.webp';
-    default:
-      return '.bin';
-  }
+  return Object.entries(mimeTypes).find(([_, value]) => value === mimeType)?.[0] || '';
 }
 
 /**

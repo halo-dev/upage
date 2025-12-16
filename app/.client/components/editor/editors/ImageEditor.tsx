@@ -1,10 +1,49 @@
 import React, { useRef, useState } from 'react';
+import { webBuilderStore } from '~/.client/stores/web-builder';
 import loadingSvg from '../icons/loading.svg?raw';
 import uploadSvg from '../icons/upload.svg?raw';
 import type { EditorProps } from './EditorProps';
 
 /**
- * 图片编辑器组件，用于上传和替换图片。
+ * wait for image load, support retry
+ * @param url image URL
+ * @param maxRetries maximum retry times
+ * @param initialDelay initial delay (milliseconds)
+ *
+ * @returns whether the image is successfully loaded
+ */
+async function waitForImageLoad(url: string, maxRetries = 5, initialDelay = 200): Promise<boolean> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        const timeout = setTimeout(() => {
+          reject(new Error('图片加载超时'));
+        }, 5000);
+
+        img.onload = () => {
+          clearTimeout(timeout);
+          resolve();
+        };
+        img.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('图片加载失败'));
+        };
+        img.src = url;
+      });
+      return true;
+    } catch {
+      if (attempt < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * image editor component, for uploading and replacing images.
  */
 export const ImageEditor: React.FC<EditorProps> = ({ element, onClose }) => {
   const imgElement = element as HTMLImageElement;
@@ -13,6 +52,7 @@ export const ImageEditor: React.FC<EditorProps> = ({ element, onClose }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<'upload' | 'preview' | 'complete'>('upload');
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const maxFileSizeMB = window.ENV.MAX_UPLOAD_SIZE_MB || 5;
@@ -35,6 +75,7 @@ export const ImageEditor: React.FC<EditorProps> = ({ element, onClose }) => {
       reader.onload = (event) => {
         if (event.target?.result) {
           setPreviewSrc(event.target.result as string);
+          setOriginalFile(file);
           setStep('preview');
           setIsUploading(false);
         }
@@ -53,32 +94,46 @@ export const ImageEditor: React.FC<EditorProps> = ({ element, onClose }) => {
   };
 
   const handleConfirm = async () => {
-    if (previewSrc) {
+    if (previewSrc && originalFile) {
       setIsUploading(true);
-      try {
-        // 从base64 src 中提取文件数据
-        const base64Data = previewSrc.split(',')[1];
-        const byteCharacters = atob(base64Data);
-        const byteArrays = [];
+      setError(null);
 
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteArrays.push(byteCharacters.charCodeAt(i));
+      try {
+        const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
+        if (!currentMessageId) {
+          throw new Error('无法获取当前消息 ID');
         }
 
-        const byteArray = new Uint8Array(byteArrays);
-        const blob = new Blob([byteArray], { type: 'image/png' });
+        const currentPageName = webBuilderStore.editorStore.selectedDocument.get();
+        if (!currentPageName) {
+          throw new Error('无法获取当前页面信息');
+        }
 
-        if (blob.size > maxFileSize) {
+        const pages = webBuilderStore.pagesStore.pages.get();
+        const currentPage = pages[currentPageName];
+        if (!currentPage || !currentPage.id) {
+          throw new Error('当前页面尚未保存，无法上传资源');
+        }
+
+        const pageId = currentPage.id;
+
+        // 验证文件大小
+        if (originalFile.size > maxFileSize) {
           const maxSizeMB = Math.round(maxFileSize / (1024 * 1024));
           throw new Error(`文件大小超过限制，最大允许${maxSizeMB}MB`);
         }
 
-        const fileName = `image_${Date.now()}.png`;
-        const file = new File([blob], fileName, { type: 'image/png' });
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', originalFile);
+        formData.append('messageId', currentMessageId);
+        formData.append('pageId', pageId);
 
-        const response = await fetch('/api/upload', {
+        // 传递旧图片 URL，用于后端清理
+        if (src && src !== previewSrc) {
+          formData.append('oldUrl', src);
+        }
+
+        const response = await fetch('/api/upload/asset', {
           method: 'POST',
           body: formData,
         });
@@ -89,15 +144,23 @@ export const ImageEditor: React.FC<EditorProps> = ({ element, onClose }) => {
           throw new Error(result.message || '上传失败');
         }
 
+        const imageLoaded = await waitForImageLoad(result.data.url);
+
+        if (!imageLoaded) {
+          throw new Error('图片上传成功但无法访问，请稍后刷新页面');
+        }
+
         imgElement.src = result.data.url;
         setSrc(result.data.url);
+
         setStep('complete');
-        onClose();
 
         setTimeout(() => {
+          onClose();
           setStep('upload');
           setPreviewSrc(null);
-        }, 1500);
+          setOriginalFile(null);
+        }, 800);
       } catch (error) {
         console.error('文件上传失败', error);
         setError(error instanceof Error ? error.message : '文件上传失败');
@@ -109,6 +172,7 @@ export const ImageEditor: React.FC<EditorProps> = ({ element, onClose }) => {
   const handleCancel = () => {
     setStep('upload');
     setPreviewSrc(null);
+    setOriginalFile(null);
     setError(null);
   };
 
@@ -207,38 +271,44 @@ export const ImageEditor: React.FC<EditorProps> = ({ element, onClose }) => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={handleCancel}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: '#f8fafc',
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                }}
-                disabled={isUploading}
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirm}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                }}
-                disabled={isUploading}
-              >
-                {isUploading ? '上传中...' : '替换图片'}
-              </button>
-              {error && <p style={{ margin: '8px 0 0', color: '#ef4444', fontSize: '12px' }}>{error}</p>}
+            <div>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={handleCancel}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    border: '1px solid #e2e8f0',
+                    backgroundColor: '#f8fafc',
+                    color: '#64748b',
+                    cursor: isUploading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    opacity: isUploading ? 0.6 : 1,
+                  }}
+                  disabled={isUploading}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleConfirm}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    border: 'none',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    cursor: isUploading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    opacity: isUploading ? 0.8 : 1,
+                  }}
+                  disabled={isUploading}
+                >
+                  {isUploading ? '上传中...' : '替换图片'}
+                </button>
+              </div>
+              {error && (
+                <p style={{ margin: '8px 0 0', color: '#ef4444', fontSize: '12px', textAlign: 'center' }}>{error}</p>
+              )}
             </div>
           </div>
         </div>

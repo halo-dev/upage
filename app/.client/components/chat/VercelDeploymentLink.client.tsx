@@ -1,15 +1,9 @@
+import type { Deployment } from '@prisma/client';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useEffect, useState } from 'react';
-import { useChatDeployment } from '~/.client/hooks/useChatDeployment';
-import { DeploymentPlatformEnum } from '~/types/deployment';
+import { useMemo } from 'react';
 
-export function VercelDeploymentLink() {
-  const [deploymentUrl, setDeploymentUrl] = useState<string | undefined>(undefined);
-  const { getDeploymentByPlatform } = useChatDeployment();
-
-  useEffect(() => {
-    setDeploymentUrl(getDeploymentByPlatform(DeploymentPlatformEnum.VERCEL)?.url || '');
-  }, [getDeploymentByPlatform]);
+export function VercelDeploymentLink({ deployment }: { deployment: Deployment | undefined }) {
+  const deploymentUrl = useMemo(() => deployment?.url, [deployment]);
 
   return (
     deploymentUrl && (

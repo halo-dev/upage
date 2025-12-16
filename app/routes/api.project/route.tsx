@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
-import type { PageCreateParams } from '~/.server/service/page';
-import { savePagesAndSections } from '~/.server/service/project-service';
+import type { PageV2CreateParams } from '~/.server/service/page-v2';
+import { saveOrUpdateProject } from '~/.server/service/project-service';
 import type { SectionCreateParams } from '~/.server/service/section';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';
@@ -28,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
       return errorResponse(400, 'sections 不能为空');
     }
 
-    let pages: PageCreateParams[];
+    let pages: PageV2CreateParams[];
     let sections: SectionCreateParams[];
 
     try {
@@ -36,7 +36,7 @@ export async function action({ request }: ActionFunctionArgs) {
       pages = pages.map((page) => ({
         ...page,
         messageId,
-      })) as PageCreateParams[];
+      }));
     } catch (e) {
       logger.error('项目数据解析失败', e);
       return errorResponse(400, '项目数据格式无效');
@@ -47,21 +47,17 @@ export async function action({ request }: ActionFunctionArgs) {
       sections = sections.map((section) => ({
         ...section,
         messageId,
-      })) as SectionCreateParams[];
+      }));
     } catch (e) {
       logger.error('sections数据解析失败', e);
       return errorResponse(400, 'sections数据格式无效');
     }
 
-    const result = await savePagesAndSections({
-      messageId,
-      pages,
-      sections,
-    });
+    const result = await saveOrUpdateProject(pages, sections);
 
     return successResponse(result, '项目保存成功');
   } catch (error) {
     logger.error('处理项目保存请求失败:', error);
-    return errorResponse(500, '服务器处理请求失败');
+    return errorResponse(500, '项目保存失败');
   }
 }

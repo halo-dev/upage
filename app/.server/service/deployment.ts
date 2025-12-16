@@ -212,6 +212,31 @@ export async function getLatestDeployment(userId: string, chatId: string, platfo
 }
 
 /**
+ * 根据 chatId 和平台获取部署记录
+ * @param chatId 聊天ID
+ * @param platform 平台名称
+ * @returns 最新的部署记录，如果不存在则返回 null
+ */
+export async function getDeploymentByChatAndPlatform(chatId: string, platform: DeploymentPlatform) {
+  try {
+    const deployment = await prisma.deployment.findFirst({
+      where: {
+        chatId,
+        platform,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return deployment;
+  } catch (error) {
+    logger.error(`[Deployment] 获取聊天 ${chatId} 在平台 ${platform} 的部署记录失败:`, error);
+    return null;
+  }
+}
+
+/**
  * 更新部署记录状态
  * @param id 部署记录ID
  * @param status 新状态

@@ -2,6 +2,7 @@ import { useSearchParams } from '@remix-run/react';
 import { getChatId } from '~/.client/stores/ai-state';
 import { createScopedLogger } from '~/.client/utils/logger';
 import type { Page, Section } from '~/types/actions';
+import type { PageAssetData, PageData } from '~/types/pages';
 
 /**
  * 序列化标记常量
@@ -130,10 +131,25 @@ function deserializeFromIndexedDB<T>(data: any): T {
   return data as T;
 }
 
+/**
+ * Editor message project data structure
+ *
+ * Compatibility notes:
+ * - pages: old version page data (only used for reading history data)
+ * - pagesV2: new version page data (new data saved to this field)
+ * - assets: page asset data (used with pagesV2)
+ * - sections: page section data (used with both old and new versions)
+ */
 export interface IEditorMessageProject {
   messageId: string;
+  // old version page data (only used for reading)
   pages: Page[];
+  // page section data
   sections: Section[];
+  // new version page data (used for saving)
+  pagesV2?: PageData[];
+  // page asset data
+  assets?: PageAssetData[];
 }
 
 export interface IProject {
@@ -145,7 +161,7 @@ export interface IProject {
 const logger = createScopedLogger('EditorProjects');
 
 /**
- * 打开 editor 本地数据库。
+ * Open editor local database.
  * @returns editor 本地数据库。
  */
 export async function openEditorDatabase(): Promise<IDBDatabase | undefined> {
@@ -180,22 +196,34 @@ export async function openEditorDatabase(): Promise<IDBDatabase | undefined> {
   });
 }
 
-// 保存项目数据
+/**
+ * Save project data (new version, using PageV2 structure)
+ *
+ * @param db IndexedDB database instance
+ * @param messageId message ID
+ * @param pagesV2 new version page data (PageV2)
+ * @param sections page section data
+ * @param assets page asset data (optional)
+ *
+ * @note new data is only saved to pagesV2 field, pages field is set to an empty array to maintain structural compatibility
+ */
 export async function saveProject(
   db: IDBDatabase,
   messageId: string,
-  pages: Page[],
+  pagesV2: PageData[],
   sections: Section[],
+  assets?: PageAssetData[],
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    // 序列化数据，处理不可序列化的内容
-    const serializedPages = serializeForIndexedDB(pages);
+    // serialize data, handle non-serializable content
+    const serializedPagesV2 = serializeForIndexedDB(pagesV2);
     const serializedSections = serializeForIndexedDB(sections);
+    const serializedAssets = assets ? serializeForIndexedDB(assets) : undefined;
 
     const transaction = db.transaction('projects', 'readwrite');
     const store = transaction.objectStore('projects');
 
-    // 首先尝试获取现有记录
+    // first try to get existing record
     const getRequest = store.get(getChatId()!);
 
     getRequest.onsuccess = () => {
@@ -212,15 +240,29 @@ export async function saveProject(
         let messageProjects;
 
         if (existingIndex !== -1) {
-          // 如果找到了相同 messageId 的项目，则更新它
+          // if the same messageId project is found, update it
           messageProjects = existingData.messageProjects.map((p, index) =>
-            index === existingIndex ? { ...p, pages: serializedPages, sections: serializedSections } : p,
+            index === existingIndex
+              ? {
+                  ...p,
+                  pages: [],
+                  sections: serializedSections,
+                  pagesV2: serializedPagesV2,
+                  assets: serializedAssets,
+                }
+              : p,
           );
         } else {
-          // 如果没有找到相同 messageId 的项目，则添加新项目
+          // if no project with the same messageId is found, add a new project
           messageProjects = [
             ...existingData.messageProjects,
-            { messageId, pages: serializedPages, sections: serializedSections },
+            {
+              messageId,
+              pages: [],
+              sections: serializedSections,
+              pagesV2: serializedPagesV2,
+              assets: serializedAssets,
+            },
           ];
         }
 
@@ -234,10 +276,18 @@ export async function saveProject(
         putRequest.onsuccess = () => resolve();
         putRequest.onerror = () => reject(putRequest.error);
       } else {
-        // 创建新记录
+        // create new record
         const newData: IProject = {
           id: getChatId()!,
-          messageProjects: [{ messageId, pages: serializedPages, sections: serializedSections }],
+          messageProjects: [
+            {
+              messageId,
+              pages: [],
+              sections: serializedSections,
+              pagesV2: serializedPagesV2,
+              assets: serializedAssets,
+            },
+          ],
           timestamp,
         };
 
@@ -269,6 +319,13 @@ export async function setEditorProjects(db: IDBDatabase, id: string, projects: I
   });
 }
 
+/**
+ * Get editor project data (supports new and old versions)
+ *
+ * @param db IndexedDB database instance
+ * @param chatId chat ID
+ * @returns project data, containing new and old versions
+ */
 export async function getEditorProjects(db: IDBDatabase, chatId: string): Promise<IProject> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction('projects', 'readonly');
@@ -285,6 +342,8 @@ export async function getEditorProjects(db: IDBDatabase, chatId: string): Promis
             ...mp,
             pages: mp.pages ? deserializeFromIndexedDB<Page[]>(mp.pages) : [],
             sections: mp.sections ? deserializeFromIndexedDB<Section[]>(mp.sections) : [],
+            pagesV2: mp.pagesV2 ? deserializeFromIndexedDB<PageData[]>(mp.pagesV2) : undefined,
+            assets: mp.assets ? deserializeFromIndexedDB<PageAssetData[]>(mp.assets) : undefined,
           })),
         };
         resolve(deserializedProject);
@@ -297,11 +356,27 @@ export async function getEditorProjects(db: IDBDatabase, chatId: string): Promis
   });
 }
 
-// 获取项目数据
+/**
+ * Get project data (supports new and old versions)
+ *
+ * @param db IndexedDB database instance
+ * @param messageId message ID (optional, if not provided, return the latest project data)
+ * @returns project data, containing new and old versions
+ *
+ * @note return pagesV2 first, if not exists, return old version pages (backward compatibility)
+ */
 export async function getEditorProject(
   db: IDBDatabase,
   messageId?: string,
-): Promise<{ pages: Page[]; sections: Section[] | undefined; project?: IProject } | undefined> {
+): Promise<
+  | {
+      sections: Section[] | undefined;
+      pages?: PageData[];
+      assets?: PageAssetData[];
+      project?: IProject;
+    }
+  | undefined
+> {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction('projects', 'readonly');
     const store = transaction.objectStore('projects');
@@ -316,25 +391,36 @@ export async function getEditorProject(
       }
 
       if (messageId) {
-        // 返回特定消息 ID 的项目数据
+        // return project data for specific message ID
         const data = project.messageProjects?.find((p) => p.messageId === messageId);
 
         const deserializedPages = data?.pages ? deserializeFromIndexedDB<Page[]>(data.pages) : [];
         const deserializedSections = data?.sections ? deserializeFromIndexedDB<Section[]>(data.sections) : undefined;
+        const deserializedPagesV2 = data?.pagesV2 ? deserializeFromIndexedDB<PageData[]>(data.pagesV2) : undefined;
+        const deserializedAssets = data?.assets ? deserializeFromIndexedDB<PageAssetData[]>(data.assets) : undefined;
+        const pagesV2: PageData[] = deserializedPages.map((page) => ({
+          id: crypto.randomUUID(),
+          messageId: data?.messageId ?? '',
+          name: page.name,
+          title: page.title,
+          content: page.content ?? '',
+          actionIds: page.actionIds,
+        }));
 
         resolve({
-          pages: deserializedPages,
+          pages: deserializedPagesV2 || pagesV2,
           sections: deserializedSections,
+          assets: deserializedAssets,
           project,
         });
       } else {
-        // 没有指定消息 ID，返回最新的项目数据
+        // if no message ID is specified, return the latest project data
         const messageIds = project.messageProjects.map((p) => p.messageId);
 
         if (messageIds.length === 0) {
           resolve({ pages: [], sections: undefined, project });
         } else {
-          // 按时间戳排序（如果有时间戳），或者取最后一个
+          // sort by timestamp (if timestamp exists), or take the last one
           const lastMessageId = messageIds[messageIds.length - 1];
           const lastMessageProject = project.messageProjects.find((p) => p.messageId === lastMessageId);
 
@@ -344,10 +430,26 @@ export async function getEditorProject(
           const deserializedSections = lastMessageProject?.sections
             ? deserializeFromIndexedDB<Section[]>(lastMessageProject.sections)
             : undefined;
+          const deserializedPagesV2 = lastMessageProject?.pagesV2
+            ? deserializeFromIndexedDB<PageData[]>(lastMessageProject.pagesV2)
+            : undefined;
+          const deserializedAssets = lastMessageProject?.assets
+            ? deserializeFromIndexedDB<PageAssetData[]>(lastMessageProject.assets)
+            : undefined;
+
+          const pagesV2: PageData[] = deserializedPages.map((page) => ({
+            id: crypto.randomUUID(),
+            messageId: lastMessageProject?.messageId ?? '',
+            name: page.name,
+            title: page.title,
+            content: page.content ?? '',
+            actionIds: page.actionIds,
+          }));
 
           resolve({
-            pages: deserializedPages,
+            pages: deserializedPagesV2 || pagesV2,
             sections: deserializedSections,
+            assets: deserializedAssets,
             project,
           });
         }
@@ -430,8 +532,8 @@ export async function createEditorProjectFromMessages(
 export async function forkEditorProject(
   db: IDBDatabase,
   chatId: string,
-  messageId: string,
   newChatId: string,
+  messageId?: string,
 ): Promise<void> {
   const project = await getEditorProjects(db, chatId);
   if (!project) {
@@ -439,7 +541,9 @@ export async function forkEditorProject(
     return;
   }
 
-  const messageIndex = project.messageProjects.findIndex((msg) => msg.messageId === messageId);
+  const messageIndex = messageId
+    ? project.messageProjects.findIndex((msg) => msg.messageId === messageId)
+    : project.messageProjects.length - 1;
 
   if (messageIndex === -1) {
     throw new Error('Message not found');
@@ -460,13 +564,30 @@ export async function duplicateEditorProject(db: IDBDatabase, id: string, newCha
   createEditorProjectFromMessages(db, newChatId, project.messageProjects);
 }
 
-// 在 GrapesEditor 中使用的Hook
+/**
+ * Hook used in editor, for saving and loading project data
+ *
+ * @note new version uses PageV2 structure to save data, old version uses Page structure when reading
+ */
 export function useEditorStorage() {
   const [searchParams] = useSearchParams();
   const currentMessageId = searchParams.get('rewindTo');
 
-  // 保存项目至本地数据库
-  const saveEditorProject = async (messageId: string | undefined, pages: Page[], sections: Section[]) => {
+  /**
+   * Save project to local database (using PageV2 structure)
+   *
+   * @param messageId message ID
+   * @param pagesV2 new version page data
+   * @param sections page section data
+   * @param assets page asset data (optional)
+   * @returns whether the project is saved successfully
+   */
+  const saveEditorProject = async (
+    messageId: string | undefined,
+    pagesV2: PageData[],
+    sections: Section[],
+    assets?: PageAssetData[],
+  ) => {
     const db = await openEditorDatabase();
 
     if (!db || !messageId) {
@@ -474,7 +595,7 @@ export function useEditorStorage() {
     }
 
     try {
-      await saveProject(db, messageId, pages, sections);
+      await saveProject(db, messageId, pagesV2, sections, assets);
       return true;
     } catch (error) {
       logger.error('保存 editor 项目失败', error);
@@ -485,10 +606,22 @@ export function useEditorStorage() {
   };
 
   /**
-   * 加载 editor 项目。
-   * @returns editor 项目数据。
+   * Load editor project
+   *
+   * @returns editor project data
+   *
+   * @note the project data will be converted to PageV2 structure
+   * @note the project data returned contains the PageV2 structure in the pages field, the Section structure in the sections field, the PageAssetData structure in the assets field, and the IProject structure in the project field
    */
-  const loadEditorProject = async (): Promise<Page[] | undefined> => {
+  const loadEditorProject = async (): Promise<
+    | {
+        pages?: PageData[];
+        sections?: Section[];
+        assets?: PageAssetData[];
+        project?: IProject;
+      }
+    | undefined
+  > => {
     const db = await openEditorDatabase();
 
     if (!db) {
@@ -498,7 +631,16 @@ export function useEditorStorage() {
     const messageId = currentMessageId || undefined;
     try {
       const result = await getEditorProject(db, messageId);
-      return result?.pages;
+      if (!result) {
+        return undefined;
+      }
+
+      return {
+        pages: result.pages,
+        sections: result.sections,
+        assets: result.assets,
+        project: result.project,
+      };
     } catch (error) {
       logger.error('加载 editor 项目失败', error);
       return undefined;

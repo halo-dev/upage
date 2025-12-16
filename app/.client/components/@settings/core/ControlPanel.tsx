@@ -62,7 +62,7 @@ export const ControlPanel = ({ open, onClose }: ControlPanelProps) => {
   // Add visibleTabs logic using useMemo with optimized calculations
   const visibleTabs = useMemo(() => {
     if (!tabConfiguration?.userTabs || !Array.isArray(tabConfiguration.userTabs)) {
-      logger.warn('Invalid tab configuration, resetting to defaults');
+      logger.warn('无效的标签配置，重置为默认配置');
       resetTabConfiguration();
 
       return [];

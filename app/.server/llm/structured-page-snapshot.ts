@@ -1,12 +1,12 @@
 import { type CallSettings, generateText, type LanguageModel } from 'ai';
-import type { Page } from '~/types/actions';
+import type { PageData } from '~/types/pages';
 
 export async function structuredPageSnapshot({
   pages,
   model,
   abortSignal,
 }: {
-  pages: Page[];
+  pages: PageData[];
   model: LanguageModel;
 } & CallSettings) {
   return await generateText({

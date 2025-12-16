@@ -1,6 +1,7 @@
 import { type ActionFunctionArgs } from '@remix-run/node';
 import { get1PanelConnectionSettings, save1PanelConnectionSettings } from '~/.server/service/connection-settings';
 import { createOrUpdateDeployment, getLatestDeployment } from '~/.server/service/deployment';
+import { convertFilesToStringRecord, generateDeploymentFiles } from '~/.server/service/files-generator';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';
 import {
@@ -15,12 +16,16 @@ import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment
 
 interface DeployRequestBody {
   websiteId: number;
-  files: Record<string, string>;
+  messageId: string;
   chatId: string;
   serverUrl?: string;
   apiKey?: string;
   websiteDomain?: string;
   protocol?: string;
+  attach?: {
+    uPageHtml?: string;
+    [key: string]: unknown;
+  };
 }
 
 export type HandleDeployArgs = ActionFunctionArgs & {
@@ -33,13 +38,26 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
   try {
     const {
       websiteId,
-      files,
+      messageId,
       chatId,
       serverUrl: requestServerUrl,
       apiKey: requestApiKey,
       websiteDomain,
       protocol,
+      attach,
     } = (await request.json()) as DeployRequestBody;
+
+    if (!messageId || !chatId) {
+      return errorResponse(400, '缺少必要参数');
+    }
+
+    const generatedFiles = await generateDeploymentFiles({
+      messageId,
+      inner: false,
+      attachBody: attach?.uPageHtml,
+    });
+
+    const files = convertFilesToStringRecord(generatedFiles);
 
     // 从用户设置中获取连接信息
     let connectionSettings = await get1PanelConnectionSettings(userId);

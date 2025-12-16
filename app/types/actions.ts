@@ -58,3 +58,13 @@ export interface PageHistory {
   // 版本历史
   versions: PageHistoryVersion[];
 }
+
+export interface ParsedSection {
+  content: string;
+  domId: string;
+  rootDomId: string;
+  pageName: string;
+  sort: number;
+  type: 'html' | 'script' | 'style';
+  actionId: string;
+}

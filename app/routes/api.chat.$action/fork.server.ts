@@ -36,8 +36,9 @@ export async function handleForkAction({ request, userId }: HandleForkActionArgs
         !Array.isArray(sourceChat.metadata) &&
         sourceChat.metadata !== null
           ? (sourceChat.metadata as Record<string, any>)
-          : undefined;
+          : {};
 
+      metadata.forkedFrom = sourceChatId;
       // 创建新聊天
       const newChat = await tx.chat.create({
         data: {
@@ -128,11 +129,85 @@ export async function handleForkAction({ request, userId }: HandleForkActionArgs
           logger.debug(`为聊天 ${newChat.id} 批量创建了 ${pageToCreate.length} 个Page项目`);
         }
 
+        // 收集需要创建的 PageV2 数据
+        const pageV2ToCreate = [];
+        for (const msg of messagesToCopy) {
+          if (msg.pagesV2 && msg.pagesV2.length > 0) {
+            for (const pageV2 of msg.pagesV2) {
+              pageV2ToCreate.push({
+                oldPageV2: pageV2,
+                newMessageId: messageMapping[msg.id].id,
+                data: {
+                  messageId: messageMapping[msg.id].id,
+                  name: pageV2.name,
+                  title: pageV2.title,
+                  content: pageV2.content,
+                  actionIds: pageV2.actionIds || [],
+                  headMeta: pageV2.headMeta || undefined,
+                  headLinks: pageV2.headLinks || undefined,
+                  headScripts: pageV2.headScripts || undefined,
+                  headStyles: pageV2.headStyles || undefined,
+                  headRaw: pageV2.headRaw || undefined,
+                  sort: pageV2.sort,
+                },
+              });
+            }
+          }
+        }
+
+        // 批量创建 PageV2 并建立映射
+        const pageV2Mapping: Record<string, any> = {};
+        if (pageV2ToCreate.length > 0) {
+          for (const pageV2Item of pageV2ToCreate) {
+            const newPageV2 = await tx.pageV2.create({
+              data: pageV2Item.data,
+            });
+            pageV2Mapping[pageV2Item.oldPageV2.id] = newPageV2;
+          }
+          logger.debug(`为聊天 ${newChat.id} 批量创建了 ${pageV2ToCreate.length} 个PageV2`);
+        }
+
+        // 收集需要创建的 PageAsset 数据
+        const pageAssetsToCreate = [];
+        for (const msg of messagesToCopy) {
+          if (msg.pagesV2 && msg.pagesV2.length > 0) {
+            for (const pageV2 of msg.pagesV2) {
+              if (pageV2.assets && pageV2.assets.length > 0) {
+                for (const asset of pageV2.assets) {
+                  const newPageV2 = pageV2Mapping[pageV2.id];
+                  if (newPageV2) {
+                    pageAssetsToCreate.push({
+                      pageId: newPageV2.id,
+                      messageId: messageMapping[msg.id].id,
+                      filename: asset.filename,
+                      storagePath: asset.storagePath,
+                      url: asset.url,
+                      fileType: asset.fileType,
+                      fileSize: asset.fileSize,
+                      sort: asset.sort,
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // 批量创建 PageAsset
+        if (pageAssetsToCreate.length > 0) {
+          await tx.pageAsset.createMany({
+            data: pageAssetsToCreate,
+          });
+          logger.debug(`为聊天 ${newChat.id} 批量创建了 ${pageAssetsToCreate.length} 个PageAsset`);
+        }
+
         // 收集需要创建的区块数据
         const sectionsToCreate = [];
         for (const msg of messagesToCopy) {
           if (msg.sections && msg.sections.length > 0) {
             for (const section of msg.sections) {
+              const newPageV2Id = section.pageV2Id ? pageV2Mapping[section.pageV2Id]?.id : undefined;
+
               sectionsToCreate.push({
                 messageId: messageMapping[msg.id].id,
                 type: section.type,
@@ -143,6 +218,8 @@ export async function handleForkAction({ request, userId }: HandleForkActionArgs
                 domId: section.domId,
                 sort: section.sort,
                 rootDomId: section.rootDomId,
+                pageV2Id: newPageV2Id || undefined,
+                placement: section.placement || 'body',
               });
             }
           }

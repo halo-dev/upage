@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { toast } from 'sonner';
 import { NetlifyDeploymentLink } from '~/.client/components/chat/NetlifyDeploymentLink.client';
 import useViewport from '~/.client/hooks';
+import { useChatDeployment } from '~/.client/hooks/useChatDeployment';
 import { setLocalStorage } from '~/.client/persistence';
 import { aiState, setShowChat } from '~/.client/stores/ai-state';
 import { webBuilderStore } from '~/.client/stores/web-builder';
@@ -22,11 +23,12 @@ import { DeployToVercelDialog } from './DeployToVercelDialog';
 interface HeaderActionButtonsProps {}
 
 export function HeaderActionButtons({}: HeaderActionButtonsProps) {
+  const { getDeploymentByPlatform } = useChatDeployment();
+
   const showWorkbench = useStore(webBuilderStore.showWorkbench);
   const { showChat, chatId, isStreaming } = useStore(aiState);
   const [deployingTo, setDeployingTo] = useState<'netlify' | 'vercel' | '1panel' | null>(null);
   const isSmallViewport = useViewport(1024);
-
   const canHideChat = showWorkbench || !showChat;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -162,30 +164,9 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
     }
   }, [panelFetcher.state, panelFetcher.data, chatId]);
 
-  async function getAllFiles(): Promise<Record<string, string>> {
-    const files = await webBuilderStore.getProjectFiles({ inline: false }).then((files) => {
-      return files.reduce(
-        (acc, file) => {
-          acc[file.filename] = file.content;
-          return acc;
-        },
-        {} as Record<string, string>,
-      );
-    });
-    const newFiles: Record<string, string> = {};
-    for (const [key, value] of Object.entries(files)) {
-      if (key.endsWith('.html')) {
-        const html = new DOMParser().parseFromString(value, 'text/html');
-        const originalContent = html.body.innerHTML;
-        // 添加 UPageHtml 到 body 中
-        const uPageHtml = renderToStaticMarkup(<UPageIndex />);
-        html.body.innerHTML = originalContent + uPageHtml;
-        newFiles[key] = '<!DOCTYPE html>\n' + html.documentElement.outerHTML;
-      } else {
-        newFiles[key] = value;
-      }
-    }
-    return newFiles;
+  function getUPageAttachHtml(): string {
+    // 生成 UPage 附加的 HTML
+    return renderToStaticMarkup(<UPageIndex />);
   }
 
   const handleNetlifyDeploy = useCallback(async () => {
@@ -194,17 +175,26 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
       return;
     }
 
+    const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
+    if (!currentMessageId) {
+      toast.error('没有找到当前消息');
+      return;
+    }
+
     try {
       setDeployingTo('netlify');
 
-      const fileContents = await getAllFiles();
+      const uPageHtml = getUPageAttachHtml();
       const existingSiteId = localStorage.getItem(`netlify-site-${chatId}`);
 
       netlifyFetcher.submit(
         {
           siteId: existingSiteId || '',
-          files: fileContents,
+          messageId: currentMessageId,
           chatId: chatId!,
+          attach: {
+            uPageHtml,
+          },
         } as any,
         {
           method: 'POST',
@@ -225,17 +215,26 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
       return;
     }
 
+    const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
+    if (!currentMessageId) {
+      toast.error('没有找到当前消息');
+      return;
+    }
+
     try {
       setDeployingTo('vercel');
 
-      const fileContents = await getAllFiles();
+      const uPageHtml = getUPageAttachHtml();
       const existingProjectId = localStorage.getItem(`vercel-project-${chatId}`);
 
       vercelFetcher.submit(
         {
           projectId: existingProjectId || '',
-          files: fileContents,
+          messageId: currentMessageId,
           chatId: chatId!,
+          attach: {
+            uPageHtml,
+          },
         } as any,
         {
           method: 'POST',
@@ -257,10 +256,16 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
         return;
       }
 
+      const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
+      if (!currentMessageId) {
+        toast.error('没有找到当前消息');
+        return;
+      }
+
       try {
         setDeployingTo('1panel');
 
-        const fileContents = await getAllFiles();
+        const uPageHtml = getUPageAttachHtml();
         const existingWebsiteId = localStorage.getItem(`1panel-project-${chatId}`);
 
         panelFetcher.submit(
@@ -268,8 +273,11 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             websiteId: options?.siteId || existingWebsiteId || '',
             websiteDomain: options?.customDomain || '',
             protocol: options?.protocol || 'http',
-            files: fileContents,
+            messageId: currentMessageId,
             chatId: chatId!,
+            attach: {
+              uPageHtml,
+            },
           } as any,
           {
             method: 'POST',
@@ -333,7 +341,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             >
               <img src="/icons/1panel.png" alt="1Panel" className="size-5" />
               <span>部署到 1Panel</span>
-              <_1PanelDeploymentLink />
+              <_1PanelDeploymentLink deployment={getDeploymentByPlatform(DeploymentPlatformEnum._1PANEL)} />
             </Button>
             <Button
               onClick={() => {
@@ -345,7 +353,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             >
               <div className="i-simple-icons:netlify size-5 bg-#00C7B7"></div>
               <span>部署到 Netlify</span>
-              <NetlifyDeploymentLink />
+              <NetlifyDeploymentLink deployment={getDeploymentByPlatform(DeploymentPlatformEnum.NETLIFY)} />
             </Button>
             <Button
               onClick={() => {
@@ -357,7 +365,7 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
             >
               <div className="i-skill-icons:vercel-light size-5"></div>
               <span>部署到 Vercel</span>
-              <VercelDeploymentLink />
+              <VercelDeploymentLink deployment={getDeploymentByPlatform(DeploymentPlatformEnum.VERCEL)} />
             </Button>
           </div>
         )}
@@ -391,18 +399,21 @@ export function HeaderActionButtons({}: HeaderActionButtonsProps) {
       <DeployToNetlifyDialog
         isOpen={showNetlifyDialog}
         deploying={isDeploying}
+        deployment={getDeploymentByPlatform(DeploymentPlatformEnum.NETLIFY)}
         onClose={() => setShowNetlifyDialog(false)}
         onDeploy={handleNetlifyDeploy}
       />
       <DeployToVercelDialog
         isOpen={showVercelDialog}
         deploying={isDeploying}
+        deployment={getDeploymentByPlatform(DeploymentPlatformEnum.VERCEL)}
         onClose={() => setShowVercelDialog(false)}
         onDeploy={handleVercelDeploy}
       />
       <DeployTo1PanelDialog
         isOpen={show1PanelDialog}
         deploying={isDeploying}
+        deployment={getDeploymentByPlatform(DeploymentPlatformEnum._1PANEL)}
         onClose={() => setShow1PanelDialog(false)}
         onDeploy={handle1PanelDeploy}
       />

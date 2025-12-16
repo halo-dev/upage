@@ -5,15 +5,18 @@ import type { Section } from '~/types/actions';
 const logger = createScopedLogger('section.server');
 
 /**
- * section 创建参数接口
+ * Section create parameters interface
  */
 export interface SectionCreateParams extends Section {
   messageId: string;
   actionId: string;
+  pageV2Id?: string;
+  placement?: string;
+  type?: string;
 }
 
 /**
- * section 更新参数接口
+ * Section update parameters interface
  */
 export interface SectionUpdateParams {
   type?: string;
@@ -24,15 +27,29 @@ export interface SectionUpdateParams {
   domId?: string;
   rootDomId?: string;
   sort?: number;
+  pageV2Id?: string;
+  placement?: string;
 }
 
 /**
- * 创建新的 section
- * @param params  section 创建参数
- * @returns 创建的 section 记录
+ * Create new section
+ * @param params section create parameters
+ * @returns created section record
  */
 export async function createSection(params: SectionCreateParams) {
-  const { messageId, action = 'add', actionId, pageName = '', content, domId, rootDomId, sort = 0 } = params;
+  const {
+    messageId,
+    action = 'add',
+    actionId,
+    pageName = '',
+    content,
+    domId,
+    rootDomId,
+    sort = 0,
+    pageV2Id,
+    placement = 'body',
+    type = 'section',
+  } = params;
 
   try {
     const section = await prisma.section.create({
@@ -45,6 +62,9 @@ export async function createSection(params: SectionCreateParams) {
         domId,
         rootDomId,
         sort,
+        pageV2Id: pageV2Id || undefined,
+        placement,
+        type,
       },
     });
 
@@ -57,9 +77,56 @@ export async function createSection(params: SectionCreateParams) {
 }
 
 /**
- * 批量创建多个 section
- * @param params  section 创建参数数组
- * @returns 创建的 section 数量
+ * Create or update section
+ * @param params section create parameters
+ * @returns created or updated section record
+ */
+export async function createOrUpdateSection(params: SectionCreateParams) {
+  const {
+    messageId,
+    action = 'add',
+    actionId,
+    pageName = '',
+    content,
+    domId,
+    rootDomId,
+    sort = 0,
+    pageV2Id,
+    placement = 'body',
+    type = 'section',
+  } = params;
+
+  try {
+    const existingSection = await getSectionByMessageIdAndDomId(messageId, domId);
+
+    if (existingSection) {
+      const updatedSection = await updateSection(existingSection.id, {
+        action,
+        actionId,
+        pageName,
+        content,
+        rootDomId,
+        sort,
+        pageV2Id,
+        placement,
+        type,
+      });
+      logger.info(`[Section] 更新了消息 ${messageId} 的 section: ${existingSection.id} (domId: ${domId})`);
+      return updatedSection;
+    }
+
+    const newSection = await createSection(params);
+    return newSection;
+  } catch (error) {
+    logger.error('[Section] 创建或更新 section 失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * Batch create multiple sections
+ * @param params section create parameters array
+ * @returns created section count
  */
 export async function createManySections(params: SectionCreateParams[]) {
   if (!params || params.length === 0) {
@@ -70,7 +137,19 @@ export async function createManySections(params: SectionCreateParams[]) {
   try {
     const result = await prisma.section.createMany({
       data: params.map(
-        ({ messageId, action = 'add', actionId, pageName = '', content, domId, rootDomId, sort = 0 }) => ({
+        ({
+          messageId,
+          action = 'add',
+          actionId,
+          pageName = '',
+          content,
+          domId,
+          rootDomId,
+          sort = 0,
+          pageV2Id,
+          placement = 'body',
+          type = 'section',
+        }) => ({
           messageId,
           action,
           actionId,
@@ -79,6 +158,9 @@ export async function createManySections(params: SectionCreateParams[]) {
           domId,
           rootDomId,
           sort,
+          pageV2Id: pageV2Id || undefined,
+          placement,
+          type,
         }),
       ),
     });
@@ -92,9 +174,36 @@ export async function createManySections(params: SectionCreateParams[]) {
 }
 
 /**
- * 根据ID获取 section
+ * Batch create or update sections
+ * @param params section create parameters array
+ * @returns created or updated section records array
+ */
+export async function createOrUpdateManySections(params: SectionCreateParams[]) {
+  if (!params || params.length === 0) {
+    logger.warn('[Section] 批量创建或更新 section : 没有提供 section 数据');
+    return [];
+  }
+
+  try {
+    const results = [];
+
+    for (const param of params) {
+      const result = await createOrUpdateSection(param);
+      results.push(result);
+    }
+
+    logger.info(`[Section] 批量创建或更新了 ${results.length} 个 section`);
+    return results;
+  } catch (error) {
+    logger.error('[Section] 批量创建或更新 section 失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get section by ID
  * @param id  section ID
- * @returns  section 记录
+ * @returns section record
  */
 export async function getSectionById(id: string) {
   try {
@@ -110,9 +219,9 @@ export async function getSectionById(id: string) {
 }
 
 /**
- * 获取消息的所有 section
- * @param messageId 消息ID
- * @returns  section 记录列表
+ * Get all sections by message ID
+ * @param messageId message ID
+ * @returns section records array
  */
 export async function getMessageSections(messageId: string) {
   try {
@@ -152,9 +261,34 @@ export async function getSectionByDomId(domId: string) {
 }
 
 /**
- * 获取特定页面的所有 section
- * @param pageName 页面名称
- * @returns  section 记录列表
+ * Get section by message ID and DOM ID
+ * @param messageId message ID
+ * @param domId DOM ID
+ * @returns section record or null
+ */
+export async function getSectionByMessageIdAndDomId(messageId: string, domId: string) {
+  try {
+    const section = await prisma.section.findFirst({
+      where: {
+        messageId,
+        domId,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    return section;
+  } catch (error) {
+    logger.error(`[Section] 获取消息 ${messageId} DOM ID ${domId} 的 section 失败:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get all sections by page name
+ * @param pageName page name
+ * @returns section records array
  */
 export async function getPageSections(pageName: string) {
   try {
@@ -173,10 +307,10 @@ export async function getPageSections(pageName: string) {
 }
 
 /**
- * 更新 section 信息
+ * Update section information
  * @param id  section ID
- * @param params 更新参数
- * @returns 更新后的 section 记录
+ * @param params update parameters
+ * @returns updated section record
  */
 export async function updateSection(id: string, params: SectionUpdateParams) {
   try {
@@ -196,9 +330,9 @@ export async function updateSection(id: string, params: SectionUpdateParams) {
 }
 
 /**
- * 删除 section
+ * Delete section by ID
  * @param id  section ID
- * @returns 删除结果
+ * @returns delete result
  */
 export async function deleteSection(id: string) {
   try {
@@ -215,9 +349,9 @@ export async function deleteSection(id: string) {
 }
 
 /**
- * 删除消息的所有 section
- * @param messageId 消息ID
- * @returns 删除结果
+ * Delete all sections by message ID
+ * @param messageId message ID
+ * @returns delete result
  */
 export async function deleteMessageSections(messageId: string) {
   try {
@@ -229,6 +363,71 @@ export async function deleteMessageSections(messageId: string) {
     return result.count > 0;
   } catch (error) {
     logger.error(`[Section] 删除消息 ${messageId} 的 section 失败:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get all sections by PageV2 ID
+ * @param pageV2Id PageV2 ID
+ * @returns section records array
+ */
+export async function getSectionsByPageV2Id(pageV2Id: string) {
+  try {
+    const sections = await prisma.section.findMany({
+      where: { pageV2Id },
+      orderBy: {
+        sort: 'asc',
+      },
+    });
+
+    return sections;
+  } catch (error) {
+    logger.error(`[Section] 获取 PageV2 ${pageV2Id} 的 section 列表失败:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get sections by message ID and page name
+ * @param messageId message ID
+ * @param pageName page name
+ * @returns section records array
+ */
+export async function getSectionsByMessageIdAndPageName(messageId: string, pageName: string) {
+  try {
+    const sections = await prisma.section.findMany({
+      where: {
+        messageId,
+        pageName,
+      },
+      orderBy: {
+        sort: 'asc',
+      },
+    });
+
+    return sections;
+  } catch (error) {
+    logger.error(`[Section] 获取消息 ${messageId} 页面 ${pageName} 的 section 列表失败:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Delete all sections by PageV2 ID
+ * @param pageV2Id PageV2 ID
+ * @returns delete result
+ */
+export async function deleteSectionsByPageV2Id(pageV2Id: string) {
+  try {
+    const result = await prisma.section.deleteMany({
+      where: { pageV2Id },
+    });
+
+    logger.info(`[Section] 删除了 PageV2 ${pageV2Id} 的 ${result.count} 个 section `);
+    return result.count > 0;
+  } catch (error) {
+    logger.error(`[Section] 删除 PageV2 ${pageV2Id} 的 section 失败:`, error);
     throw error;
   }
 }

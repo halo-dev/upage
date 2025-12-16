@@ -1,22 +1,20 @@
 import { useStore } from '@nanostores/react';
+import type { Deployment } from '@prisma/client';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import _1PanelConnection from '~/.client/components/header/connections/_1PanelConnection';
-import { useChatDeployment } from '~/.client/hooks/useChatDeployment';
 import { _1PanelConnectionStore } from '~/.client/stores/1panel';
-import { DeploymentPlatformEnum } from '~/types/deployment';
 
 interface DeployTo1PanelDialogProps {
   isOpen: boolean;
   deploying: boolean;
   onClose: () => void;
   onDeploy: (options?: { customDomain?: string; siteId?: number; protocol?: string }) => Promise<void>;
+  deployment: Deployment | undefined;
 }
 
-export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy }: DeployTo1PanelDialogProps) {
-  const { getDeploymentByPlatform } = useChatDeployment();
-
+export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy, deployment }: DeployTo1PanelDialogProps) {
   const connection = useStore(_1PanelConnectionStore);
   const [is1PanelConnected, setIs1PanelConnected] = useState(false);
   const [showConnectionForm, setShowConnectionForm] = useState(false);
@@ -65,8 +63,6 @@ export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy }: D
       setShowConnectionForm(false);
     }
   };
-
-  const deploymentInfo = getDeploymentByPlatform(DeploymentPlatformEnum._1PANEL);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -125,7 +121,7 @@ export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy }: D
                     </p>
                   )}
 
-                  {is1PanelConnected && !deploymentInfo?.id && (
+                  {is1PanelConnected && !deployment?.id && (
                     <div className="mb-6">
                       <label className="block text-sm text-gray-600 dark:text-gray-400 mb-2">自定义域名（可选）</label>
                       <div className="flex items-center gap-2">
@@ -153,7 +149,7 @@ export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy }: D
                   </div>
                 </div>
 
-                <div className="p-4 border-t border-[#E5E5E5] dark:border-[#1A1A1A] bg-white dark:bg-[#0A0A0A] sticky bottom-0">
+                <div className="p-4 border-t sticky bottom-0">
                   <div className="flex justify-end">
                     {!is1PanelConnected ? (
                       <motion.button
@@ -184,7 +180,7 @@ export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy }: D
                         ) : (
                           <>
                             <div className="i-ph:rocket-launch size-4" />
-                            {!!deploymentInfo?.id ? '覆盖已有网站' : '部署到 1Panel'}
+                            {!!deployment?.id ? '覆盖已有网站' : '部署到 1Panel'}
                           </>
                         )}
                       </motion.button>

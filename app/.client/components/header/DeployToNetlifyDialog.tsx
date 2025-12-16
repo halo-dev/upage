@@ -1,10 +1,9 @@
 import { useStore } from '@nanostores/react';
+import type { Deployment } from '@prisma/client';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
 import React, { Suspense, useEffect, useState } from 'react';
-import { useChatDeployment } from '~/.client/hooks/useChatDeployment';
 import { netlifyConnection } from '~/.client/stores/netlify';
-import { DeploymentPlatformEnum } from '~/types/deployment';
 
 const NetlifyConnection = React.lazy(() => import('~/.client/components/header/connections/NetlifyConnection'));
 
@@ -13,10 +12,16 @@ interface DeployToNetlifyDialogProps {
   deploying: boolean;
   onClose: () => void;
   onDeploy: () => Promise<void>;
+  deployment: Deployment | undefined;
 }
 
-export function DeployToNetlifyDialog({ deploying, isOpen, onClose, onDeploy }: DeployToNetlifyDialogProps) {
-  const { getDeploymentByPlatform } = useChatDeployment();
+export function DeployToNetlifyDialog({
+  deploying,
+  isOpen,
+  onClose,
+  onDeploy,
+  deployment,
+}: DeployToNetlifyDialogProps) {
   const connection = useStore(netlifyConnection);
   const [isNetlifyConnected, setIsNetlifyConnected] = useState(false);
   const [showConnectionForm, setShowConnectionForm] = useState(false);
@@ -54,8 +59,6 @@ export function DeployToNetlifyDialog({ deploying, isOpen, onClose, onDeploy }: 
       setShowConnectionForm(false);
     }
   };
-
-  const deploymentInfo = getDeploymentByPlatform(DeploymentPlatformEnum.NETLIFY);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -115,7 +118,7 @@ export function DeployToNetlifyDialog({ deploying, isOpen, onClose, onDeploy }: 
                   </div>
                 </div>
 
-                <div className="p-4 border-t border-[#E5E5E5] dark:border-[#1A1A1A] bg-white dark:bg-[#0A0A0A] sticky bottom-0">
+                <div className="p-4 border-t sticky bottom-0">
                   <div className="flex justify-end">
                     {isNetlifyConnected ? (
                       <motion.button
@@ -133,7 +136,7 @@ export function DeployToNetlifyDialog({ deploying, isOpen, onClose, onDeploy }: 
                         ) : (
                           <>
                             <div className="i-ph:rocket-launch size-4" />
-                            {!!deploymentInfo?.id ? '覆盖已有网站' : '部署到 Netlify'}
+                            {!!deployment?.id ? '覆盖已有网站' : '部署到 Netlify'}
                           </>
                         )}
                       </motion.button>

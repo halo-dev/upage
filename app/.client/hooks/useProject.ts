@@ -1,14 +1,25 @@
 import { useFetcher } from '@remix-run/react';
-import { useEditorStorage } from '~/.client/persistence/editor';
-import { webBuilderStore } from '~/.client/stores/web-builder';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 import { createScopedLogger } from '~/.client/utils/logger';
 import type { ApiResponse } from '~/types/global';
+import { useEditorStorage } from '../persistence/editor';
+import { webBuilderStore } from '../stores/web-builder';
 
 const logger = createScopedLogger('useGrapesProject');
 
 export function useProject() {
   const fetcher = useFetcher();
   const { saveEditorProject } = useEditorStorage();
+
+  useEffect(() => {
+    if (fetcher.state === 'idle' && fetcher.data) {
+      const { success, message } = fetcher.data as ApiResponse<string>;
+      if (!success) {
+        toast.error(`保存项目失败: ${message}`);
+      }
+    }
+  }, [fetcher]);
 
   /**
    * 保存项目数据到后端数据库
@@ -58,15 +69,16 @@ export function useProject() {
       );
       return false;
     }
+    const projectPageV2 = projectPages.map((page) => ({ ...page, messageId }));
     try {
       // 先保存在本地数据中
-      saveEditorProject(messageId, projectPages, projectSections);
+      saveEditorProject(messageId, projectPageV2, projectSections);
       // 再调用远程接口保存到后端数据库
       // 使用fetcher调用API保存项目数据
       fetcher.submit(
         {
           messageId,
-          pages: JSON.stringify(projectPages),
+          pages: JSON.stringify(projectPageV2),
           sections: JSON.stringify(projectSections),
         },
         {
@@ -76,7 +88,7 @@ export function useProject() {
       );
       return true;
     } catch (error) {
-      logger.error('保存GrapesJS项目失败:', error);
+      logger.error('保存项目失败:', error);
       return false;
     }
   }
