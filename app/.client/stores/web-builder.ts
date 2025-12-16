@@ -1,10 +1,9 @@
 import { atom, type WritableAtom } from 'nanostores';
 import { toast } from 'sonner';
+import { replaceUrlsWithRelativePaths } from '~/.client/utils/asset-path-converter';
 import { createScopedLogger } from '~/.client/utils/logger';
 import type { ChangeSource } from '~/types/actions';
-import type { PageData, PageMap } from '~/types/pages';
-import { base64ToBinary, getContentType, getExtensionFromMimeType, getFileName } from '~/utils/file-utils';
-import { replaceUrlsWithRelativePaths } from '../utils/asset-path-converter';
+import type { PageMap } from '~/types/pages';
 import { ChatStore } from './chat';
 import { EditorStore } from './editor';
 import { PagesStore } from './pages';
@@ -56,9 +55,7 @@ export class WebBuilderStore {
   private setupCoordination() {
     this.currentView.listen((view) => {
       if (view === 'preview') {
-        this.getProjectFiles({ pathMode: 'absolute' }).then((files) => {
-          this.setPreviews(files);
-        });
+        this.setPreviews();
       }
     });
   }
@@ -101,13 +98,13 @@ export class WebBuilderStore {
     this.pagesStore.setActiveSection(sectionId);
   }
 
-  setPreviews(files: ExportEditorFile[]) {
-    this.previewsStore.setPreviews(files);
+  setPreviews() {
+    const documents = this.editorStore.editorDocuments.get();
+    this.previewsStore.setPreviews(documents);
 
     const currentDocument = this.editorStore.currentDocument.get();
-    const pageName = currentDocument?.name;
-    if (pageName) {
-      this.previewsStore.setCurrentPreview(`${pageName}.html`);
+    if (currentDocument) {
+      this.previewsStore.setCurrentPreviewName(currentDocument.name);
     }
   }
 
@@ -254,248 +251,6 @@ export class WebBuilderStore {
       logger.error(`导出 HTML 文件失败: ${errorMessage}`);
       toast.error(`导出 HTML 文件失败: ${errorMessage}`);
     }
-  }
-
-  async getProjectFilesAsMap(options: GetProjectFilesOptions = {}): Promise<Record<string, string>> {
-    const files = await this.getProjectFiles(options);
-    return files.reduce(
-      (acc, file) => {
-        acc[file.filename] = file.content;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
-  }
-
-  /**
-   * 获取当前编辑器中的文件。
-   * @param inline 是否内联样式及所有图片。如果为 false，则将提取所有本地资源为单独文件。默认为 true。
-   * @param pathMode HTML 内的文件路径模式，默认为相对路径。
-   * @returns 文件列表。
-   */
-  async getProjectFiles({
-    inline = true,
-    pathMode = 'relative',
-  }: GetProjectFilesOptions = {}): Promise<ExportEditorFile[]> {
-    const getFiles = async () => {
-      const files: ExportEditorFile[] = [];
-      for (const page of Object.values(this.pagesStore.pages.get())) {
-        if (!page) {
-          continue;
-        }
-        const doc = this.createProjectHead(page, pathMode);
-        const pageElement = document.createElement('div');
-        pageElement.id = page.name;
-        pageElement.innerHTML = page.content || '';
-        doc.body.innerHTML = pageElement.innerHTML;
-
-        const file = {
-          filename: `${page.name}.html`,
-          content: '',
-          mimeType: 'text/html',
-        };
-
-        if (inline) {
-          file.content = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
-          files.push(file);
-        } else {
-          const extractedFiles = await this.extractResources(pageElement);
-          doc.body.innerHTML = pageElement.innerHTML;
-          file.content = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
-          files.push(file);
-          files.push(...extractedFiles);
-        }
-      }
-
-      return files;
-    };
-
-    const files: ExportEditorFile[] = await getFiles();
-
-    if (!inline) {
-      const tailwindContent = await fetch('/tailwindcss.js').then((resp) => resp.text());
-      files.push({
-        filename: 'tailwindcss.js',
-        content: tailwindContent,
-        mimeType: 'application/javascript',
-      });
-      const iconifyContent = await fetch('/iconify-icon.min.js').then((resp) => resp.text());
-      files.push({
-        filename: 'iconify-icon.min.js',
-        content: iconifyContent,
-        mimeType: 'application/javascript',
-      });
-    }
-
-    return files;
-  }
-
-  private createProjectHead(
-    page: Omit<PageData, 'messageId'>,
-    pathMode: 'relative' | 'absolute' = 'relative',
-  ): Document {
-    const basePath = pathMode === 'relative' ? './' : '/';
-    const doc = document.implementation.createHTMLDocument('');
-    const head = doc.head;
-
-    const meta = doc.createElement('meta');
-    meta.setAttribute('charset', 'UTF-8');
-    head.appendChild(meta);
-
-    const viewport = doc.createElement('meta');
-    viewport.setAttribute('name', 'viewport');
-    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
-    head.appendChild(viewport);
-
-    const title = doc.createElement('title');
-    title.textContent = page.title || 'UPage Generated Page';
-    head.appendChild(title);
-
-    const tailwindScript = doc.createElement('script');
-    tailwindScript.setAttribute('src', `${basePath}tailwindcss.js`);
-    head.appendChild(tailwindScript);
-
-    const iconifyScript = doc.createElement('script');
-    iconifyScript.setAttribute('src', `${basePath}iconify-icon.min.js`);
-    head.appendChild(iconifyScript);
-
-    return doc;
-  }
-
-  /**
-   * 提取资源为单独文件
-   * @param doc HTML 文档
-   * @returns 提取的文件列表
-   */
-  private async extractResources(doc: Element, assetsFolder: string = 'assets'): Promise<ExportEditorFile[]> {
-    const files: ExportEditorFile[] = [];
-
-    const resources: {
-      element: Element;
-      attribute: string;
-      value: string;
-    }[] = [];
-    doc.querySelectorAll('*').forEach((element) => {
-      const src = element.getAttribute('src');
-      if (src) {
-        resources.push({
-          element,
-          attribute: 'src',
-          value: src,
-        });
-      }
-      const href = element.getAttribute('href');
-      if (href && element.tagName === 'LINK') {
-        resources.push({
-          element,
-          attribute: 'href',
-          value: href,
-        });
-      }
-      const background = element.getAttribute('background');
-      if (background) {
-        resources.push({
-          element,
-          attribute: 'background',
-          value: background,
-        });
-      }
-      const backgroundImage = element.getAttribute('background-image');
-      if (backgroundImage) {
-        resources.push({
-          element,
-          attribute: 'background-image',
-          value: backgroundImage,
-        });
-      }
-    });
-
-    for (const resource of resources) {
-      if (this.isRemoteUrl(resource.value) || this.isAnchor(resource.value)) {
-        continue;
-      }
-
-      if (resource.value.startsWith('data:')) {
-        const mimeType = resource.value.split(';')[0].split(':')[1];
-        const base64Content = resource.value.split(',')[1];
-        const filename = `${assetsFolder}/${Date.now()}${getExtensionFromMimeType(mimeType)}`;
-        resource.element.setAttribute(resource.attribute, `./${filename}`);
-
-        // 将 base64 转换为二进制字符串
-        const binaryString = base64ToBinary(base64Content);
-        files.push({
-          filename,
-          content: binaryString,
-          mimeType,
-        });
-        continue;
-      }
-
-      try {
-        const response = await fetch(resource.value, {
-          headers: {
-            'Content-Type': getContentType(resource.value),
-          },
-        });
-        if (!response.ok) {
-          logger.error(`获取资源失败: ${resource.value} (状态: ${response.status})`);
-          continue;
-        }
-        const filename = `${assetsFolder}/${getFileName(resource.value)}`;
-        resource.element.setAttribute(resource.attribute, `./${filename}`);
-
-        const mimeType = getContentType(resource.value);
-        let content: string;
-
-        if (this.isTextMimeType(mimeType)) {
-          content = await response.text();
-        } else {
-          const buffer = await response.arrayBuffer();
-          const array = new Uint8Array(buffer);
-          content = Array.from(array)
-            .map((byte) => String.fromCharCode(byte))
-            .join('');
-        }
-
-        files.push({
-          filename,
-          content,
-          mimeType,
-        });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '未知错误';
-        logger.error(`获取资源失败: ${resource.value} ${errorMessage}`);
-        continue;
-      }
-    }
-    return files;
-  }
-
-  /**
-   * 检查 URL 是否为远程 URL（以 http:// 或 https:// 开头）
-   * @param url 要检查的 URL
-   * @returns 是否为远程 URL
-   */
-  private isRemoteUrl(url: string): boolean {
-    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
-  }
-
-  private isAnchor(url: string): boolean {
-    return url.startsWith('#');
-  }
-
-  /**
-   * 判断是否为文本类型的 MIME 类型
-   * @param mimeType MIME 类型
-   * @returns 是否为文本类型
-   */
-  private isTextMimeType(mimeType: string): boolean {
-    return (
-      mimeType.startsWith('text/') ||
-      mimeType === 'application/javascript' ||
-      mimeType === 'application/json' ||
-      mimeType === 'application/xml'
-    );
   }
 }
 

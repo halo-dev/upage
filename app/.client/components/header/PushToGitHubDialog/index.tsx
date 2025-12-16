@@ -56,23 +56,13 @@ export function PushToGitHubDialog({ isOpen, onClose }: PushToGitHubDialogProps)
   useEffect(() => {
     if (githubFetcher.state === 'idle' && githubFetcher.data) {
       const { data, success, message } = githubFetcher.data;
-      if (success && data?.repo) {
+      if (success && data?.repo && data?.files) {
         const repoUrl = data.repo.html_url;
         setCreatedRepoUrl(repoUrl);
 
-        webBuilderStore
-          .getProjectFilesAsMap({
-            inline: false,
-          })
-          .then((files) => {
-            const filesList = Object.entries(files).map(([path, content]) => ({
-              path,
-              size: new TextEncoder().encode(content).length,
-            }));
-            setPushedFiles(filesList);
-            setShowSuccessDialog(true);
-            setShowInputForm(false);
-          });
+        setPushedFiles(data.files);
+        setShowSuccessDialog(true);
+        setShowInputForm(false);
       } else {
         console.error('Invalid push response:', data);
         toast.error(message || '推送失败，请检查仓库名称并重试。');
@@ -115,6 +105,12 @@ export function PushToGitHubDialog({ isOpen, onClose }: PushToGitHubDialogProps)
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
+    const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
+    if (!currentMessageId) {
+      toast.error('没有找到当前消息');
+      return;
+    }
+
     e.preventDefault();
 
     if (!validateForm()) {
@@ -122,20 +118,11 @@ export function PushToGitHubDialog({ isOpen, onClose }: PushToGitHubDialogProps)
     }
 
     try {
-      const files = await webBuilderStore.getProjectFilesAsMap({
-        inline: false,
-      });
-
-      if (!files || Object.keys(files).length === 0) {
-        toast.error('没有文件需要推送');
-        return;
-      }
-
       githubFetcher.submit(
         {
+          messageId: currentMessageId,
           repoName,
           commitMessage,
-          files,
           isPrivate,
           chatId,
         } as any,

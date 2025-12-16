@@ -21,8 +21,6 @@ export type AiState = {
   aborted: boolean;
   // 当前的聊天 ID
   chatId: string | undefined;
-  // 当前的消息 ID
-  messageId: string | undefined;
   // 当前聊天的消息列表，包含解析后的消息内容，仅用于前端渲染
   parseMessages: ParsedUIMessage[];
 };
@@ -39,7 +37,6 @@ export const aiState = map<AiState & UIState>({
   chatStarted: false,
   isStreaming: false,
   chatId: undefined,
-  messageId: undefined,
   isInitialized: false,
   parseMessages: [],
   aborted: false,
@@ -112,10 +109,6 @@ export function setChatId(id: string | undefined) {
  */
 export function getChatId(): string | undefined {
   return aiState.get().chatId;
-}
-
-export function getMessageId(): string | undefined {
-  return aiState.get().messageId;
 }
 
 export function setShowChat(showChat: boolean) {

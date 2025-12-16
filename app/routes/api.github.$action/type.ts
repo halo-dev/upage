@@ -17,33 +17,6 @@ export interface GitHubAuthResponse {
 }
 
 /**
- * GitHub 推送请求体
- */
-export interface GitHubPushRequest {
-  repoName: string;
-  commitMessage?: string;
-  files: Record<string, string>;
-  chatId: string;
-  isPrivate?: boolean;
-}
-
-/**
- * GitHub 推送响应
- */
-export interface GitHubPushResponse {
-  repo: {
-    id: number;
-    name: string;
-    full_name: string;
-    html_url: string;
-  };
-  commit: {
-    sha: string;
-    url: string;
-  };
-}
-
-/**
  * GitHub 仓库列表响应项
  */
 export interface GitHubRepoItem {

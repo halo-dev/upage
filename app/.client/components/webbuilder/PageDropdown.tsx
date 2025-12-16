@@ -26,7 +26,7 @@ export const PageDropdown = memo(
     // sort previews alphabetically by filename, preserving original index
     const sortedPreviews = previews
       .map((previewInfo, index) => ({ ...previewInfo, index }))
-      .sort((a, b) => a.filename.localeCompare(b.filename));
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     // close dropdown if user clicks outside
     useEffect(() => {
@@ -59,7 +59,7 @@ export const PageDropdown = memo(
             </div>
             {sortedPreviews.map((preview) => (
               <div
-                key={preview.filename}
+                key={preview.name}
                 className="flex items-center px-4 py-2 cursor-pointer hover:bg-upage-elements-item-backgroundActive"
                 onClick={() => {
                   setActivePreviewIndex(preview.index);
@@ -74,7 +74,7 @@ export const PageDropdown = memo(
                       : 'text-upage-elements-item-contentDefault group-hover:text-upage-elements-item-contentActive'
                   }
                 >
-                  {preview.filename}
+                  {preview.name}
                 </span>
               </div>
             ))}

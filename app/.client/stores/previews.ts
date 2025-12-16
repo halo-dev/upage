@@ -1,33 +1,37 @@
-import { atom } from 'nanostores';
-import type { ExportEditorFile } from './web-builder';
+import { atom, computed } from 'nanostores';
+import type { EditorDocuments } from './editor';
 
 export interface PreviewInfo {
+  name: string;
+  title: string;
+  head: string;
   content: string;
-  filename: string;
-  mimeType: string;
 }
 
 // 当页面保存时，由 save 方法主动调用并 setPreviews 来更新 previews 中的数据
 export class PreviewsStore {
   previews = atom<PreviewInfo[]>([]);
-  currentPreview = atom<string | null>(null);
+  currentPreviewName = atom<string | null>(null);
+  currentPreview = computed([this.previews, this.currentPreviewName], (previews, currentPreviewName) => {
+    return previews.find((preview) => preview.name === currentPreviewName);
+  });
 
-  setPreviews(files: ExportEditorFile[]) {
+  setPreviews(documents: EditorDocuments) {
     this.previews.set(
-      files.map((file) => ({
-        content: file.content,
-        filename: file.filename,
-        mimeType: file.mimeType,
+      Object.values(documents).map((document) => ({
+        name: document.name,
+        title: document.title,
+        head: document.head,
+        content: document.content,
       })),
     );
   }
 
-  setCurrentPreview(filename: string) {
-    this.currentPreview.set(filename);
+  setCurrentPreviewName(name: string) {
+    this.currentPreviewName.set(name);
   }
 }
 
-// Create a singleton instance
 let previewsStore: PreviewsStore | null = null;
 
 export function usePreviewStore() {

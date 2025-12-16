@@ -1,11 +1,11 @@
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 import { getGitHubConnectionSettings } from '~/.server/service/connection-settings';
 import { createOrUpdateDeployment } from '~/.server/service/deployment';
+import { generateDeploymentFiles } from '~/.server/service/files-generator';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';
 import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment';
 import { formatFile } from '~/utils/prettier';
-import type { GitHubPushRequest, GitHubPushResponse } from './type';
 
 const logger = createScopedLogger('api.github.push');
 
@@ -15,15 +15,54 @@ export type HandleGitHubPushArgs = {
 };
 
 /**
+ * GitHub 推送响应
+ */
+export interface GitHubPushResponse {
+  repo: {
+    id: number;
+    name: string;
+    full_name: string;
+    html_url: string;
+  };
+  commit: {
+    sha: string;
+    url: string;
+  };
+  files: {
+    name: string;
+    path: string;
+    size: number;
+  }[];
+}
+
+/**
+ * GitHub 推送请求体
+ */
+export interface GitHubPushRequest {
+  messageId: string;
+  repoName: string;
+  commitMessage?: string;
+  files: Record<string, string>;
+  chatId: string;
+  isPrivate?: boolean;
+}
+
+/**
  * 处理 GitHub 代码推送
  */
 export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs) {
   try {
-    const { repoName, commitMessage, files, isPrivate, chatId } = (await request.json()) as GitHubPushRequest;
+    const { messageId, repoName, commitMessage, isPrivate, chatId } = (await request.json()) as GitHubPushRequest;
 
-    if (!repoName || !files || !chatId) {
+    if (!repoName || !chatId) {
       return errorResponse(400, '缺少必需参数: repoName, files, chatId');
     }
+
+    // 获取部署文件
+    const files = await generateDeploymentFiles({
+      messageId,
+      inner: false,
+    });
 
     if (Object.keys(files).length === 0) {
       return errorResponse(400, '没有文件需要推送');
@@ -88,12 +127,17 @@ export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs
       Object.entries(files).map(async ([path, content]) => {
         if (path && content) {
           try {
-            const formatContent = await formatFile(path, content);
+            if (typeof content === 'string') {
+              const formatContent = await formatFile(path, content);
+              content = Buffer.from(formatContent).toString('base64');
+            } else {
+              content = Buffer.from(content).toString('base64');
+            }
 
             const { data: blob } = await octokit.git.createBlob({
               owner: repo.owner.login,
               repo: repo.name,
-              content: Buffer.from(formatContent).toString('base64'),
+              content,
               encoding: 'base64',
             });
 
@@ -173,7 +217,7 @@ export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs
       logger.info(`为用户 ${userId} 创建了 GitHub 部署记录`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
-      logger.error(`创建部署记录失败: ${errorMessage}`);
+      logger.error('创建部署记录失败:', errorMessage);
     }
 
     const response: GitHubPushResponse = {
@@ -187,6 +231,11 @@ export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs
         sha: newCommit.sha,
         url: newCommit.html_url,
       },
+      files: Object.entries(files).map(([path, content]) => ({
+        name: path,
+        path,
+        size: typeof content === 'string' ? new TextEncoder().encode(content).length : content.byteLength,
+      })),
     };
 
     return successResponse(response, '代码推送成功');

@@ -179,7 +179,6 @@ export async function handleForkAction({ request, userId }: HandleForkActionArgs
                   if (newPageV2) {
                     pageAssetsToCreate.push({
                       pageId: newPageV2.id,
-                      messageId: messageMapping[msg.id].id,
                       filename: asset.filename,
                       storagePath: asset.storagePath,
                       url: asset.url,

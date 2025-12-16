@@ -93,9 +93,8 @@ export const Preview = memo(() => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPreviewOnly, setIsPreviewOnly] = useState(false);
   const hasSelectedPreview = useRef(false);
-  const currentPreview = useStore(webBuilderStore.previewsStore.currentPreview);
   const previews = useStore(webBuilderStore.previewsStore.previews);
-  const activePreview = previews[activePreviewIndex];
+  const activePreview = useStore(webBuilderStore.previewsStore.currentPreview);
 
   const [iframeDoc, setIframeDoc] = useState<string | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -125,35 +124,71 @@ export const Preview = memo(() => {
   const [showDeviceFrame, setShowDeviceFrame] = useState(true);
   const [showDeviceFrameInPreview, setShowDeviceFrameInPreview] = useState(false);
 
-  const addWhiteBackground = (content: string): string => {
+  const buildHeadContent = (head: string): string => {
+    const headContent = `
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="${import.meta.env.BASE_URL}tailwindcss.js"></script>
+        <script src="${import.meta.env.BASE_URL}iconify-icon.min.js"></script>
+        ${head}
+        <style>
+          html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+          }
+          #page-content {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: block;
+            overflow-y: auto;
+          }
+        </style>
+      </head>
+    `;
     // 包含拦截#链接点击的脚本
     const interceptScript = `
-      <script data-hash-link-interceptor="true">
-        ${HASH_LINK_INTERCEPTOR_SCRIPT}
-      </script>
-    `;
+        <script data-hash-link-interceptor="true">
+          ${HASH_LINK_INTERCEPTOR_SCRIPT}
+        </script>
+      `;
 
-    if (content.includes('<head>')) {
-      return content.replace('<head>', `<head><style>body{background-color:white;}</style>${interceptScript}`);
+    if (headContent.includes('<head>')) {
+      return headContent.replace(
+        '<head>',
+        `<head><style rel="stylesheet">body{background-color:white;}</style>${interceptScript}`,
+      );
     }
 
-    if (content.includes('</body>')) {
-      return content.replace('</body>', `${interceptScript}</body>`);
-    }
-
-    if (content.includes('<!DOCTYPE')) {
-      return content.replace('<!DOCTYPE', `<style>body{background-color:white;}</style>${interceptScript}<!DOCTYPE`);
-    }
-
-    return `<style>body{background-color:white;}</style>${interceptScript}${content}`;
+    return headContent;
   };
 
-  useEffect(() => {
-    if (previews.length > 1 && !hasSelectedPreview.current) {
-      const currentPreviewIndex = previews.findIndex((preview) => preview.filename === currentPreview);
-      setActivePreviewIndex(currentPreviewIndex);
+  const buildHTML = () => {
+    if (!activePreview) {
+      return null;
     }
-  }, [previews]);
+
+    const { head, content } = activePreview;
+    const headContent = buildHeadContent(head);
+    // 构造一个完整的 HTML 文档
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        ${headContent}
+      </head>
+      <body>
+        ${content}
+      </body>
+      </html>
+    `;
+    return htmlContent;
+  };
 
   useEffect(() => {
     if (!activePreview) {
@@ -161,11 +196,8 @@ export const Preview = memo(() => {
       return;
     }
 
-    // 为内容添加白色背景样式
-    const { content } = activePreview;
-    const contentWithWhiteBackground = addWhiteBackground(content);
-
-    setIframeDoc(contentWithWhiteBackground);
+    const htmlContent = buildHTML();
+    setIframeDoc(htmlContent);
   }, [activePreview]);
 
   const reloadPreview = () => {
@@ -173,21 +205,6 @@ export const Preview = memo(() => {
       iframeRef.current?.contentDocument?.open();
       iframeRef.current?.contentDocument?.write(iframeDoc ?? '');
       iframeRef.current?.contentDocument?.close();
-
-      // 在iframe加载完成后，确保所有#链接都被正确处理
-      iframeRef.current.onload = () => {
-        if (iframeRef.current?.contentDocument) {
-          const doc = iframeRef.current.contentDocument;
-
-          // 如果iframe内还没有我们的拦截脚本，手动添加一个
-          if (!doc.querySelector('script[data-hash-link-interceptor]')) {
-            const script = doc.createElement('script');
-            script.setAttribute('data-hash-link-interceptor', 'true');
-            script.textContent = HASH_LINK_INTERCEPTOR_SCRIPT;
-            doc.body.appendChild(script);
-          }
-        }
-      };
     }
   };
 
@@ -498,9 +515,9 @@ export const Preview = memo(() => {
         const homeWidth = isLandscape ? '4px' : '40px';
         const homeHeight = isLandscape ? '40px' : '4px';
 
+        const content = buildHTML();
         // 使用 base64 编码内容以避免中文乱码
-        const contentWithWhiteBackground = addWhiteBackground(activePreview.content);
-        const encodedContent = btoa(unescape(encodeURIComponent(contentWithWhiteBackground)));
+        const encodedContent = btoa(unescape(encodeURIComponent(content || '')));
         const contentDataUrl = `data:text/html;charset=utf-8;base64,${encodedContent}`;
 
         // Create HTML content for the wrapper page
