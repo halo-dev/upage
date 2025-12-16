@@ -5,7 +5,7 @@ import { ElementEditPreview } from './ElementEditPreview';
 import { Markdown } from './Markdown';
 
 export function UserMessage({ message }: { message: UPageUIMessage }) {
-  const parts = message.parts;
+  const parts = message.parts || [];
   const textContent = stripMetadata(parts.find((part) => part.type === 'text')?.text || '');
   const images = parts.filter((part) => part.type === 'file' && part.mediaType.startsWith('image')) as FileUIPart[];
   const elementInfo = message.metadata?.elementInfo;

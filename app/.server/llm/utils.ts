@@ -7,7 +7,7 @@ export function getUserMessageContent(message: Omit<UPageUIMessage, 'id'>): stri
     throw new Error('Message is not a user message');
   }
 
-  return message.parts
+  return (message.parts || [])
     .map((part) => {
       if (part.type === 'text') {
         return part.text;

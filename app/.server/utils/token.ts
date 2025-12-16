@@ -14,7 +14,7 @@ export function decode(tokens: number[]) {
 
 export function approximatePromptTokenCount(messages: UIMessage[]): number {
   return messages.reduce((acc, message) => {
-    return acc + approximateUsageFromContent(message.parts);
+    return acc + approximateUsageFromContent(message.parts || []);
   }, 0);
 }
 

@@ -86,6 +86,7 @@ export async function handleForkAction({ request, userId }: HandleForkActionArgs
           parts: msg.parts || undefined,
           revisionId: msg.revisionId || undefined,
           isDiscarded: msg.isDiscarded || false,
+          version: msg.version || 2,
         }));
 
         logger.debug('批量创建消息数据', JSON.stringify(messageCreateData));

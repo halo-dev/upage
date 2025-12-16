@@ -278,10 +278,10 @@ export async function getOrCreateChat(chatId: string, params: Omit<ChatCreatePar
  * @param id 聊天ID
  * @returns 聊天记录
  */
-export async function getUserChatById(id: string, userId: string) {
+export async function getUserChatById(id: string, userId?: string) {
   try {
     const chat = await prisma.chat.findUnique({
-      where: { id, userId },
+      where: { id, ...(userId ? { userId } : {}) },
       include: {
         messages: {
           where: {

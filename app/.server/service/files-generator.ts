@@ -371,7 +371,10 @@ export async function generateFilesFromPagesV2(pages: PageV2[], params: Generate
   const { inner = false } = params;
   const files: ExportedFiles = {};
   for (const page of pages) {
-    const html = await generateHTMLFromPageV2(page, params);
+    const html = await generateHTMLFromPageV2(page, {
+      ...params,
+      pageName: page.name,
+    });
     files[`${page.name}.html`] = html;
     if (!inner) {
       const assets = await getAssetsByPageId(page.id);

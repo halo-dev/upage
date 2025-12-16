@@ -21,7 +21,7 @@ export async function createSummary({
     }
 
     if (message.role == 'assistant') {
-      for (const part of message.parts) {
+      for (const part of message.parts || []) {
         if (part.type === 'text') {
           part.text = simplifyUPageActions(part.text);
           part.text = part.text.replace(/<div class=\\"__uPageThought__\\">.*?<\/div>/s, '');
@@ -63,7 +63,7 @@ ${summary.summary}`;
   logger.debug('切片消息长度:', slicedMessages.length);
 
   const extractTextContent = (message: UPageUIMessage) =>
-    message.parts
+    (message.parts || [])
       .map((part) => {
         if (part.type === 'text') {
           return part.text;

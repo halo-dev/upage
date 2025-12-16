@@ -3,6 +3,7 @@ import { getChatId } from '~/.client/stores/ai-state';
 import { createScopedLogger } from '~/.client/utils/logger';
 import type { Page, Section } from '~/types/actions';
 import type { PageAssetData, PageData } from '~/types/pages';
+import { generateUUID } from '~/utils/uuid';
 
 /**
  * 序列化标记常量
@@ -399,7 +400,7 @@ export async function getEditorProject(
         const deserializedPagesV2 = data?.pagesV2 ? deserializeFromIndexedDB<PageData[]>(data.pagesV2) : undefined;
         const deserializedAssets = data?.assets ? deserializeFromIndexedDB<PageAssetData[]>(data.assets) : undefined;
         const pagesV2: PageData[] = deserializedPages.map((page) => ({
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           messageId: data?.messageId ?? '',
           name: page.name,
           title: page.title,
@@ -438,7 +439,7 @@ export async function getEditorProject(
             : undefined;
 
           const pagesV2: PageData[] = deserializedPages.map((page) => ({
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             messageId: lastMessageProject?.messageId ?? '',
             name: page.name,
             title: page.title,

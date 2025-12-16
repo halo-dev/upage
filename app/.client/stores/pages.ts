@@ -7,6 +7,7 @@ import { createScopedLogger } from '~/.client/utils/logger';
 import type { ChangeSource, PageHistory } from '~/types/actions';
 import type { PageData, PageMap, PageSection, SectionMap } from '~/types/pages';
 import { normalizeContent } from '~/utils/prettier';
+import { generateUUID } from '~/utils/uuid';
 
 const logger = createScopedLogger('PagesStore');
 
@@ -302,7 +303,7 @@ export class PagesStore {
         }
 
         this.pages.setKey(pageName, {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           name: pageName,
           title: pageTitle,
           content: '',
@@ -317,7 +318,7 @@ export class PagesStore {
         const { title: pageTitle, actionIds = [] } = payload;
         const oldPage = this.pages.get()[pageName];
         this.pages.setKey(pageName, {
-          id: oldPage?.id || crypto.randomUUID(),
+          id: oldPage?.id || generateUUID(),
           name: pageName,
           title: pageTitle,
           actionIds: actionIds || oldPage?.actionIds,

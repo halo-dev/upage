@@ -280,13 +280,13 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
       }
 
       // 提取消息的文本内容
-      const textPart = message.parts.find((part) => part.type === 'text');
+      const textPart = (message.parts || []).find((part) => part.type === 'text');
       const content = textPart?.text || '';
 
       // 创建或更新消息
       const updateData: any = {
         content,
-        parts: message.parts,
+        parts: message.parts || [],
         metadata: message.metadata,
         version: 2,
       };
@@ -297,7 +297,7 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
         userId,
         role: message.role,
         content,
-        parts: message.parts,
+        parts: message.parts || [],
         metadata: message.metadata,
         version: 2,
       };
