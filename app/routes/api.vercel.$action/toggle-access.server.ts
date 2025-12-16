@@ -30,8 +30,9 @@ async function getVercelDomainAliases(token: string, deploymentId: string): Prom
     const data = (await response.json()) as VercelResponseAliases;
     return data.aliases;
   } catch (error) {
-    logger.error(`获取 Vercel 项目 ${deploymentId} 的域名别名时发生错误:`, error);
-    throw new Error(`${error}`);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 Vercel 项目 ${deploymentId} 的域名别名时发生错误: ${errorMessage}`);
+    throw new Error(`${errorMessage}`);
   }
 }
 
@@ -71,8 +72,9 @@ async function setVercelDomainAlias(
 
     return data;
   } catch (error) {
-    logger.error(`为 Vercel 项目 ${deploymentId} 添加域名别名 ${alias} 时发生错误:`, error);
-    throw new Error(`${error}`);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`为 Vercel 项目 ${deploymentId} 添加域名别名 ${alias} 时发生错误: ${errorMessage}`);
+    throw new Error(`${errorMessage}`);
   }
 }
 
@@ -99,8 +101,9 @@ async function removeVercelDomainAlias(token: string, aliasId: string): Promise<
 
     return true;
   } catch (error) {
-    logger.error(`删除 Vercel 项目 ${aliasId} 的域名别名时发生错误:`, error);
-    throw new Error(`${error}`);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 Vercel 项目 ${aliasId} 的域名别名时发生错误: ${errorMessage}`);
+    throw new Error(`${errorMessage}`);
   }
 }
 
@@ -184,7 +187,8 @@ export async function toggleAccess({ userId, request }: ToggleAccessArgs) {
 
     return successResponse(id, `已${newStatus === 'success' ? '开启' : '停止'}访问`);
   } catch (error) {
-    logger.error(`切换Vercel部署 ${id} 访问状态失败:`, error);
-    return errorResponse(500, error instanceof Error ? error.message : '操作失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`切换Vercel部署 ${id} 访问状态失败: ${errorMessage}`);
+    return errorResponse(500, `操作失败: ${errorMessage}`);
   }
 }

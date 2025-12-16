@@ -61,7 +61,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     logger.info(`用户 ${userId} 成功对部署 ${deployId} 执行了 ${action} 操作`);
     return successResponse(responseData, `部署${action}操作成功`);
   } catch (error) {
-    logger.error(`部署${params.action}操作失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`部署${params.action}操作失败: ${errorMessage}`);
     return errorResponse(500, `部署${params.action}操作失败`);
   }
 }

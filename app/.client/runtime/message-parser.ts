@@ -187,11 +187,11 @@ export class StreamingMessageParser {
               const artifactTitle = this.#extractAttribute(artifactTag, 'title') as string;
 
               if (!artifactId || !artifactName) {
-                logger.warn('Artifact id or name missing');
+                logger.warn('Artifact id 或者 name 未指定');
               }
 
               if (!artifactTitle) {
-                logger.warn('Artifact title missing');
+                logger.warn('Artifact title 未指定');
               }
 
               state.insideArtifact = true;
@@ -262,33 +262,33 @@ export class StreamingMessageParser {
 
     const id = this.#extractAttribute(actionTag, 'id') as string;
     if (!id) {
-      logger.warn('Page id not specified');
+      logger.warn('页面 id 未指定');
       throw new Error('Page id not specified');
     }
 
     const pageName = this.#extractAttribute(actionTag, 'pageName') as string;
     if (!pageName) {
-      logger.warn('Page Name not specified');
+      logger.warn('页面名称未指定');
     }
 
     const action = this.#extractAttribute(actionTag, 'action') as UPageAction['action'];
     if (!action) {
-      logger.warn('Action not specified');
+      logger.warn('Action 未指定');
     }
 
     if (!['add', 'remove', 'update'].includes(action)) {
-      logger.warn(`Invalid action '${action}'`);
+      logger.warn(`无效的 action: ${action}`);
       throw new Error(`Invalid action: ${action}`);
     }
 
     const domId = this.#extractAttribute(actionTag, 'domId') as string;
     if (!domId) {
-      logger.warn('domId not specified');
+      logger.warn('domId 未指定');
     }
 
     const rootDomId = this.#extractAttribute(actionTag, 'rootDomId') as string;
     if (!rootDomId) {
-      logger.warn('rootDomId not specified');
+      logger.warn('rootDomId 未指定');
     } else {
       actionAttributes.validRootDomId = true;
     }

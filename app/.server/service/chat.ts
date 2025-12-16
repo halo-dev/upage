@@ -55,10 +55,11 @@ export async function createChat(params: ChatCreateParams) {
       },
     });
 
-    logger.info(`[Chat] 创建了用户 ${userId} 的聊天: ${chat.id}`);
+    logger.info(`创建了用户 ${userId} 的聊天: ${chat.id}`);
     return chat;
   } catch (error) {
-    logger.error('[Chat] 创建聊天失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建聊天失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -95,7 +96,8 @@ export async function getChatById(id: string) {
 
     return chat;
   } catch (error) {
-    logger.error(`[Chat] 获取聊天 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取聊天 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -123,7 +125,8 @@ export async function getChatByUrlId(urlId: string) {
 
     return chat;
   } catch (error) {
-    logger.error(`[Chat] 获取聊天 URL ${urlId} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取聊天 URL ${urlId} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -166,7 +169,8 @@ export async function getUserChats(userId: string, limit = 20, offset = 0) {
       total,
     };
   } catch (error) {
-    logger.error(`[Chat] 获取用户 ${userId} 的聊天列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户 ${userId} 的聊天列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -189,10 +193,11 @@ export async function updateChat(id: string, params: ChatUpdateParams) {
       },
     });
 
-    logger.info(`[Chat] 更新了聊天 ${id}`);
+    logger.info(`更新了聊天 ${id}`);
     return updatedChat;
   } catch (error) {
-    logger.error(`[Chat] 更新聊天 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新聊天 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -221,7 +226,7 @@ export async function deleteChat(id: string) {
     });
 
     if (!chatToDelete) {
-      logger.info(`[Chat] 未找到ID为 ${id} 的聊天，无法删除`);
+      logger.info(`未找到ID为 ${id} 的聊天，无法删除`);
       return false;
     }
 
@@ -229,10 +234,11 @@ export async function deleteChat(id: string) {
       where: { id },
     });
 
-    logger.info(`[Chat] 删除了聊天 ${id}，级联删除了 ${chatToDelete._count.messages} 条关联消息及其项目数据`);
+    logger.info(`删除了聊天 ${id}，级联删除了 ${chatToDelete._count.messages} 条关联消息及其项目数据`);
     return true;
   } catch (error) {
-    logger.error(`[Chat] 删除聊天 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除聊天 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -249,7 +255,7 @@ export async function getOrCreateChat(chatId: string, params: Omit<ChatCreatePar
     const existingChat = await getChatById(chatId);
 
     if (existingChat) {
-      logger.info(`[Chat] 找到现有聊天: ${chatId}`);
+      logger.info(`找到现有聊天: ${chatId}`);
       return existingChat;
     }
 
@@ -258,10 +264,11 @@ export async function getOrCreateChat(chatId: string, params: Omit<ChatCreatePar
       ...params,
       id: chatId,
     });
-    logger.info(`[Chat] 聊天不存在，创建新聊天: ${newChat.id}`);
+    logger.info(`聊天不存在，创建新聊天: ${newChat.id}`);
     return newChat;
   } catch (error) {
-    logger.error(`[Chat] 获取或创建聊天失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取或创建聊天失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -298,7 +305,8 @@ export async function getUserChatById(id: string, userId: string) {
 
     return chat;
   } catch (error) {
-    logger.error(`[Chat] 获取聊天 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取聊天 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -330,10 +338,11 @@ export async function upsertChat(params: ChatUpsertParams) {
       },
     });
 
-    logger.info(`[Chat] 创建或更新了聊天 ${id}`);
+    logger.info(`创建或更新了聊天 ${id}`);
     return chat;
   } catch (error) {
-    logger.error(`[Chat] 创建或更新聊天 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建或更新聊天 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }

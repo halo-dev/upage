@@ -83,15 +83,14 @@ export async function recordUsage(params: ChatUsageParams) {
     });
 
     if (status === ChatUsageStatus.PENDING) {
-      logger.info(`[ChatUsage] 初始化用户 ${userId} 的 ${modelName} 模型聊天使用量`);
+      logger.info(`初始化用户 ${userId} 的 ${modelName} 模型聊天使用量`);
     } else {
-      logger.info(
-        `[ChatUsage] 记录了用户 ${userId} 的 ${modelName} 模型聊天使用量: ${totalTokens} tokens，状态: ${status}`,
-      );
+      logger.info(`记录了用户 ${userId} 的 ${modelName} 模型聊天使用量: ${totalTokens} tokens，状态: ${status}`);
     }
     return record;
   } catch (error) {
-    logger.error('[ChatUsage] 记录聊天使用量失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`记录聊天使用量失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -155,7 +154,8 @@ export async function getDailyUsageStats(userId: string, days = 30) {
       totalTokens: stats.totalTokens,
     }));
   } catch (error) {
-    logger.error('[ChatUsage] 获取每日使用统计失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取每日使用统计失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -235,7 +235,8 @@ export async function getUserUsageStats(userId: string, startDate?: Date, endDat
       byDate: dailyStats,
     };
   } catch (error) {
-    logger.error('[ChatUsage] 获取用户使用统计失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户使用统计失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -263,7 +264,8 @@ export async function updateUsageStatus(
 
     return updatedRecord;
   } catch (error) {
-    logger.error('[ChatUsage] 更新使用记录状态失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新使用记录状态失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -297,7 +299,8 @@ export async function getRecentUsage(userId: string, limit = 10) {
 
     return records;
   } catch (error) {
-    logger.error('[ChatUsage] 获取最近使用记录失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取最近使用记录失败: ${errorMessage}`);
     throw error;
   }
 }

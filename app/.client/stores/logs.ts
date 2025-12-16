@@ -74,7 +74,8 @@ class LogStore {
         const parsedLogs = JSON.parse(savedLogs);
         this._logs.set(parsedLogs);
       } catch (error) {
-        logger.error('Failed to parse logs from cookies:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`从 cookies 解析日志失败: ${errorMessage}`);
       }
     }
   }
@@ -91,7 +92,8 @@ class LogStore {
         const parsedReadLogs = JSON.parse(savedReadLogs);
         this._readLogs = new Set(parsedReadLogs);
       } catch (error) {
-        logger.error('Failed to parse read logs:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`解析已读日志失败: ${errorMessage}`);
       }
     }
   }

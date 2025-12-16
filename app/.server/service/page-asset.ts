@@ -17,7 +17,8 @@ export async function getAssetsByPageId(pageId: string) {
 
     return assets;
   } catch (error) {
-    logger.error(`[PageAsset] 获取页面 ${pageId} 的资源失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取页面 ${pageId} 的资源失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -58,10 +59,11 @@ export async function createPageAssets(assets: PageAssetCreateParams[]) {
       ),
     );
 
-    logger.info(`[PageAsset] 批量创建了 ${createdAssets.length} 个资源记录`);
+    logger.info(`批量创建了 ${createdAssets.length} 个资源记录`);
     return createdAssets;
   } catch (error) {
-    logger.error('[PageAsset] 批量创建 PageAsset 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`批量创建 PageAsset 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -85,10 +87,11 @@ export async function createPageAsset(asset: PageAssetCreateParams) {
       },
     });
 
-    logger.info(`[PageAsset] 创建了资源记录: ${createdAsset.id}`);
+    logger.info(`创建了资源记录: ${createdAsset.id}`);
     return createdAsset;
   } catch (error) {
-    logger.error('[PageAsset] 创建 PageAsset 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建 PageAsset 失败: ${errorMessage}`);
     throw error;
   }
 }

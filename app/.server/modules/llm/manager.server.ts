@@ -84,7 +84,7 @@ export class LLMManager {
 
   registerProvider(provider: BaseProvider) {
     if (this._providers.has(provider.name)) {
-      logger.warn(`Provider ${provider.name} is already registered. Skipping.`);
+      logger.warn(`供应商 ${provider.name} 已注册。跳过。`);
       return;
     }
 
@@ -144,13 +144,14 @@ export class LLMManager {
           const dynamicModels = await provider
             .getDynamicModels(providerSettings?.[provider.name])
             .then((models) => {
-              logger.info(`Caching ${models.length} dynamic models for ${provider.name}`);
+              logger.info(`缓存 ${models.length} 个动态模型: ${provider.name}`);
               provider.storeDynamicModels(options, models);
 
               return models;
             })
             .catch((err) => {
-              logger.error(`Error getting dynamic models ${provider.name} :`, err);
+              const errorMessage = err instanceof Error ? err.message : '未知错误';
+              logger.error(`获取动态模型失败: ${provider.name} : ${errorMessage}`);
               return [];
             });
 
@@ -197,22 +198,23 @@ export class LLMManager {
     });
 
     if (cachedModels) {
-      logger.info(`Found ${cachedModels.length} cached models for ${provider.name}`);
+      logger.info(`找到 ${cachedModels.length} 个缓存模型: ${provider.name}`);
       return [...cachedModels, ...staticModels];
     }
 
-    logger.info(`Getting dynamic models for ${provider.name}`);
+    logger.info(`获取动态模型: ${provider.name}`);
 
     const dynamicModels = await provider
       .getDynamicModels?.(providerSettings?.[provider.name])
       .then((models) => {
-        logger.info(`Got ${models.length} dynamic models for ${provider.name}`);
+        logger.info(`获取 ${models.length} 个动态模型: ${provider.name}`);
         provider.storeDynamicModels(options, models);
 
         return models;
       })
       .catch((err) => {
-        logger.error(`Error getting dynamic models ${provider.name} :`, err);
+        const errorMessage = err instanceof Error ? err.message : '未知错误';
+        logger.error(`获取动态模型失败: ${provider.name} : ${errorMessage}`);
         return [];
       });
     const dynamicModelsName = dynamicModels.map((d) => d.name);

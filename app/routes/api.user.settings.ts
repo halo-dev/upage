@@ -63,7 +63,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     return successResponse(settings);
   } catch (error) {
-    logger.error('获取用户设置失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户设置失败: ${errorMessage}`);
     return errorResponse(500, '获取用户设置失败');
   }
 }
@@ -119,7 +120,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return errorResponse(405, '不支持的请求方法');
   } catch (error) {
-    logger.error('处理用户设置失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`处理用户设置失败: ${errorMessage}`);
     return errorResponse(500, '处理用户设置失败');
   }
 }

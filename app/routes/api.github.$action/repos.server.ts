@@ -60,12 +60,13 @@ export async function getGitHubRepos({ request, userId }: GetGitHubReposArgs) {
       '获取仓库列表成功',
     );
   } catch (error: any) {
-    logger.error('获取 GitHub 仓库列表失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 GitHub 仓库列表失败: ${errorMessage}`);
 
     if (error.status === 401) {
       return errorResponse(401, 'GitHub 令牌已过期或无效，请重新认证');
     }
 
-    return errorResponse(500, `获取仓库列表失败: ${error.message || '未知错误'}`);
+    return errorResponse(500, `获取仓库列表失败: ${errorMessage}`);
   }
 }

@@ -107,7 +107,8 @@ export class LocalStorageProvider extends BaseStorageProvider {
         path: filePath,
       };
     } catch (error) {
-      logger.error('获取文件失败', { filepath, error });
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`获取文件失败: ${filepath} ${errorMessage}`);
       return null;
     }
   }
@@ -125,7 +126,8 @@ export class LocalStorageProvider extends BaseStorageProvider {
       logger.debug('文件删除成功', { filepath });
       return true;
     } catch (error) {
-      logger.error('删除文件失败', { filepath, error });
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`删除文件失败: ${filepath} ${errorMessage}`);
       return false;
     }
   }

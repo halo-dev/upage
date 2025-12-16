@@ -48,7 +48,7 @@ export async function createOrUpdateDeployment(params: DeploymentCreateParams) {
           metadata,
         },
       });
-      logger.info(`[Deployment] 更新了用户 ${userId} 的部署记录: ${deployment.id}, 平台: ${platform}`);
+      logger.info(`更新了用户 ${userId} 的部署记录: ${deployment.id}, 平台: ${platform}`);
     } else {
       deployment = await prisma.deployment.create({
         data: {
@@ -61,12 +61,13 @@ export async function createOrUpdateDeployment(params: DeploymentCreateParams) {
           metadata,
         },
       });
-      logger.info(`[Deployment] 创建了用户 ${userId} 的部署记录: ${deployment.id}, 平台: ${platform}`);
+      logger.info(`创建了用户 ${userId} 的部署记录: ${deployment.id}, 平台: ${platform}`);
     }
 
     return deployment;
   } catch (error) {
-    logger.error('[Deployment] 创建或更新部署记录失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建或更新部署记录失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -84,7 +85,8 @@ export async function getDeploymentById(id: string) {
 
     return deployment;
   } catch (error) {
-    logger.error(`[Deployment] 获取部署记录 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取部署记录 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -101,7 +103,8 @@ export async function deleteDeploymentById(id: string) {
     });
     return deployment;
   } catch (error) {
-    logger.error(`[Deployment] 删除部署记录 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除部署记录 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -133,7 +136,8 @@ export async function getUserDeployments(userId: string, limit = 20, offset = 0)
       total,
     };
   } catch (error) {
-    logger.error(`[Deployment] 获取用户 ${userId} 的部署记录列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户 ${userId} 的部署记录列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -154,7 +158,8 @@ export async function getChatDeployments(chatId: string) {
 
     return deployments;
   } catch (error) {
-    logger.error(`[Deployment] 获取聊天 ${chatId} 的部署记录列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取聊天 ${chatId} 的部署记录列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -179,7 +184,8 @@ export async function getUserPlatformDeployments(userId: string, platform: Deplo
 
     return deployments;
   } catch (error) {
-    logger.error(`[Deployment] 获取用户 ${userId} 在平台 ${platform} 的部署记录列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户 ${userId} 在平台 ${platform} 的部署记录列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -206,7 +212,8 @@ export async function getLatestDeployment(userId: string, chatId: string, platfo
 
     return deployment;
   } catch (error) {
-    logger.error(`[Deployment] 获取用户 ${userId} 在平台 ${platform} 的最新部署记录失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户 ${userId} 在平台 ${platform} 的最新部署记录失败: ${errorMessage}`);
     return null;
   }
 }
@@ -231,7 +238,8 @@ export async function getDeploymentByChatAndPlatform(chatId: string, platform: D
 
     return deployment;
   } catch (error) {
-    logger.error(`[Deployment] 获取聊天 ${chatId} 在平台 ${platform} 的部署记录失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取聊天 ${chatId} 在平台 ${platform} 的部署记录失败: ${errorMessage}`);
     return null;
   }
 }
@@ -253,10 +261,11 @@ export async function updateDeploymentStatus(id: string, status: string, metadat
       },
     });
 
-    logger.info(`[Deployment] 更新了部署记录 ${id} 的状态为 ${status}`);
+    logger.info(`更新了部署记录 ${id} 的状态为 ${status}`);
     return updatedDeployment;
   } catch (error) {
-    logger.error(`[Deployment] 更新部署记录 ${id} 状态失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新部署记录 ${id} 状态失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -280,10 +289,11 @@ export async function deleteDeploymentsByPlatformAndId(platform: DeploymentPlatf
       },
     });
 
-    logger.info(`[Deployment] 删除了平台 ${platform} 上 ID 为 ${platformId} 的 ${result.count} 条部署记录`);
+    logger.info(`删除了平台 ${platform} 上 ID 为 ${platformId} 的 ${result.count} 条部署记录`);
     return result.count;
   } catch (error) {
-    logger.error(`[Deployment] 删除平台 ${platform} 上 ID 为 ${platformId} 的部署记录失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除平台 ${platform} 上 ID 为 ${platformId} 的部署记录失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -332,10 +342,8 @@ export async function getUserPlatformDeploymentsWithPagination(
       total,
     };
   } catch (error) {
-    logger.error(
-      `[Deployment] 分页获取用户 ${userId} ${platform ? `在平台 ${platform} ` : ''}的部署记录列表失败:`,
-      error,
-    );
-    throw error;
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`分页获取用户 ${userId} ${platform ? `在平台 ${platform} ` : ''}的部署记录列表失败: ${errorMessage}`);
+    throw new Error(errorMessage);
   }
 }

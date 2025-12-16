@@ -241,8 +241,9 @@ export class WebBuilderStore {
 
       toast.success('导出成功');
     } catch (error) {
-      logger.error('导出 HTML 文件失败', error);
-      toast.error(error instanceof Error ? error.message : '导出 HTML 文件失败');
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`导出 HTML 文件失败: ${errorMessage}`);
+      toast.error(`导出 HTML 文件失败: ${errorMessage}`);
     }
   }
 
@@ -428,7 +429,7 @@ export class WebBuilderStore {
           },
         });
         if (!response.ok) {
-          logger.error(`Failed to fetch resource: ${resource.value} (status: ${response.status})`);
+          logger.error(`获取资源失败: ${resource.value} (status: ${response.status})`);
           continue;
         }
         const filename = `${assetsFolder}/${getFileName(resource.value)}`;
@@ -453,7 +454,8 @@ export class WebBuilderStore {
           mimeType,
         });
       } catch (error) {
-        logger.error(`Error fetching resource: ${resource.value}`, error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`获取资源失败: ${resource.value} ${errorMessage}`);
         continue;
       }
     }

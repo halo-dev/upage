@@ -30,10 +30,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // 记录错误信息
-    logger.error('组件错误边界捕获到错误:', { error, errorInfo });
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`组件错误边界捕获到错误: ${errorMessage}`);
 
     // 显示错误提示
-    toast.error(`组件发生错误: ${error.message}`);
+    toast.error(`组件发生错误: ${errorMessage}`);
 
     // 调用可选的 onError 回调
     if (this.props.onError) {

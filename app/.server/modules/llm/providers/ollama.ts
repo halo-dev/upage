@@ -45,7 +45,7 @@ export default class OllamaProvider extends BaseProvider {
     let { baseUrl } = this.getProviderBaseUrlAndKey(settings);
 
     if (!baseUrl) {
-      logger.debug('No baseUrl found for OLLAMA provider, using default: ', BASE_URL);
+      logger.debug('未找到 Ollama 提供者的 baseUrl，使用默认值: ', BASE_URL);
       baseUrl = BASE_URL;
     }
 
@@ -81,7 +81,7 @@ export default class OllamaProvider extends BaseProvider {
 
       // Backend: Check if we're running in Docker
       if (!baseUrl) {
-        logger.debug('No baseUrl found for OLLAMA provider, using default: ', BASE_URL);
+        logger.debug('未找到 Ollama 提供者的 baseUrl，使用默认值: ', BASE_URL);
         baseUrl = BASE_URL;
       }
 
@@ -89,7 +89,7 @@ export default class OllamaProvider extends BaseProvider {
       baseUrl = isDocker ? baseUrl.replace('localhost', 'host.docker.internal') : baseUrl;
       baseUrl = isDocker ? baseUrl.replace('127.0.0.1', 'host.docker.internal') : baseUrl;
 
-      logger.debug('Ollama Base Url used: ', baseUrl);
+      logger.debug('Ollama 使用的 baseUrl: ', baseUrl);
 
       const ollama = createOllama({
         baseURL: `${baseUrl}/api`,

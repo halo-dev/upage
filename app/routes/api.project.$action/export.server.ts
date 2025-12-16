@@ -78,7 +78,8 @@ export async function exportProject({ request, userId }: ExportProjectParams) {
       },
     });
   } catch (error) {
-    logger.error('导出项目失败:', error);
-    return errorResponse(500, error instanceof Error ? error.message : '导出项目失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`导出项目失败: ${errorMessage}`);
+    return errorResponse(500, `导出项目失败: ${errorMessage}`);
   }
 }

@@ -55,7 +55,8 @@ async function readFileContent(storagePath: string): Promise<Buffer | string> {
 
     return isText ? content.toString('utf-8') : content;
   } catch (error) {
-    logger.error(`读取文件失败: ${storagePath}`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`读取文件失败: ${storagePath} ${errorMessage}`);
     throw error;
   }
 }
@@ -308,7 +309,8 @@ export async function generateHTMLFromPages(params: GenerateHTMLParams): Promise
 
     return htmlRecord;
   } catch (error) {
-    logger.error('生成 HTML 文件失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`生成 HTML 文件失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -353,7 +355,8 @@ async function addStaticAssets(files: ExportedFiles): Promise<void> {
       files['iconify-icon.min.js'] = iconifyContent;
     }
   } catch (error) {
-    logger.error('添加静态资源失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`添加静态资源失败: ${errorMessage}`);
   }
 }
 
@@ -380,7 +383,8 @@ export async function generateFilesFromPagesV2(pages: PageV2[], params: Generate
           files[assetPath] = content;
           logger.debug(`添加资源文件: ${assetPath}`);
         } catch (error) {
-          logger.error(`读取资源文件失败: ${asset.filename}`, error);
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          logger.error(`读取资源文件失败: ${asset.filename} ${errorMessage}`);
         }
       }
     }

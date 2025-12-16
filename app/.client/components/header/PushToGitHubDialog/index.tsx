@@ -146,7 +146,8 @@ export function PushToGitHubDialog({ isOpen, onClose }: PushToGitHubDialogProps)
         },
       );
     } catch (error) {
-      logger.error('Error preparing GitHub push:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`准备 GitHub 推送失败: ${errorMessage}`);
       toast.error('准备推送失败，请重试。');
     }
   };

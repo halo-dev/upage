@@ -238,7 +238,8 @@ export async function handleForkAction({ request, userId }: HandleForkActionArgs
       return successResponse(newChat.id, '聊天复制成功');
     });
   } catch (error) {
-    logger.error('复制聊天失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`复制聊天失败: ${errorMessage}`);
     return errorResponse(500, '服务器处理请求失败');
   }
 }

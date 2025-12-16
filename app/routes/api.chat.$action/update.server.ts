@@ -55,7 +55,8 @@ export async function handleUpdateAction({ request, userId }: HandleUpdateAction
       '更新聊天描述成功',
     );
   } catch (error) {
-    logger.error('更新聊天描述失败', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新聊天描述失败: ${errorMessage}`);
     return errorResponse(500, '更新聊天描述失败');
   }
 }

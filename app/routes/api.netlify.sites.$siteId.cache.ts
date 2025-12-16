@@ -47,7 +47,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     logger.info(`用户 ${userId} 成功清除了站点 ${siteId} 的缓存`);
     return successResponse({}, '站点缓存清除成功');
   } catch (error) {
-    logger.error('清除站点缓存失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`清除站点缓存失败: ${errorMessage}`);
     return errorResponse(500, '清除站点缓存失败');
   }
 }

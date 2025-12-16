@@ -104,7 +104,8 @@ function PageContextMenu({ pageName, children }: { pageName: string; children: R
       }
     } catch (error) {
       toast.error('页面创建失败');
-      logger.error(error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`页面创建失败: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +124,8 @@ function PageContextMenu({ pageName, children }: { pageName: string; children: R
       }
     } catch (error) {
       toast.error(`页面删除失败`);
-      logger.error(error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`页面删除失败: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }

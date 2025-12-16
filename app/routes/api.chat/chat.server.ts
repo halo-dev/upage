@@ -120,7 +120,8 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
       logger.debug(`用户 ${userId} 的聊天: ${chat.id} 总使用量为: ${JSON.stringify(cumulativeUsage)}`);
       logger.debug(`用户 ${userId} 的聊天: ${chat.id} 使用状态已更新为 ${status}`);
     } catch (error) {
-      logger.error(`更新用户 ${userId} 的使用状态时出错:`, error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`更新用户 ${userId} 的使用状态时出错: ${errorMessage}`);
     }
   };
 
@@ -136,7 +137,8 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
       });
       logger.debug(`用户 ${userId} 的聊天: ${chat.id} 辅助模型使用状态已更新为 ${status}`);
     } catch (error) {
-      logger.error(`更新用户 ${userId} 的辅助模型使用状态时出错:`, error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`更新用户 ${userId} 的辅助模型使用状态时出错: ${errorMessage}`);
       // 记录错误但不中断流程
     }
   };
@@ -401,7 +403,8 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
       saveChatMessages(chatId, messages);
     },
     onError: (error) => {
-      logger.error(`用户 ${userId} 的聊天: ${chatId} 处理过程中发生错误 ===> `, error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`用户 ${userId} 的聊天: ${chatId} 处理过程中发生错误 ===> ${errorMessage}`);
       calculateTokenUsage(ChatUsageStatus.FAILED);
       calculateMinorModelTokenUsage(ChatUsageStatus.FAILED);
       return '内部服务器错误，请稍后重试';

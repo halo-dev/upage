@@ -88,7 +88,8 @@ export function useProject() {
       );
       return true;
     } catch (error) {
-      logger.error('保存项目失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`保存项目失败: ${errorMessage}`);
       return false;
     }
   }
@@ -129,7 +130,8 @@ export function useProject() {
       logger.info(`成功复制聊天 ${chatId}，新聊天ID: ${data}`);
       return data;
     } catch (error) {
-      logger.error('复制聊天过程中发生错误:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`复制聊天过程中发生错误: ${errorMessage}`);
       return undefined;
     }
   }

@@ -52,8 +52,9 @@ export async function mockChat(_args: ActionFunctionArgs, filePath: string = 'mo
       },
     });
   } catch (error: any) {
-    logger.error(`Mock 数据流式输出错误: ${error}`);
-    throw new Response(`Mock 数据流式输出错误: ${error.message}`, {
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`Mock 数据流式输出错误: ${errorMessage}`);
+    throw new Response(`Mock 数据流式输出错误: ${errorMessage}`, {
       status: 500,
       statusText: 'Internal Server Error',
     });

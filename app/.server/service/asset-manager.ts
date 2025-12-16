@@ -47,21 +47,22 @@ export async function uploadAssets(params: UploadAssetsParams): Promise<UploadAs
           inlinedSections.push(inlinedSection);
           inlinedAssetFilenames.push(filename);
           inlineSectionIndex++;
-          logger.debug(`Inlined asset: ${filename}`);
+          logger.debug(`内联资产: ${filename}`);
         }
       } else {
         // upload asset to storage service
         const uploadedAsset = await uploadSingleAsset(userId, messageId, assetFile);
         uploadedAssets.push(uploadedAsset);
         assetMap.set(filename, uploadedAsset.url);
-        logger.debug(`Uploaded asset: ${filename} -> ${uploadedAsset.url}`);
+        logger.debug(`上传资产: ${filename} -> ${uploadedAsset.url}`);
       }
     } catch (error) {
-      logger.error(`Failed to process asset ${filename}:`, error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`处理资产失败: ${filename}: ${errorMessage}`);
     }
   }
 
-  logger.info(`Asset processing complete: ${uploadedAssets.length} uploaded, ${inlinedSections.length} inlined`);
+  logger.info(`资产处理完成: ${uploadedAssets.length} 上传, ${inlinedSections.length} 内联`);
 
   return {
     uploadedAssets,
@@ -113,7 +114,7 @@ async function inlineAsset(assetFile: AssetFile, pageName: string, index: number
   const content = typeof assetFile.content === 'string' ? assetFile.content : '';
 
   if (!content) {
-    logger.warn(`Cannot inline non-text asset: ${assetFile.filename}`);
+    logger.warn(`无法内联非文本资产: ${assetFile.filename}`);
     return null;
   }
 
@@ -143,7 +144,7 @@ async function inlineAsset(assetFile: AssetFile, pageName: string, index: number
     };
   }
 
-  logger.warn(`Cannot inline asset with extension: ${ext}`);
+  logger.warn(`无法内联具有扩展名的资产: ${ext}`);
   return null;
 }
 
@@ -156,9 +157,10 @@ export async function deleteMessageAssets(userId: string, messageId: string): Pr
   try {
     const dirPath = `${getAssetDirPath(userId, messageId)}`;
     // TODO: implement delete directory functionality (if storageProvider supports it)
-    logger.info(`Would delete assets in: ${dirPath}`);
+    logger.info(`删除资产: ${dirPath}`);
   } catch (error) {
-    logger.error('Failed to delete message assets:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除消息资产失败: ${errorMessage}`);
     throw error;
   }
 }

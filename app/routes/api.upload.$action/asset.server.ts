@@ -18,7 +18,8 @@ function extractStoragePathFromUrl(url: string): string | null {
     const match = url.match(urlPattern);
     return match ? match[1] : null;
   } catch (error) {
-    logger.error('解析 URL 失败', { url, error });
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error('解析 URL 失败', { url, error: errorMessage });
     return null;
   }
 }
@@ -66,7 +67,8 @@ async function deleteOldAsset(oldUrl: string, pageId: string, userId: string): P
       pageId,
     });
   } catch (error) {
-    logger.error('删除旧资源失败，继续上传新文件', { oldUrl, error });
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error('删除旧资源失败，继续上传新文件', { oldUrl, error: errorMessage });
   }
 }
 
@@ -164,7 +166,8 @@ export const uploadAsset = async ({ request, userId }: UploadAssetParams) => {
       '文件上传成功',
     );
   } catch (error) {
-    logger.error('资源文件上传失败:', error);
-    return errorResponse(500, '文件上传失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`资源文件上传失败: ${errorMessage}`);
+    return errorResponse(500, `文件上传失败: ${errorMessage}`);
   }
 };

@@ -40,7 +40,8 @@ export async function deletePage({ request, userId }: DeletePageArgs) {
     logger.info(`用户 ${userId} 已删除 1Panel 部署 ${id}`);
     return successResponse(true, '页面已删除');
   } catch (error) {
-    logger.error(`删除 1Panel 部署 ${id} 失败:`, error);
-    return errorResponse(500, error instanceof Error ? error.message : '删除失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 1Panel 部署 ${id} 失败: ${errorMessage}`);
+    return errorResponse(500, errorMessage);
   }
 }

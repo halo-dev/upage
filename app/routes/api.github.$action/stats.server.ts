@@ -130,7 +130,8 @@ export async function getGitHubStats({ userId }: GetGitHubStatsArgs) {
       '获取 GitHub 统计信息成功',
     );
   } catch (error: any) {
-    logger.error('获取 GitHub 统计信息失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 GitHub 统计信息失败: ${errorMessage}`);
 
     if (error.status === 401) {
       return errorResponse(401, 'GitHub 令牌已过期或无效，请重新认证');
@@ -140,6 +141,6 @@ export async function getGitHubStats({ userId }: GetGitHubStatsArgs) {
       return errorResponse(403, 'GitHub API 请求频率超限');
     }
 
-    return errorResponse(500, `获取统计信息失败: ${error.message || '未知错误'}`);
+    return errorResponse(500, `获取统计信息失败: ${errorMessage}`);
   }
 }

@@ -81,8 +81,6 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
 
     const { serverUrl, apiKey } = connectionSettings;
 
-    logger.debug('action => request', { websiteId, files, chatId, serverUrl, websiteDomain, protocol });
-
     const existingDeployment = await getLatestDeployment(userId, chatId, DeploymentPlatformEnum._1PANEL);
     let targetWebsiteId;
     if (websiteId) {
@@ -100,8 +98,6 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
         apiKey,
         siteId: targetWebsiteId,
       });
-
-      logger.debug('action => getWebsite', JSON.stringify(websiteResponse));
 
       if (websiteResponse.data) {
         const existingWebsite = websiteResponse.data as _1PanelWebsite;
@@ -127,8 +123,6 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
         proxyProtocol: `${protocol || 'http'}://`,
         isSSL: protocol === 'https',
       });
-
-      logger.debug('action => createWebsite', JSON.stringify(createWebsiteResponse));
 
       if (createWebsiteResponse.code !== 200) {
         logger.warn('无法创建网站', JSON.stringify(createWebsiteResponse));
@@ -183,8 +177,6 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
       });
     }
 
-    logger.debug('action => uploadFiles', JSON.stringify(deploymentFiles));
-
     try {
       await uploadFiles({
         serverUrl,
@@ -193,8 +185,8 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
         files: deploymentFiles,
       });
     } catch (error) {
-      logger.warn('action => uploadFiles error', JSON.stringify(error));
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.warn(`上传文件失败: ${errorMessage}`);
       return errorResponse(400, `无法上传文件: ${errorMessage}`);
     }
 
@@ -215,7 +207,8 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
       });
       logger.info(`为用户 ${userId} 创建了 1Panel 部署记录`);
     } catch (error) {
-      logger.error('创建部署记录失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`创建部署记录失败: ${errorMessage}`);
     }
 
     return successResponse(

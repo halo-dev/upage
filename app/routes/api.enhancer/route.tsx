@@ -32,7 +32,7 @@ async function enhancerAction({ request, userId }: EnhancerActionArgs) {
     messages: UIMessage[];
   }>();
 
-  logger.info(`User ${userId} => Enhancing prompt: ${messages}`);
+  logger.info(`用户 ${userId} => 增强提示：${messages}`);
   return streamEnhancer({
     messages,
     model: getModel(MINOR_MODEL),

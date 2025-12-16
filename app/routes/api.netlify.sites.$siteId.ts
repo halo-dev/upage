@@ -54,7 +54,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
     logger.info(`用户 ${userId} 成功删除了站点 ${siteId}`);
     return successResponse({}, '站点删除成功');
   } catch (error) {
-    logger.error('删除站点失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除站点失败: ${errorMessage}`);
     return errorResponse(500, '删除站点失败');
   }
 }

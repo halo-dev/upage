@@ -28,7 +28,8 @@ export async function handleDeleteAction({ request, userId }: HandleDeleteAction
       try {
         ids = JSON.parse(idsString);
       } catch (error) {
-        logger.error('解析 ids 参数失败', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`解析 ids 参数失败: ${errorMessage}`);
         return errorResponse(400, 'ids 参数格式无效');
       }
     }
@@ -72,7 +73,8 @@ export async function handleDeleteAction({ request, userId }: HandleDeleteAction
 
         logger.debug(`用户 ${userId} 删除了聊天 ${chatId}，级联删除了 ${messageCount} 条消息及其关联数据`);
       } catch (error) {
-        logger.error(`删除聊天 ${chatId} 失败`, error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`删除聊天 ${chatId} 失败: ${errorMessage}`);
         results.failed.push(chatId);
       }
     }
@@ -87,7 +89,8 @@ export async function handleDeleteAction({ request, userId }: HandleDeleteAction
       '删除聊天成功',
     );
   } catch (error) {
-    logger.error('删除聊天失败', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除聊天失败: ${errorMessage}`);
     return errorResponse(500, '删除聊天失败');
   }
 }

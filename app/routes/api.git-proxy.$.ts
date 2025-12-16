@@ -88,7 +88,7 @@ async function handleProxyRequest(request: Request, path: string | undefined) {
     const url = new URL(request.url);
     const targetURL = `https://${domain}/${remainingPath}${url.search}`;
 
-    logger.debug('Target URL:', targetURL);
+    logger.debug(`目标 URL: ${targetURL}`);
 
     // Filter and prepare headers
     const headers = new Headers();
@@ -108,7 +108,7 @@ async function handleProxyRequest(request: Request, path: string | undefined) {
       headers.set('User-Agent', 'git/@isomorphic-git/cors-proxy');
     }
 
-    logger.debug('Request headers:', Object.fromEntries(headers.entries()));
+    logger.debug(`请求头: ${JSON.stringify(Object.fromEntries(headers.entries()))}`);
 
     // Prepare fetch options
     const fetchOptions: RequestInit = {
@@ -131,7 +131,7 @@ async function handleProxyRequest(request: Request, path: string | undefined) {
     // Forward the request to the target URL
     const response = await fetch(targetURL, fetchOptions);
 
-    logger.debug('Response status:', response.status);
+    logger.debug(`响应状态: ${response.status}`);
 
     // Create response headers
     const responseHeaders = new Headers();
@@ -159,7 +159,7 @@ async function handleProxyRequest(request: Request, path: string | undefined) {
       responseHeaders.set('x-redirected-url', response.url);
     }
 
-    logger.debug('Response headers:', Object.fromEntries(responseHeaders.entries()));
+    logger.debug(`响应头: ${JSON.stringify(Object.fromEntries(responseHeaders.entries()))}`);
 
     // Return the response with the target's body stream piped directly
     return new Response(response.body, {
@@ -168,7 +168,8 @@ async function handleProxyRequest(request: Request, path: string | undefined) {
       headers: responseHeaders,
     });
   } catch (error) {
-    logger.error('Proxy error:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`代理错误: ${errorMessage}`);
     return json(
       {
         error: 'Proxy error',

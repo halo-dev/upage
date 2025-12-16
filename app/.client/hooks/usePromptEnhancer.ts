@@ -12,7 +12,8 @@ export function usePromptEnhancer() {
       api: '/api/enhancer',
     }),
     onError: (error) => {
-      logger.error('Error enhancing prompt:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`提示词优化失败: ${errorMessage}`);
       toast.error('提示词优化失败');
     },
     onFinish: () => {

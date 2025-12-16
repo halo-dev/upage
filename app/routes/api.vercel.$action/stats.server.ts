@@ -55,7 +55,8 @@ export async function getVercelStats({ userId }: GetVercelStatsArgs) {
 
           return project;
         } catch (error) {
-          logger.error(`获取项目 ${project.id} 的部署信息失败:`, error);
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          logger.error(`获取项目 ${project.id} 的部署信息失败: ${errorMessage}`);
           return project;
         }
       }),
@@ -69,7 +70,8 @@ export async function getVercelStats({ userId }: GetVercelStatsArgs) {
       '获取 Vercel 项目统计信息成功',
     );
   } catch (error) {
-    logger.error('获取 Vercel 项目统计信息失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 Vercel 项目统计信息失败: ${errorMessage}`);
     return errorResponse(500, '获取 Vercel 项目统计信息失败');
   }
 }

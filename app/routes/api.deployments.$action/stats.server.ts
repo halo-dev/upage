@@ -39,7 +39,8 @@ export async function getDeploymentStats({ userId }: GetDeploymentStatsArgs) {
       '获取部署统计数据成功',
     );
   } catch (error) {
-    logger.error('获取部署统计数据失败:', error);
-    return errorResponse(500, error instanceof Error ? error.message : '获取部署统计数据失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取部署统计数据失败: ${errorMessage}`);
+    return errorResponse(500, `获取部署统计数据失败: ${errorMessage}`);
   }
 }

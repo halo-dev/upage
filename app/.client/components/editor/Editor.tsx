@@ -81,7 +81,8 @@ export const EditorStudio = memo(
           }
         }
       } catch (error) {
-        logger.error('执行组件操作时出错', JSON.stringify({ error, action, domId }));
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`执行组件操作时出错: `, JSON.stringify({ errorMessage, action, domId }));
       }
     }, []);
 
@@ -124,7 +125,7 @@ export const EditorStudio = memo(
       }
 
       if (!currentSection.pageName) {
-        logger.warn('page should not be empty');
+        logger.warn('页面名称不能为空');
       }
 
       // section变更时，先执行上一个section的待处理更新

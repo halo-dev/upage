@@ -18,7 +18,7 @@ export default class LMStudioProvider extends BaseProvider {
     let { baseUrl } = this.getProviderBaseUrlAndKey(settings);
 
     if (!baseUrl) {
-      logger.debug('No baseUrl found for LMStudio provider, using default: ', BASE_URL);
+      logger.debug('未找到 LMStudio 提供者的 baseUrl，使用默认值: ', BASE_URL);
       baseUrl = BASE_URL;
     }
 
@@ -49,7 +49,7 @@ export default class LMStudioProvider extends BaseProvider {
       let { baseUrl } = this.getProviderBaseUrlAndKey(providerSettings?.[this.name]);
 
       if (!baseUrl) {
-        logger.debug('No baseUrl found for LMStudio provider, using default: ', BASE_URL);
+        logger.debug('未找到 LMStudio 提供者的 baseUrl，使用默认值: ', BASE_URL);
         baseUrl = BASE_URL;
       }
 
@@ -60,7 +60,7 @@ export default class LMStudioProvider extends BaseProvider {
         baseUrl = isDocker ? baseUrl.replace('127.0.0.1', 'host.docker.internal') : baseUrl;
       }
 
-      logger.debug('LMStudio Base Url used: ', baseUrl);
+      logger.debug('LMStudio 使用的 baseUrl: ', baseUrl);
 
       const lmstudio = createOpenAI({
         baseURL: `${baseUrl}/v1`,

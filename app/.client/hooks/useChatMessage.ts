@@ -54,8 +54,9 @@ export function useChatMessage({
       }
     },
     onError: (e) => {
-      logger.error('Request failed\n\n', e.message);
-      toast.error('请求处理失败: ' + (e.message ? e.message : '没有返回详细信息'), { position: 'bottom-right' });
+      const errorMessage = e instanceof Error ? e.message : '未知错误';
+      logger.error(`请求处理失败: ${errorMessage}`);
+      toast.error(`请求处理失败: ${errorMessage}`, { position: 'bottom-right' });
 
       addStoppedProgressMessage('网络连接中断，响应已停止');
     },
@@ -65,7 +66,7 @@ export function useChatMessage({
         saveProject(message.id);
       }, SAVE_PROJECT_DELAY_MS);
       refreshUsageStats();
-      logger.debug('Finished streaming');
+      logger.debug('流式响应完成');
     },
   });
 
@@ -124,7 +125,7 @@ export function useChatMessage({
     setAborted(true);
     webBuilderStore.chatStore.abortAllActions();
     addStoppedProgressMessage('响应已中断');
-    logger.debug('Chat response aborted');
+    logger.debug('流式响应中断');
   };
 
   const runAnimation = async () => {

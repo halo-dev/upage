@@ -146,7 +146,7 @@ export function isValidContent(content: string): boolean {
       const scriptElements = doc.getElementsByTagName('script');
 
       if (scriptElements.length !== 1) {
-        logger.warn('JS content must have exactly one script element', {
+        logger.warn('JS 内容必须有且只有一个 script 元素', {
           contentLength: content.length,
           elementCount: scriptElements.length,
         });
@@ -157,7 +157,7 @@ export function isValidContent(content: string): boolean {
 
       // 检查脚本元素是否有 id 属性
       if (!scriptElement.id) {
-        logger.warn('JS content must have an id attribute on the script element', { contentLength: content.length });
+        logger.warn('JS 内容必须有 id 属性在 script 元素上', { contentLength: content.length });
         return false;
       }
 
@@ -184,7 +184,7 @@ export function isValidContent(content: string): boolean {
       const styleElements = doc.getElementsByTagName('style');
 
       if (styleElements.length !== 1) {
-        logger.warn('CSS content must have exactly one style element', {
+        logger.warn('CSS 内容必须有且只有一个 style 元素', {
           contentLength: content.length,
           elementCount: styleElements.length,
         });
@@ -195,7 +195,7 @@ export function isValidContent(content: string): boolean {
 
       // 检查样式元素是否有 id 属性
       if (!styleElement.id) {
-        logger.warn('CSS content must have an id attribute on the style element', { contentLength: content.length });
+        logger.warn('CSS 内容必须有 id 属性在 style 元素上', { contentLength: content.length });
         return false;
       }
 
@@ -215,7 +215,7 @@ export function isValidContent(content: string): boolean {
     const bodyChildren = doc.body.children;
 
     if (bodyChildren.length !== 1) {
-      logger.warn('HTML content must have exactly one root element', {
+      logger.warn('HTML 内容必须有且只有一个根元素', {
         contentLength: content.length,
         rootCount: bodyChildren.length,
       });
@@ -226,7 +226,7 @@ export function isValidContent(content: string): boolean {
 
     // 检查根元素是否有 id 属性
     if (!rootElement.id) {
-      logger.warn('HTML content must have an id attribute on the root element');
+      logger.warn('HTML 内容必须有 id 属性在根元素上');
       return false;
     }
 
@@ -241,7 +241,8 @@ export function isValidContent(content: string): boolean {
 
     return true;
   } catch (error) {
-    logger.error('Error validating content', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`验证内容失败: ${errorMessage}`);
     return false;
   }
 }
@@ -263,7 +264,7 @@ export function sanitizeHtmlContent(content: string): string {
   if (incompleteEndingRegex.test(content)) {
     // 移除不完整的结束标签
     logger.warn(
-      'Incomplete tag detected at the end of content',
+      '检测到末尾不完整的标签',
       JSON.stringify({
         contentEnd: content.slice(-10),
         contentLength: content.length,
@@ -278,7 +279,7 @@ export function sanitizeHtmlContent(content: string): string {
 
   if (openTags.length !== closeTags.length) {
     logger.warn(
-      'Potential unbalanced tags detected',
+      '检测到不匹配的标签',
       JSON.stringify({
         openTagsCount: openTags.length,
         closeTagsCount: closeTags.length,

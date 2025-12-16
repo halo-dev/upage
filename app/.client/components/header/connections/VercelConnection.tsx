@@ -34,7 +34,8 @@ export default function VercelConnection() {
   useEffect(() => {
     if (connection.isConnect) {
       fetchVercelStats().catch((err) => {
-        logger.error('获取 Vercel 统计信息失败:', err);
+        const errorMessage = err instanceof Error ? err.message : '未知错误';
+        logger.error(`获取 Vercel 统计信息失败: ${errorMessage}`);
       });
       if (!connection.user) {
         handleConnect();
@@ -83,7 +84,8 @@ export default function VercelConnection() {
       );
     } catch (error) {
       toast.error('连接 Vercel 失败');
-      logger.error('连接 Vercel 失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`连接 Vercel 失败: ${errorMessage}`);
       logStore.logError('Failed to authenticate with Vercel', { error });
     }
   };
@@ -103,7 +105,8 @@ export default function VercelConnection() {
       );
     } catch (error) {
       toast.error('断开 Vercel 连接失败');
-      logger.error('断开 Vercel 连接失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`断开 Vercel 连接失败: ${errorMessage}`);
     }
   };
 

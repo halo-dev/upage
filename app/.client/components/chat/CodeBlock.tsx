@@ -36,7 +36,7 @@ export const CodeBlock = memo(
 
     useEffect(() => {
       if (language && !isSpecialLang(language) && !(language in bundledLanguages)) {
-        logger.warn(`Unsupported language '${language}'`);
+        logger.warn(`不支持的语言 '${language}'`);
       }
 
       logger.trace(`Language = ${language}`);

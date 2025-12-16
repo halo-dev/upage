@@ -88,7 +88,8 @@ export function extractResourcesFromHTML(html: string): ExtractedResource[] {
     logger.debug(`从 HTML 中提取了 ${resources.length} 个资源引用`);
     return resources;
   } catch (error) {
-    logger.error('提取资源失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`提取资源失败: ${errorMessage}`);
     return [];
   }
 }
@@ -183,7 +184,8 @@ function analyzeDataUrl(dataUrl: string, tagName: string, attribute: string): Ex
       },
     };
   } catch (error) {
-    logger.error('解析 data URL 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`解析 data URL 失败: ${errorMessage}`);
     return null;
   }
 }

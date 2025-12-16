@@ -159,7 +159,8 @@ export class ActionRunner {
       }
 
       this.#updateAction(actionId, { status: 'failed', error: 'Action failed' });
-      logger.error(`Action failed\n\n`, error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`Action 失败\n\n: ${errorMessage}`);
 
       if (!(error instanceof ActionCommandError)) {
         return;
@@ -181,9 +182,10 @@ export class ActionRunner {
     const editorBridge = await this.#editorBridge;
     try {
       await editorBridge.updateSection(action);
-      logger.debug(`Page Section written ${action.pageName}`);
+      logger.debug(`页面 Section 写入成功 ${action.pageName}`);
     } catch (error) {
-      logger.error('Failed to write page section\n\n', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`页面 Section 写入失败\n\n: ${errorMessage}`);
     }
   }
 
@@ -192,9 +194,10 @@ export class ActionRunner {
     try {
       // 新增或更新 Pages
       await editorBridge.upsertPageAction(action.pageName, this.#page.title, action.id);
-      logger.debug(`Page written ${action.pageName}`);
+      logger.debug(`页面写入成功 ${action.pageName}`);
     } catch (error) {
-      logger.error('Failed to write page\n\n', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`页面写入失败\n\n: ${errorMessage}`);
     }
 
     this.#runPageSectionAction(action);

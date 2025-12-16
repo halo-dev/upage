@@ -21,7 +21,8 @@ async function saveOrUpdatePages(pages: PageV2CreateParams[]) {
       logger.error('保存页面数据失败: 页面创建或更新失败');
     }
   } catch (error) {
-    logger.error('保存页面数据失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`保存页面数据失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -44,7 +45,8 @@ async function saveOrUpdateSections(sections: SectionCreateParams[]) {
       logger.error('保存部分数据失败: 部分创建或更新失败');
     }
   } catch (error) {
-    logger.error('保存部分数据失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`保存部分数据失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -81,7 +83,8 @@ export async function saveOrUpdateProject(pages: PageV2CreateParams[], sections:
       sections: sectionsResult,
     };
   } catch (error) {
-    logger.error('保存页面和部分数据失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`保存页面和部分数据失败: ${errorMessage}`);
     throw error;
   }
 }

@@ -16,7 +16,7 @@ try {
   }
 } catch {
   // In Cloudflare environment, this will fail, which is expected
-  logger.debug('Running in Cloudflare environment, child_process not available');
+  logger.debug('在 Cloudflare 环境中运行，child_process 不可用');
 }
 
 // For development environments, we'll always provide mock data if real data isn't available
@@ -48,7 +48,7 @@ const getSystemMemoryInfo = (): SystemMemoryInfo => {
         used: 0,
         percentage: 0,
         timestamp: new Date().toISOString(),
-        error: 'System memory information is not available in this environment',
+        error: '系统内存信息在当前环境中不可用',
       };
     }
 
@@ -142,7 +142,8 @@ const getSystemMemoryInfo = (): SystemMemoryInfo => {
           percentage: swapTotal > 0 ? Math.round((swapUsed / swapTotal) * 100) : 0,
         };
       } catch (swapError) {
-        logger.error('Failed to get swap info:', swapError);
+        const errorMessage = swapError instanceof Error ? swapError.message : '未知错误';
+        logger.error(`获取交换信息失败: ${errorMessage}`);
       }
     } else if (platform === 'linux') {
       // Linux
@@ -221,10 +222,11 @@ const getSystemMemoryInfo = (): SystemMemoryInfo => {
           percentage: swapTotal > 0 ? Math.round((swapUsed / swapTotal) * 100) : 0,
         };
       } catch (swapError) {
-        logger.error('Failed to get swap info:', swapError);
+        const errorMessage = swapError instanceof Error ? swapError.message : '未知错误';
+        logger.error(`获取交换信息失败: ${errorMessage}`);
       }
     } else {
-      throw new Error(`Unsupported platform: ${platform}`);
+      throw new Error(`不支持的平台: ${platform}`);
     }
 
     return {
@@ -232,14 +234,15 @@ const getSystemMemoryInfo = (): SystemMemoryInfo => {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    logger.error('Failed to get system memory info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取系统内存信息失败: ${errorMessage}`);
     return {
       total: 0,
       free: 0,
       used: 0,
       percentage: 0,
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
     };
   }
 };
@@ -248,7 +251,8 @@ export const memoryLoader: LoaderFunction = async ({ request: _request }) => {
   try {
     return json(getSystemMemoryInfo());
   } catch (error) {
-    logger.error('Failed to get system memory info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取系统内存信息失败: ${errorMessage}`);
     return json(
       {
         total: 0,
@@ -256,7 +260,7 @@ export const memoryLoader: LoaderFunction = async ({ request: _request }) => {
         used: 0,
         percentage: 0,
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       },
       { status: 500 },
     );
@@ -267,7 +271,8 @@ export const memoryAction = async ({ request: _request }: ActionFunctionArgs) =>
   try {
     return json(getSystemMemoryInfo());
   } catch (error) {
-    logger.error('Failed to get system memory info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取系统内存信息失败: ${errorMessage}`);
     return json(
       {
         total: 0,
@@ -275,7 +280,7 @@ export const memoryAction = async ({ request: _request }: ActionFunctionArgs) =>
         used: 0,
         percentage: 0,
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       },
       { status: 500 },
     );

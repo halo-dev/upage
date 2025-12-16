@@ -598,7 +598,8 @@ export function useEditorStorage() {
       await saveProject(db, messageId, pagesV2, sections, assets);
       return true;
     } catch (error) {
-      logger.error('保存 editor 项目失败', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`保存 editor 项目失败: ${errorMessage}`);
       return false;
     } finally {
       db.close();
@@ -642,7 +643,8 @@ export function useEditorStorage() {
         project: result.project,
       };
     } catch (error) {
-      logger.error('加载 editor 项目失败', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`加载 editor 项目失败: ${errorMessage}`);
       return undefined;
     } finally {
       db.close();

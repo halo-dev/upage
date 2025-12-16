@@ -91,8 +91,9 @@ export default function GitHubConnection() {
       });
       toast.success('GitHub 统计已刷新');
     } catch (error) {
-      logger.error('Error fetching GitHub stats:', error);
-      toast.error(`获取 GitHub 统计失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`获取 GitHub 统计失败: ${errorMessage}`);
+      toast.error(`获取 GitHub 统计失败: ${errorMessage}`);
     } finally {
       setIsFetchingStats(false);
     }
@@ -108,9 +109,10 @@ export default function GitHubConnection() {
       revalidator.revalidate();
       toast.success('已成功连接到 GitHub');
     } catch (error) {
-      logger.error('Failed to connect to GitHub:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`连接 GitHub 失败: ${errorMessage}`);
       setConnectInfo({ token, tokenType });
-      toast.error(`Failed to connect to GitHub: ${error instanceof Error ? error.message : '未知错误'}`);
+      toast.error(`连接 GitHub 失败: ${errorMessage}`);
     }
   };
 
@@ -125,8 +127,9 @@ export default function GitHubConnection() {
       revalidator.revalidate();
       toast.success('已断开与 GitHub 的连接');
     } catch (error) {
-      logger.error('断开连接失败:', error);
-      toast.error('断开连接失败');
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`断开连接失败: ${errorMessage}`);
+      toast.error('无法断开连接');
     }
   };
 

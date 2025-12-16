@@ -229,28 +229,27 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
 
               if (!uploadSuccess) {
                 if (uploadResponse.status === 422) {
-                  logger.warn(
-                    `Upload failed for ${normalizedPath} (${uploadResponse.status}, But it may be uploaded successfully`,
-                  );
+                  logger.warn(`${normalizedPath} (${uploadResponse.status}) 上传失败，但它可能已成功上传`);
                   uploadSuccess = true;
                 } else {
                   const errorText = await uploadResponse.text();
-                  logger.error(`Upload failed for ${normalizedPath} (${uploadResponse.status}): ${errorText}`);
+                  logger.error(`${normalizedPath} (${uploadResponse.status}) 上传失败: ${errorText}`);
                   uploadRetries++;
                   await new Promise((resolve) => setTimeout(resolve, 2000));
                 }
               } else {
-                logger.info(`Successfully uploaded ${normalizedPath}`);
+                logger.info(`${normalizedPath} 上传成功`);
               }
             } catch (error) {
-              logger.error('Upload error:', error);
+              const errorMessage = error instanceof Error ? error.message : '未知错误';
+              logger.error(`${normalizedPath} 上传失败: ${errorMessage}`);
               uploadRetries++;
               await new Promise((resolve) => setTimeout(resolve, 2000));
             }
           }
 
           if (!uploadSuccess) {
-            return errorResponse(500, `上传文件失败： ${filePath}`);
+            return errorResponse(500, `上传文件失败: ${filePath}`);
           }
         }
 
@@ -258,7 +257,7 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
       }
 
       if (deploymentStatus.state === 'error') {
-        return errorResponse(500, deploymentStatus.error_message || 'Deploy preparation failed');
+        return errorResponse(500, deploymentStatus.error_message || '部署准备失败');
       }
 
       retryCount++;
@@ -266,7 +265,7 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
     }
 
     if (retryCount >= maxRetries) {
-      return errorResponse(500, 'Deploy preparation timed out');
+      return errorResponse(500, '部署准备超时');
     }
 
     // 第二阶段：轮询直到部署完成
@@ -289,7 +288,7 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
       }
 
       if (deploymentStatus.state === 'error') {
-        return errorResponse(500, deploymentStatus.error_message || 'Deployment failed');
+        return errorResponse(500, deploymentStatus.error_message || '部署失败');
       }
 
       retryCount++;
@@ -297,7 +296,7 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
     }
 
     if (retryCount >= maxDeploymentRetries) {
-      return errorResponse(500, 'Deployment timed out');
+      return errorResponse(500, '部署超时');
     }
 
     try {
@@ -315,7 +314,8 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
       });
       logger.info(`为用户 ${userId} 创建或更新了 Netlify 部署记录`);
     } catch (error) {
-      logger.error('创建部署记录失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`创建部署记录失败: ${errorMessage}`);
     }
 
     return successResponse(
@@ -330,7 +330,8 @@ export async function handleDeploy({ request, userId }: HandleDeployArgs) {
       '部署成功',
     );
   } catch (error) {
-    logger.error('Deploy error:', error);
-    return errorResponse(500, 'Deployment failed');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`部署失败: ${errorMessage}`);
+    return errorResponse(500, `部署失败`);
   }
 }

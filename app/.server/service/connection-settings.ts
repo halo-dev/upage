@@ -58,7 +58,8 @@ export async function get1PanelConnectionSettings(
       apiKey: apiKeySetting.value,
     };
   } catch (error) {
-    logger.error(`[1Panel] 获取用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[1Panel] 获取用户 ${userId} 的连接设置失败: ${errorMessage}`);
     return null;
   }
 }
@@ -88,7 +89,8 @@ export async function save1PanelConnectionSettings(userId: string, serverUrl: st
 
     logger.info(`[1Panel] 保存用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[1Panel] 保存用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[1Panel] 保存用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -104,7 +106,8 @@ export async function delete1PanelConnectionSettings(userId: string): Promise<vo
 
     logger.info(`[1Panel] 删除用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[1Panel] 删除用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[1Panel] 删除用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -126,7 +129,8 @@ export async function getNetlifyConnectionSettings(userId: string): Promise<{ to
       token: tokenSetting.value,
     };
   } catch (error) {
-    logger.error(`[Netlify] 获取用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[Netlify] 获取用户 ${userId} 的连接设置失败: ${errorMessage}`);
     return null;
   }
 }
@@ -148,7 +152,8 @@ export async function saveNetlifyConnectionSettings(userId: string, token: strin
 
     logger.info(`[Netlify] 保存用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[Netlify] 保存用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[Netlify] 保存用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -163,7 +168,8 @@ export async function deleteNetlifyConnectionSettings(userId: string): Promise<v
 
     logger.info(`[Netlify] 删除用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[Netlify] 删除用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[Netlify] 删除用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -185,7 +191,8 @@ export async function getVercelConnectionSettings(userId: string): Promise<{ tok
       token: tokenSetting.value,
     };
   } catch (error) {
-    logger.error(`[Vercel] 获取用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[Vercel] 获取用户 ${userId} 的连接设置失败: ${errorMessage}`);
     return null;
   }
 }
@@ -207,7 +214,8 @@ export async function saveVercelConnectionSettings(userId: string, token: string
 
     logger.info(`[Vercel] 保存用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[Vercel] 保存用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[Vercel] 保存用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -222,7 +230,8 @@ export async function deleteVercelConnectionSettings(userId: string): Promise<vo
 
     logger.info(`[Vercel] 删除用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[Vercel] 删除用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[Vercel] 删除用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -248,7 +257,8 @@ export async function getGitHubConnectionSettings(
       tokenType: (tokenTypeSetting?.value as 'classic' | 'fine-grained') || 'classic',
     };
   } catch (error) {
-    logger.error(`[GitHub] 获取用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[GitHub] 获取用户 ${userId} 的连接设置失败: ${errorMessage}`);
     return null;
   }
 }
@@ -282,7 +292,8 @@ export async function saveGitHubConnectionSettings(
 
     logger.info(`[GitHub] 保存用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[GitHub] 保存用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[GitHub] 保存用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -298,7 +309,8 @@ export async function deleteGitHubConnectionSettings(userId: string): Promise<vo
 
     logger.info(`[GitHub] 删除用户 ${userId} 的连接设置成功`);
   } catch (error) {
-    logger.error(`[GitHub] 删除用户 ${userId} 的连接设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`[GitHub] 删除用户 ${userId} 的连接设置失败: ${errorMessage}`);
     throw error;
   }
 }

@@ -100,7 +100,8 @@ export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs
             logger.debug(`创建 blob 成功: ${path} -> ${blob.sha}`);
             return { path, sha: blob.sha };
           } catch (error) {
-            logger.error(`创建 blob 失败: ${path}`, error);
+            const errorMessage = error instanceof Error ? error.message : '未知错误';
+            logger.error(`创建 blob 失败: ${path} ${errorMessage}`);
             throw error;
           }
         }
@@ -171,7 +172,8 @@ export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs
       });
       logger.info(`为用户 ${userId} 创建了 GitHub 部署记录`);
     } catch (error) {
-      logger.error('创建部署记录失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`创建部署记录失败: ${errorMessage}`);
     }
 
     const response: GitHubPushResponse = {
@@ -189,7 +191,8 @@ export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs
 
     return successResponse(response, '代码推送成功');
   } catch (error: any) {
-    logger.error('GitHub 推送失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`GitHub 推送失败: ${errorMessage}`);
 
     if (error.status === 401) {
       return errorResponse(401, 'GitHub 令牌已过期或无效，请重新认证');
@@ -200,9 +203,9 @@ export async function handleGitHubPush({ request, userId }: HandleGitHubPushArgs
     }
 
     if (error.status === 422) {
-      return errorResponse(422, `无法创建仓库或推送代码: ${error.message || '参数错误'}`);
+      return errorResponse(422, `无法创建仓库或推送代码: ${errorMessage}`);
     }
 
-    return errorResponse(500, `推送失败: ${error.message || '未知错误'}`);
+    return errorResponse(500, `推送失败: ${errorMessage}`);
   }
 }

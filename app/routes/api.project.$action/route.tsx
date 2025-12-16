@@ -31,7 +31,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return errorResponse(404, `不支持的操作: ${action}`);
     }
   } catch (error) {
-    logger.error('处理项目请求失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`处理项目请求失败: ${errorMessage}`);
     return errorResponse(500, '请求处理失败');
   }
 }

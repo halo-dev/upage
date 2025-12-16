@@ -48,7 +48,8 @@ export async function toggleAccess({ request, userId }: ToggleAccessArgs) {
       `已${newStatus === 'success' ? '开启' : '停止'}访问`,
     );
   } catch (error) {
-    logger.error(`切换1Panel部署 ${id} 访问状态失败:`, error);
-    return errorResponse(500, error instanceof Error ? error.message : '操作失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`切换1Panel部署 ${id} 访问状态失败: ${errorMessage}`);
+    return errorResponse(500, errorMessage);
   }
 }

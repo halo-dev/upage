@@ -43,7 +43,7 @@ export async function action(args: ActionFunctionArgs) {
     return errorResponse(401, '用户未登录');
   }
 
-  logger.debug('处理 1Panel API 请求', { action: params.action });
+  logger.debug(`处理 1Panel API 请求: ${params.action}`);
 
   // 根据参数调用不同的处理函数
   switch (params.action) {
@@ -58,7 +58,7 @@ export async function action(args: ActionFunctionArgs) {
     case 'delete':
       return deletePage({ ...args, userId });
     default:
-      logger.warn('未知的 API 操作', { action: params.action });
+      logger.warn(`未知的 API 操作: ${params.action}`);
       return errorResponse(404, `未知的 API 操作: ${params.action}`);
   }
 }

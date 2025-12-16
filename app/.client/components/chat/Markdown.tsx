@@ -18,8 +18,6 @@ interface MarkdownProps {
 }
 
 export const Markdown = memo(({ children, html = false, limitedMarkdown = false }: MarkdownProps) => {
-  logger.trace('Render');
-
   const components = useMemo(() => {
     return {
       div: ({ className, children, node, ...props }) => {
@@ -28,10 +26,10 @@ export const Markdown = memo(({ children, html = false, limitedMarkdown = false 
           const pageName = node?.properties.dataPageName as string;
 
           if (!messageId) {
-            logger.error(`Invalid message id ${messageId}`);
+            logger.error(`无效的消息 ID ${messageId}`);
           }
           if (!pageName) {
-            logger.error(`Invalid page name ${pageName}`);
+            logger.error(`无效的页面名称 ${pageName}`);
           }
 
           return <Artifact messageId={messageId} pageName={pageName} />;

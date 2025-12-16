@@ -40,18 +40,18 @@ export async function assetsUser({ request, params }: LoaderFunctionArgs) {
 
     const fileExists = await storageProvider.fileExists(filepath);
     if (!fileExists) {
-      logger.debug('文件不存在', { filepath });
+      logger.debug(`文件不存在: ${filepath}`);
       return new Response('文件不存在', { status: 404 });
     }
 
     if (currentUserId !== userId) {
-      logger.warn('无权访问文件', { userId, currentUserId, filepath });
+      logger.warn(`无权访问文件: ${userId}, ${currentUserId}, ${filepath}`);
       return new Response('无权访问此文件', { status: 403 });
     }
 
     const file = await storageProvider.getFile(filepath);
     if (!file) {
-      logger.debug('文件不存在', { userId, filepath });
+      logger.debug(`文件不存在: ${userId}, ${filepath}`);
       return new Response('文件不存在', { status: 404 });
     }
 
@@ -65,7 +65,8 @@ export async function assetsUser({ request, params }: LoaderFunctionArgs) {
       },
     });
   } catch (error) {
-    logger.error('获取文件失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取文件失败: ${errorMessage}`);
     return new Response('服务器错误', { status: 500 });
   }
 }

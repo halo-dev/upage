@@ -66,7 +66,7 @@ export const gitInfoLoader: LoaderFunction = async ({
   request,
   context,
 }: LoaderFunctionArgs & { context: AppContext }) => {
-  logger.debug('Git info API called with URL:', request.url);
+  logger.debug(`用 URL ${request.url} 调用的 Git 信息 API`);
 
   // Handle CORS preflight requests
   if (request.method === 'OPTIONS') {
@@ -82,7 +82,7 @@ export const gitInfoLoader: LoaderFunction = async ({
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 
-  logger.debug('Git info action:', action);
+  logger.debug(`Git 信息 API 操作: ${action}`);
 
   if (action === 'getUser' || action === 'getRepos' || action === 'getOrgs' || action === 'getActivity') {
     // Use server-side token instead of client-side token
@@ -100,14 +100,14 @@ export const gitInfoLoader: LoaderFunction = async ({
     const token = serverGithubToken || headerToken || cookieToken;
 
     logger.debug(
-      'Using GitHub token from:',
+      `使用 GitHub 令牌从: ${serverGithubToken ? 'server env' : headerToken ? 'auth header' : cookieToken ? 'cookie' : 'none'}`,
       serverGithubToken ? 'server env' : headerToken ? 'auth header' : cookieToken ? 'cookie' : 'none',
     );
 
     if (!token) {
-      logger.error('No GitHub token available');
+      logger.error('没有可用的 GitHub 令牌');
       return json(
-        { error: 'No GitHub token available' },
+        { error: '没有可用的 GitHub 令牌' },
         {
           status: 401,
           headers: {
@@ -128,7 +128,7 @@ export const gitInfoLoader: LoaderFunction = async ({
         });
 
         if (!response.ok) {
-          logger.error('GitHub user API error:', response.status);
+          logger.error(`GitHub 用户 API 错误: ${response.status}`);
           throw new Error(`GitHub API error: ${response.status}`);
         }
 
@@ -154,7 +154,7 @@ export const gitInfoLoader: LoaderFunction = async ({
         });
 
         if (!reposResponse.ok) {
-          logger.error('GitHub repos API error:', reposResponse.status);
+          logger.error(`GitHub 仓库 API 错误: ${reposResponse.status}`);
           throw new Error(`GitHub API error: ${reposResponse.status}`);
         }
 
@@ -203,7 +203,8 @@ export const gitInfoLoader: LoaderFunction = async ({
            *       });
            *     }
            *   } catch (error) {
-           *     logger.error(`Error fetching languages for ${repo.name}:`, error);
+           *     const errorMessage = error instanceof Error ? error.message : '未知错误';
+           *     logger.error(`获取 ${repo.name} 的语言失败: ${errorMessage}`);
            *   }
            * }
            */
@@ -237,7 +238,7 @@ export const gitInfoLoader: LoaderFunction = async ({
         });
 
         if (!response.ok) {
-          logger.error('GitHub orgs API error:', response.status);
+          logger.error(`GitHub 组织 API 错误: ${response.status}`);
           throw new Error(`GitHub API error: ${response.status}`);
         }
 
@@ -262,9 +263,9 @@ export const gitInfoLoader: LoaderFunction = async ({
           ?.split('=')[1];
 
         if (!username) {
-          logger.error('GitHub username not found in cookies');
+          logger.error('GitHub 用户名未找到在 cookies');
           return json(
-            { error: 'GitHub username not found in cookies' },
+            { error: 'GitHub 用户名未找到 cookies' },
             {
               status: 400,
               headers: {
@@ -283,7 +284,7 @@ export const gitInfoLoader: LoaderFunction = async ({
         });
 
         if (!response.ok) {
-          logger.error('GitHub activity API error:', response.status);
+          logger.error(`GitHub 活动 API 错误: ${response.status}`);
           throw new Error(`GitHub API error: ${response.status}`);
         }
 
@@ -300,9 +301,10 @@ export const gitInfoLoader: LoaderFunction = async ({
         );
       }
     } catch (error) {
-      logger.error('GitHub API error:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`GitHub API 错误: ${errorMessage}`);
       return json(
-        { error: error instanceof Error ? error.message : 'Unknown error' },
+        { error: errorMessage },
         {
           status: 500,
           headers: {

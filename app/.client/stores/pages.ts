@@ -93,7 +93,8 @@ export class PagesStore {
         }
       }
     } catch (error) {
-      logger.error('Failed to load deleted paths from localStorage', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`从 localStorage 加载已删除路径失败: ${errorMessage}`);
     }
 
     if (import.meta.hot && import.meta.hot.data) {
@@ -164,11 +165,12 @@ export class PagesStore {
     }
     try {
       this.pages.setKey(pageName, { ...page, content });
-      logger.info('Page updated');
+      logger.info('页面更新成功');
       // 保存上一次的页面内容
       this.savePageHistory(pageName, content, changeSource);
     } catch (error) {
-      logger.error('Failed to update page content\n\n', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`更新页面内容失败\n\n: ${errorMessage}`);
       throw error;
     }
   }
@@ -308,7 +310,7 @@ export class PagesStore {
         });
 
         this.size++;
-        logger.info(`Page created: ${pageName}`);
+        logger.info(`页面创建成功: ${pageName}`);
         break;
       }
       case 'upsert_page': {
@@ -335,7 +337,7 @@ export class PagesStore {
 
         this.#persistDeletedPages();
 
-        logger.info(`Page deleted: ${pageName}`);
+        logger.info(`页面删除成功: ${pageName}`);
         break;
       }
       case 'update_section': {
@@ -362,8 +364,8 @@ export class PagesStore {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('upage-deleted-pages', JSON.stringify([...this.deletedPages]));
       }
-    } catch (error) {
-      logger.error('Failed to persist deleted paths to localStorage', error);
+    } catch (_error) {
+      // ignore
     }
   }
 

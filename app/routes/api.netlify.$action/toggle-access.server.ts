@@ -34,8 +34,9 @@ export async function setNetlifySiteName(token: string, siteId: string, name: st
     const result = (await response.json()) as NetlifySite;
     return result;
   } catch (error) {
-    logger.error(`设置 Netlify 站点 ${siteId} 名称失败:`, error);
-    throw new Error(`${error}`);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`设置 Netlify 站点 ${siteId} 名称失败: ${errorMessage}`);
+    throw new Error(`${errorMessage}`);
   }
 }
 
@@ -83,7 +84,8 @@ export async function toggleAccess({ userId, request }: ToggleAccessArgs) {
 
     return successResponse(id, `已${newStatus === 'success' ? '开启' : '停止'}访问`);
   } catch (error) {
-    logger.error(`切换Netlify部署 ${id} 访问状态失败:`, error);
-    return errorResponse(500, error instanceof Error ? error.message : '操作失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`切换Netlify部署 ${id} 访问状态失败: ${errorMessage}`);
+    return errorResponse(500, `操作失败: ${errorMessage}`);
   }
 }

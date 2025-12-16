@@ -16,7 +16,7 @@ try {
   }
 } catch {
   // In Cloudflare environment, this will fail, which is expected
-  logger.info('Running in Cloudflare environment, child_process not available');
+  logger.info('在 Cloudflare 环境中运行，child_process 不可用');
 }
 
 // For development environments, we'll always provide mock data if real data isn't available
@@ -43,7 +43,7 @@ const getProcessInfo = (): ProcessInfo[] => {
           cpu: 0,
           memory: 0,
           timestamp: new Date().toISOString(),
-          error: 'Process information is not available in this environment',
+          error: '进程信息在当前环境中不可用',
         },
       ];
     }
@@ -73,7 +73,8 @@ const getProcessInfo = (): ProcessInfo[] => {
         cpuCount = match ? parseInt(match[0], 10) : 1;
       }
     } catch (error) {
-      logger.error('Failed to get CPU count:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`获取 CPU 计数失败: ${errorMessage}`);
 
       // Default to 1 if we can't get the count
       cpuCount = 1;
@@ -109,7 +110,8 @@ const getProcessInfo = (): ProcessInfo[] => {
           };
         });
       } catch (error) {
-        logger.error('Failed to get macOS process info:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`获取 macOS 进程信息失败: ${errorMessage}`);
 
         // Try alternative command
         try {
@@ -135,7 +137,8 @@ const getProcessInfo = (): ProcessInfo[] => {
             };
           });
         } catch (fallbackError) {
-          logger.error('Failed to get macOS process info with fallback:', fallbackError);
+          const errorMessage = fallbackError instanceof Error ? fallbackError.message : '未知错误';
+          logger.error(`获取 macOS 进程信息失败: ${errorMessage}`);
           return [
             {
               pid: 0,
@@ -143,7 +146,7 @@ const getProcessInfo = (): ProcessInfo[] => {
               cpu: 0,
               memory: 0,
               timestamp: new Date().toISOString(),
-              error: 'Process information is not available in this environment',
+              error: '进程信息在当前环境中不可用',
             },
           ];
         }
@@ -177,7 +180,8 @@ const getProcessInfo = (): ProcessInfo[] => {
           };
         });
       } catch (error) {
-        logger.error('Failed to get Linux process info:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`获取 Linux 进程信息失败: ${errorMessage}`);
 
         // Try alternative command
         try {
@@ -203,7 +207,8 @@ const getProcessInfo = (): ProcessInfo[] => {
             };
           });
         } catch (fallbackError) {
-          logger.error('Failed to get Linux process info with fallback:', fallbackError);
+          const errorMessage = fallbackError instanceof Error ? fallbackError.message : '未知错误';
+          logger.error(`获取 Linux 进程信息失败: ${errorMessage}`);
           return [
             {
               pid: 0,
@@ -211,7 +216,7 @@ const getProcessInfo = (): ProcessInfo[] => {
               cpu: 0,
               memory: 0,
               timestamp: new Date().toISOString(),
-              error: 'Process information is not available in this environment',
+              error: '进程信息在当前环境中不可用',
             },
           ];
         }
@@ -239,7 +244,8 @@ const getProcessInfo = (): ProcessInfo[] => {
           timestamp: new Date().toISOString(),
         }));
       } catch (error) {
-        logger.error('Failed to get Windows process info:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`获取 Windows 进程信息失败: ${errorMessage}`);
 
         // Try alternative command using tasklist
         try {
@@ -264,7 +270,8 @@ const getProcessInfo = (): ProcessInfo[] => {
             };
           });
         } catch (fallbackError) {
-          logger.error('Failed to get Windows process info with fallback:', fallbackError);
+          const errorMessage = fallbackError instanceof Error ? fallbackError.message : '未知错误';
+          logger.error(`获取 Windows 进程信息失败: ${errorMessage}`);
           return [
             {
               pid: 0,
@@ -272,13 +279,13 @@ const getProcessInfo = (): ProcessInfo[] => {
               cpu: 0,
               memory: 0,
               timestamp: new Date().toISOString(),
-              error: 'Process information is not available in this environment',
+              error: '进程信息在当前环境中不可用',
             },
           ];
         }
       }
     } else {
-      logger.warn(`Unsupported platform: ${platform}, using browser fallback`);
+      logger.warn(`不支持的平台: ${platform}, 使用浏览器回退`);
       return [
         {
           pid: 0,
@@ -293,7 +300,8 @@ const getProcessInfo = (): ProcessInfo[] => {
 
     return processes;
   } catch (error) {
-    logger.error('Failed to get process info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取进程信息失败: ${errorMessage}`);
 
     if (isDevelopment) {
       return getMockProcessInfo();
@@ -404,7 +412,8 @@ export const processLoader: LoaderFunction = async ({ request: _request }) => {
   try {
     return json(getProcessInfo());
   } catch (error) {
-    logger.error('Failed to get process info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取进程信息失败: ${errorMessage}`);
     return json(getMockProcessInfo(), { status: 500 });
   }
 };
@@ -413,7 +422,8 @@ export const processAction = async ({ request: _request }: ActionFunctionArgs) =
   try {
     return json(getProcessInfo());
   } catch (error) {
-    logger.error('Failed to get process info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取进程信息失败: ${errorMessage}`);
     return json(getMockProcessInfo(), { status: 500 });
   }
 };

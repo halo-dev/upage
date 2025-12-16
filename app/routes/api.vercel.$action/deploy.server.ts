@@ -90,7 +90,8 @@ export async function getVercelDeployByProjectId({ request, userId }: GetVercelD
       '获取部署信息成功',
     );
   } catch (error) {
-    logger.error('Error fetching Vercel deployment:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 Vercel 部署失败: ${errorMessage}`);
     return errorResponse(500, '获取部署失败');
   }
 }
@@ -303,7 +304,8 @@ export async function handleVercelDeploy({ request, userId }: HandleVercelDeploy
       });
       logger.info(`为用户 ${userId} 创建了 Vercel 部署记录`);
     } catch (error) {
-      logger.error('创建部署记录失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`创建部署记录失败: ${errorMessage}`);
       // 不影响主流程，继续返回成功
     }
 
@@ -319,7 +321,8 @@ export async function handleVercelDeploy({ request, userId }: HandleVercelDeploy
       '部署成功',
     );
   } catch (error) {
-    logger.error('Vercel deploy error:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`Vercel 部署失败: ${errorMessage}`);
     return errorResponse(500, '部署失败');
   }
 }

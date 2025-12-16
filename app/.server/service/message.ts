@@ -71,10 +71,11 @@ export async function upsertMessage(params: MessageUpsertParams) {
       },
     });
 
-    logger.info(`[Message] 创建或更新了消息 ${id}`);
+    logger.info(`创建或更新了消息 ${id}`);
     return message;
   } catch (error) {
-    logger.error(`[Message] 创建或更新消息 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建或更新消息 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -96,7 +97,7 @@ export async function updateDiscardedMessage(chatId: string, startMessageId: str
     });
 
     if (!startMessage) {
-      logger.error(`[Message] 找不到开始消息 ${startMessageId}`);
+      logger.error(`找不到开始消息 ${startMessageId}`);
       return false;
     }
 
@@ -113,10 +114,11 @@ export async function updateDiscardedMessage(chatId: string, startMessageId: str
       },
     });
 
-    logger.info(`[Message] 已将聊天 ${chatId} 中 ${startMessageId} 之后的 ${result.count} 条消息标记为遗弃`);
+    logger.info(`已将聊天 ${chatId} 中 ${startMessageId} 之后的 ${result.count} 条消息标记为遗弃`);
     return true;
   } catch (error) {
-    logger.error(`[Message] 更新遗弃消息失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新遗弃消息失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -146,7 +148,7 @@ export async function getHistoryChatMessages(params: GetHistoryChatMessagesParam
       });
 
       if (!rewindToMessage) {
-        logger.warn(`[Message] 获取历史消息: 找不到指定的 rewindTo 消息 ${rewindTo}`);
+        logger.warn(`获取历史消息: 找不到指定的 rewindTo 消息 ${rewindTo}`);
         // 如果找不到指定消息，则返回所有消息
         return await getAllChatMessages(chatId);
       }
@@ -165,14 +167,15 @@ export async function getHistoryChatMessages(params: GetHistoryChatMessagesParam
         },
       });
 
-      logger.info(`[Message] 获取了聊天 ${chatId} 中直到消息 ${rewindTo} 的 ${messages.length} 条历史消息`);
+      logger.info(`获取了聊天 ${chatId} 中直到消息 ${rewindTo} 的 ${messages.length} 条历史消息`);
       return messages.map(convertToUIMessage);
     } else {
       // 如果没有指定 rewindTo，则获取所有消息
       return await getAllChatMessages(chatId);
     }
   } catch (error) {
-    logger.error(`[Message] 获取聊天 ${chatId} 的历史消息失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取聊天 ${chatId} 的历史消息失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -237,7 +240,7 @@ async function getAllChatMessages(chatId: string): Promise<UPageUIMessage[]> {
     },
   });
 
-  logger.info(`[Message] 获取了聊天 ${chatId} 的所有 ${messages.length} 条历史消息`);
+  logger.info(`获取了聊天 ${chatId} 的所有 ${messages.length} 条历史消息`);
   return messages.map(convertToUIMessage);
 }
 
@@ -249,7 +252,7 @@ async function getAllChatMessages(chatId: string): Promise<UPageUIMessage[]> {
  */
 export async function saveChatMessages(chatId: string, messages: UPageUIMessage[]): Promise<number> {
   if (!messages || messages.length === 0) {
-    logger.warn('[Message] 保存聊天消息: 没有提供消息数据');
+    logger.warn('保存聊天消息: 没有提供消息数据');
     return 0;
   }
 
@@ -261,7 +264,7 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
     });
 
     if (!chat) {
-      logger.error(`[Message] 保存聊天消息: 找不到聊天 ${chatId}`);
+      logger.error(`保存聊天消息: 找不到聊天 ${chatId}`);
       throw new Error(`找不到聊天 ${chatId}`);
     }
 
@@ -272,7 +275,7 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
     for (const message of messages) {
       // 跳过没有ID的消息
       if (!message.id) {
-        logger.warn('[Message] 保存聊天消息: 跳过没有ID的消息');
+        logger.warn('保存聊天消息: 跳过没有ID的消息');
         continue;
       }
 
@@ -308,10 +311,11 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
       savedCount++;
     }
 
-    logger.info(`[Message] 成功保存了聊天 ${chatId} 的 ${savedCount} 条消息`);
+    logger.info(`成功保存了聊天 ${chatId} 的 ${savedCount} 条消息`);
     return savedCount;
   } catch (error) {
-    logger.error(`[Message] 保存聊天消息失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`保存聊天消息失败: ${errorMessage}`);
     throw error;
   }
 }

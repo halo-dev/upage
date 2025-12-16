@@ -74,7 +74,8 @@ export async function getNetlifyStats({ userId }: GetNetlifyStatsArgs) {
       '获取 Netlify 站点统计信息成功',
     );
   } catch (error) {
-    logger.error('获取 Netlify 站点统计信息失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 Netlify 站点统计信息失败: ${errorMessage}`);
     return errorResponse(500, '获取 Netlify 站点统计信息失败');
   }
 }

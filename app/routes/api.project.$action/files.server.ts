@@ -60,7 +60,8 @@ export async function getProjectFiles({ request, userId }: GetProjectFilesParams
       '获取文件列表成功',
     );
   } catch (error) {
-    logger.error('获取项目文件失败:', error);
-    return errorResponse(500, error instanceof Error ? error.message : '获取项目文件失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取项目文件失败: ${errorMessage}`);
+    return errorResponse(500, `获取项目文件失败: ${errorMessage}`);
   }
 }

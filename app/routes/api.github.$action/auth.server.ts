@@ -58,11 +58,13 @@ export async function handleGitHubAuth({ request, userId }: HandleGitHubAuthArgs
         return errorResponse(401, '无效的令牌或未经授权');
       }
 
-      logger.error('验证 GitHub 令牌失败:', error);
-      return errorResponse(500, `验证失败: ${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`验证 GitHub 令牌失败: ${errorMessage}`);
+      return errorResponse(500, `验证失败: ${errorMessage}`);
     }
   } catch (error) {
-    logger.error('处理 GitHub 认证请求失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`处理 GitHub 认证请求失败: ${errorMessage}`);
     return errorResponse(500, '验证 GitHub 令牌失败');
   }
 }
@@ -74,7 +76,8 @@ export async function handleGitHubDisconnect({ userId }: { userId: string }) {
 
     return successResponse({ success: true }, '已断开 GitHub 连接');
   } catch (error) {
-    logger.error('断开 GitHub 连接失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`断开 GitHub 连接失败: ${errorMessage}`);
     return errorResponse(500, '断开连接失败');
   }
 }

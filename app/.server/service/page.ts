@@ -50,10 +50,11 @@ export async function createPage(params: PageCreateParams) {
       },
     });
 
-    logger.info(`[Page] 创建了消息 ${messageId} 的页面: ${page.id}`);
+    logger.info(`创建了消息 ${messageId} 的页面: ${page.id}`);
     return page;
   } catch (error) {
-    logger.error('[Page] 创建页面失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建页面失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -87,7 +88,8 @@ export async function createOrUpdatePage(params: PageCreateParams) {
     const newPage = await createPage(params);
     return newPage;
   } catch (error) {
-    logger.error('[Page] 创建或更新页面失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建或更新页面失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -109,10 +111,11 @@ export async function createPages(messageId: string, pages: Page[]) {
       },
     });
 
-    logger.info(`[Page] 为消息 ${messageId} 创建了 ${pages.length} 个页面: ${page.id}`);
+    logger.info(`为消息 ${messageId} 创建了 ${pages.length} 个页面: ${page.id}`);
     return page;
   } catch (error) {
-    logger.error('[Page] 创建多个页面失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建多个页面失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -135,7 +138,8 @@ export async function createOrUpdatePages(messageId: string, pages: Page[]) {
     const newPage = await createPages(messageId, pages);
     return newPage;
   } catch (error) {
-    logger.error('[Page] 创建或更新多个页面失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建或更新多个页面失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -155,7 +159,8 @@ export async function getPageById(id: string) {
 
     return page;
   } catch (error) {
-    logger.error(`[Page] 获取页面 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取页面 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -175,7 +180,8 @@ export async function getPageByMessageId(messageId: string) {
 
     return page;
   } catch (error) {
-    logger.error(`[Page] 获取消息 ${messageId} 的页面失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取消息 ${messageId} 的页面失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -204,7 +210,8 @@ export async function getPageByMessageIdAndName(messageId: string, name: string)
     }
     return pageData as JsonObject;
   } catch (error) {
-    logger.error(`[Page] 获取消息 ${messageId} 的页面 ${name} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取消息 ${messageId} 的页面 ${name} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -230,10 +237,11 @@ export async function updatePage(id: string, params: PageUpdateParams) {
       data: updateData,
     });
 
-    logger.info(`[Page] 更新了页面 ${id}`);
+    logger.info(`更新了页面 ${id}`);
     return updatedPage;
   } catch (error) {
-    logger.error(`[Page] 更新页面 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新页面 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -259,10 +267,11 @@ export async function updatePageByMessageId(messageId: string, params: PageUpdat
       data: updateData,
     });
 
-    logger.info(`[Page] 更新了消息 ${messageId} 的页面`);
+    logger.info(`更新了消息 ${messageId} 的页面`);
     return updatedPage;
   } catch (error) {
-    logger.error(`[Page] 更新消息 ${messageId} 的页面失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新消息 ${messageId} 的页面失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -280,10 +289,11 @@ export async function deletePage(id: string) {
       where: { id },
     });
 
-    logger.info(`[Page] 删除了页面 ${id}`);
+    logger.info(`删除了页面 ${id}`);
     return true;
   } catch (error) {
-    logger.error(`[Page] 删除页面 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除页面 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -301,10 +311,11 @@ export async function deletePageByMessageId(messageId: string) {
       where: { messageId },
     });
 
-    logger.info(`[Page] 删除了消息 ${messageId} 的页面`);
+    logger.info(`删除了消息 ${messageId} 的页面`);
     return true;
   } catch (error) {
-    logger.error(`[Page] 删除消息 ${messageId} 的页面失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除消息 ${messageId} 的页面失败: ${errorMessage}`);
     throw error;
   }
 }

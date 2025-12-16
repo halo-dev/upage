@@ -45,7 +45,8 @@ export async function handleListLoader({ request, userId }: HandleListLoaderArgs
       '获取聊天列表成功',
     );
   } catch (error) {
-    logger.error('获取聊天列表失败', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取聊天列表失败: ${errorMessage}`);
     return errorResponse(500, '获取聊天列表失败');
   }
 }

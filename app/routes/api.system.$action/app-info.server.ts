@@ -67,12 +67,13 @@ export const appInfoLoader: LoaderFunction = async ({ request: _request }) => {
   try {
     return json(getAppResponse());
   } catch (error) {
-    logger.error('Failed to get webapp info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 Web 应用信息失败: ${errorMessage}`);
     return json(
       {
         name: 'upage',
         version: '0.0.0',
-        description: 'Error fetching app info',
+        description: '获取 Web 应用信息失败',
         license: 'MIT',
         environment: 'error',
         gitInfo: {
@@ -102,12 +103,13 @@ export const appInfoAction = async ({ request: _request }: ActionFunctionArgs) =
   try {
     return json(getAppResponse());
   } catch (error) {
-    logger.error('Failed to get webapp info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 Web 应用信息失败: ${errorMessage}`);
     return json(
       {
         name: 'upage',
         version: '0.0.0',
-        description: 'Error fetching app info',
+        description: '获取 Web 应用信息失败',
         license: 'MIT',
         environment: 'error',
         gitInfo: {

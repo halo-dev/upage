@@ -163,7 +163,7 @@ export const logto = {
           const virtualUser = await getVirtualUser(request);
 
           if (virtualUser?.isVirtual) {
-            logger.info('[Auth] 虚拟用户退出登录');
+            logger.info('虚拟用户退出登录');
             const clearCookie = await clearVirtualUser();
             return redirect(routes['sign-out'].redirectBackTo, {
               headers: {
@@ -174,7 +174,8 @@ export const logto = {
         }
         return await originalHandler(args);
       } catch (error) {
-        logger.error('[Auth] 认证服务错误:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`认证服务错误: ${errorMessage}`);
         return handleAuthError(error, args);
       }
     };
@@ -332,8 +333,8 @@ export async function getVirtualUser(request: Request): Promise<VirtualUser | nu
       isVirtual: true,
     };
   } catch (error) {
-    logger.error('[Auth] 验证虚拟用户失败:', error);
-    // 如果验证过程中出现错误，仍然返回用户信息
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error('验证虚拟用户失败:', errorMessage);
     return {
       isAuthenticated: true,
       userInfo,

@@ -95,7 +95,8 @@ export default function NetlifyConnection() {
 
           toast.success('站点删除成功');
           fetchNetlifyStats().catch((err) => {
-            logger.error('获取 Netlify 统计信息失败:', err);
+            const errorMessage = err instanceof Error ? err.message : '未知错误';
+            logger.error(`获取 Netlify 统计信息失败: ${errorMessage}`);
           });
         } catch (err: unknown) {
           const error = err instanceof Error ? err.message : '未知错误';
@@ -126,7 +127,8 @@ export default function NetlifyConnection() {
 
       toast.success(`Deploy ${action}ed successfully`);
       fetchNetlifyStats().catch((err) => {
-        logger.error('获取 Netlify 统计信息失败:', err);
+        const errorMessage = err instanceof Error ? err.message : '未知错误';
+        logger.error(`获取 Netlify 统计信息失败: ${errorMessage}`);
       });
     } catch (err: unknown) {
       const error = err instanceof Error ? err.message : 'Unknown error';
@@ -139,7 +141,8 @@ export default function NetlifyConnection() {
   useEffect(() => {
     if (connection.isConnect && (!connection.stats || !connection.stats.sites)) {
       fetchNetlifyStats().catch((err) => {
-        logger.error('获取 Netlify 统计信息失败:', err);
+        const errorMessage = err instanceof Error ? err.message : '未知错误';
+        logger.error(`获取 Netlify 统计信息失败: ${errorMessage}`);
       });
     }
 
@@ -162,7 +165,8 @@ export default function NetlifyConnection() {
         });
 
         fetchNetlifyStats().catch((err) => {
-          logger.error('获取 Netlify 统计信息失败:', err);
+          const errorMessage = err instanceof Error ? err.message : '未知错误';
+          logger.error(`获取 Netlify 统计信息失败: ${errorMessage}`);
         });
 
         toast.success('连接 Netlify 成功');
@@ -201,8 +205,9 @@ export default function NetlifyConnection() {
         },
       );
     } catch (error) {
-      logger.error('连接 Netlify 失败:', error);
-      toast.error(`连接 Netlify 失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`连接 Netlify 失败: ${errorMessage}`);
+      toast.error(`连接 Netlify 失败: ${errorMessage}`);
     }
   };
 
@@ -220,8 +225,9 @@ export default function NetlifyConnection() {
         },
       );
     } catch (error) {
-      toast.error('断开 Netlify 连接失败');
-      logger.error('断开 Netlify 连接失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`断开 Netlify 连接失败: ${errorMessage}`);
+      toast.error(`断开 Netlify 连接失败: ${errorMessage}`);
     }
   };
 
@@ -289,7 +295,8 @@ export default function NetlifyConnection() {
                         size="sm"
                         onClick={() =>
                           fetchNetlifyStats().catch((err) => {
-                            logger.error('获取 Netlify 统计信息失败:', err);
+                            const errorMessage = err instanceof Error ? err.message : '未知错误';
+                            logger.error(`获取 Netlify 统计信息失败: ${errorMessage}`);
                           })
                         }
                         disabled={fetchingStats}
@@ -662,7 +669,8 @@ export default function NetlifyConnection() {
                 <Button
                   onClick={() =>
                     fetchNetlifyStats().catch((err) => {
-                      logger.error('获取 Netlify 统计信息失败:', err);
+                      const errorMessage = err instanceof Error ? err.message : '未知错误';
+                      logger.error(`获取 Netlify 统计信息失败: ${errorMessage}`);
                     })
                   }
                   disabled={fetchingStats}

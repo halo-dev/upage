@@ -54,7 +54,7 @@ export async function action(args: ActionFunctionArgs) {
     case 'delete':
       return deletePage({ ...args, userId });
     default:
-      logger.warn('未知的 API 操作', { action: params.action });
+      logger.warn(`未知的 API 操作: ${params.action}`);
       return errorResponse(404, `未知的 API 操作: ${params.action}`);
   }
 }

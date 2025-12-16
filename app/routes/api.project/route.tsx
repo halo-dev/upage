@@ -37,8 +37,9 @@ export async function action({ request }: ActionFunctionArgs) {
         ...page,
         messageId,
       }));
-    } catch (e) {
-      logger.error('项目数据解析失败', e);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`项目数据解析失败: ${errorMessage}`);
       return errorResponse(400, '项目数据格式无效');
     }
 
@@ -48,8 +49,9 @@ export async function action({ request }: ActionFunctionArgs) {
         ...section,
         messageId,
       }));
-    } catch (e) {
-      logger.error('sections数据解析失败', e);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`sections数据解析失败: ${errorMessage}`);
       return errorResponse(400, 'sections数据格式无效');
     }
 
@@ -57,7 +59,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return successResponse(result, '项目保存成功');
   } catch (error) {
-    logger.error('处理项目保存请求失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`处理项目保存请求失败: ${errorMessage}`);
     return errorResponse(500, '项目保存失败');
   }
 }

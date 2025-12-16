@@ -35,8 +35,9 @@ async function removeVercelDeployment(token: string, deploymentId: string): Prom
 
     return true;
   } catch (error) {
-    logger.error(`删除 Vercel 部署 ${deploymentId} 时发生错误:`, error);
-    throw new Error(`${error}`);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 Vercel 部署 ${deploymentId} 时发生错误: ${errorMessage}`);
+    throw new Error(`${errorMessage}`);
   }
 }
 
@@ -69,7 +70,8 @@ export async function deletePage({ userId, request }: DeletePageArgs) {
 
     return successResponse(id, '页面已删除');
   } catch (error) {
-    logger.error(`删除 Vercel 部署 ${id} 失败:`, error);
-    return errorResponse(500, error instanceof Error ? error.message : '删除失败');
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 Vercel 部署 ${id} 失败: ${errorMessage}`);
+    return errorResponse(500, `删除失败: ${errorMessage}`);
   }
 }

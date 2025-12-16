@@ -48,7 +48,8 @@ export async function handleVercelAuth({ request, userId }: HandleVercelAuthArgs
       'Vercel 令牌验证成功',
     );
   } catch (error) {
-    logger.error('验证 Vercel 令牌失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`验证 Vercel 令牌失败: ${errorMessage}`);
     return errorResponse(500, '验证 Vercel 令牌失败');
   }
 }

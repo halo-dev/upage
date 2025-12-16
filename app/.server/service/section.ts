@@ -68,10 +68,11 @@ export async function createSection(params: SectionCreateParams) {
       },
     });
 
-    logger.info(`[Section] 创建了消息 ${messageId} 的 section : ${section.id}`);
+    logger.info(`创建了消息 ${messageId} 的 section : ${section.id}`);
     return section;
   } catch (error) {
-    logger.error('[Section] 创建 section 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建 section 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -111,14 +112,15 @@ export async function createOrUpdateSection(params: SectionCreateParams) {
         placement,
         type,
       });
-      logger.info(`[Section] 更新了消息 ${messageId} 的 section: ${existingSection.id} (domId: ${domId})`);
+      logger.info(`更新了消息 ${messageId} 的 section: ${existingSection.id} (domId: ${domId})`);
       return updatedSection;
     }
 
     const newSection = await createSection(params);
     return newSection;
   } catch (error) {
-    logger.error('[Section] 创建或更新 section 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`创建或更新 section 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -130,7 +132,7 @@ export async function createOrUpdateSection(params: SectionCreateParams) {
  */
 export async function createManySections(params: SectionCreateParams[]) {
   if (!params || params.length === 0) {
-    logger.warn('[Section] 批量创建 section : 没有提供 section 数据');
+    logger.warn(`批量创建 section : 没有提供 section 数据`);
     return 0;
   }
 
@@ -165,10 +167,11 @@ export async function createManySections(params: SectionCreateParams[]) {
       ),
     });
 
-    logger.info(`[Section] 批量创建了 ${result.count} 个 section `);
+    logger.info(`批量创建了 ${result.count} 个 section `);
     return result.count;
   } catch (error) {
-    logger.error('[Section] 批量创建 section 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`批量创建 section 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -180,7 +183,7 @@ export async function createManySections(params: SectionCreateParams[]) {
  */
 export async function createOrUpdateManySections(params: SectionCreateParams[]) {
   if (!params || params.length === 0) {
-    logger.warn('[Section] 批量创建或更新 section : 没有提供 section 数据');
+    logger.warn(`批量创建或更新 section : 没有提供 section 数据`);
     return [];
   }
 
@@ -192,10 +195,11 @@ export async function createOrUpdateManySections(params: SectionCreateParams[]) 
       results.push(result);
     }
 
-    logger.info(`[Section] 批量创建或更新了 ${results.length} 个 section`);
+    logger.info(`批量创建或更新了 ${results.length} 个 section`);
     return results;
   } catch (error) {
-    logger.error('[Section] 批量创建或更新 section 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`批量创建或更新 section 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -213,7 +217,8 @@ export async function getSectionById(id: string) {
 
     return section;
   } catch (error) {
-    logger.error(`[Section] 获取 section  ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 section  ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -234,7 +239,8 @@ export async function getMessageSections(messageId: string) {
 
     return sections;
   } catch (error) {
-    logger.error(`[Section] 获取消息 ${messageId} 的 section 列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取消息 ${messageId} 的 section 列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -255,7 +261,8 @@ export async function getSectionByDomId(domId: string) {
 
     return sections;
   } catch (error) {
-    logger.error(`[Section] 获取DOM ID ${domId} 的 section 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取DOM ID ${domId} 的 section 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -280,7 +287,8 @@ export async function getSectionByMessageIdAndDomId(messageId: string, domId: st
 
     return section;
   } catch (error) {
-    logger.error(`[Section] 获取消息 ${messageId} DOM ID ${domId} 的 section 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取消息 ${messageId} DOM ID ${domId} 的 section 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -301,7 +309,8 @@ export async function getPageSections(pageName: string) {
 
     return sections;
   } catch (error) {
-    logger.error(`[Section] 获取页面 ${pageName} 的 section 列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取页面 ${pageName} 的 section 列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -321,10 +330,11 @@ export async function updateSection(id: string, params: SectionUpdateParams) {
       },
     });
 
-    logger.info(`[Section] 更新了 section  ${id}`);
+    logger.info(`更新了 section  ${id}`);
     return updatedSection;
   } catch (error) {
-    logger.error(`[Section] 更新 section  ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新 section  ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -340,10 +350,11 @@ export async function deleteSection(id: string) {
       where: { id },
     });
 
-    logger.info(`[Section] 删除了 section  ${id}`);
+    logger.info(`删除了 section  ${id}`);
     return true;
   } catch (error) {
-    logger.error(`[Section] 删除 section  ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 section  ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -359,10 +370,11 @@ export async function deleteMessageSections(messageId: string) {
       where: { messageId },
     });
 
-    logger.info(`[Section] 删除了消息 ${messageId} 的 ${result.count} 个 section `);
+    logger.info(`删除了消息 ${messageId} 的 ${result.count} 个 section `);
     return result.count > 0;
   } catch (error) {
-    logger.error(`[Section] 删除消息 ${messageId} 的 section 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除消息 ${messageId} 的 section 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -383,7 +395,8 @@ export async function getSectionsByPageV2Id(pageV2Id: string) {
 
     return sections;
   } catch (error) {
-    logger.error(`[Section] 获取 PageV2 ${pageV2Id} 的 section 列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 PageV2 ${pageV2Id} 的 section 列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -408,7 +421,8 @@ export async function getSectionsByMessageIdAndPageName(messageId: string, pageN
 
     return sections;
   } catch (error) {
-    logger.error(`[Section] 获取消息 ${messageId} 页面 ${pageName} 的 section 列表失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取消息 ${messageId} 页面 ${pageName} 的 section 列表失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -424,10 +438,11 @@ export async function deleteSectionsByPageV2Id(pageV2Id: string) {
       where: { pageV2Id },
     });
 
-    logger.info(`[Section] 删除了 PageV2 ${pageV2Id} 的 ${result.count} 个 section `);
+    logger.info(`删除了 PageV2 ${pageV2Id} 的 ${result.count} 个 section `);
     return result.count > 0;
   } catch (error) {
-    logger.error(`[Section] 删除 PageV2 ${pageV2Id} 的 section 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 PageV2 ${pageV2Id} 的 section 失败: ${errorMessage}`);
     throw error;
   }
 }

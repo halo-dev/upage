@@ -55,10 +55,11 @@ export async function setUserSetting(params: UserSettingParams) {
       },
     });
 
-    logger.info(`[UserSetting] 设置用户 ${userId} 的 ${category}.${key} 成功`);
+    logger.info(`设置用户 ${userId} 的 ${category}.${key} 成功`);
     return setting;
   } catch (error) {
-    logger.error(`[UserSetting] 设置用户 ${userId} 的 ${category}.${key} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`设置用户 ${userId} 的 ${category}.${key} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -94,7 +95,8 @@ export async function getUserSettings(params: UserSettingQueryParams) {
 
     return settings;
   } catch (error) {
-    logger.error(`[UserSetting] 获取用户 ${userId} 的设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户 ${userId} 的设置失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -120,7 +122,8 @@ export async function getUserSetting(userId: string, category: string, key: stri
 
     return setting;
   } catch (error) {
-    logger.error(`[UserSetting] 获取用户 ${userId} 的 ${category}.${key} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取用户 ${userId} 的 ${category}.${key} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -144,10 +147,11 @@ export async function deleteUserSetting(userId: string, category: string, key: s
       },
     });
 
-    logger.info(`[UserSetting] 删除用户 ${userId} 的 ${category}.${key} 成功`);
+    logger.info(`删除用户 ${userId} 的 ${category}.${key} 成功`);
     return setting;
   } catch (error) {
-    logger.error(`[UserSetting] 删除用户 ${userId} 的 ${category}.${key} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除用户 ${userId} 的 ${category}.${key} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -170,12 +174,11 @@ export async function deleteUserSettings(userId: string, category?: string) {
       where,
     });
 
-    logger.info(
-      `[UserSetting] 删除用户 ${userId} 的${category ? ` ${category}` : '所有'}设置成功，共 ${result.count} 条`,
-    );
+    logger.info(`删除用户 ${userId} 的${category ? ` ${category}` : '所有'}设置成功，共 ${result.count} 条`);
     return result.count;
   } catch (error) {
-    logger.error(`[UserSetting] 删除用户 ${userId} 的${category ? ` ${category}` : '所有'}设置失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除用户 ${userId} 的${category ? ` ${category}` : '所有'}设置失败: ${errorMessage}`);
     throw error;
   }
 }

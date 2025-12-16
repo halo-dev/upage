@@ -57,7 +57,8 @@ export async function getPageV2ByMessageId(messageId: string) {
 
     return pages;
   } catch (error) {
-    logger.error(`[PageV2] 获取消息 ${messageId} 的 PageV2 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取消息 ${messageId} 的 PageV2 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -79,7 +80,8 @@ export async function getPageV2ByMessageIdAndName(messageId: string, name: strin
 
     return page;
   } catch (error) {
-    logger.error(`[PageV2] 获取消息 ${messageId} 的 PageV2 页面 ${name} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取消息 ${messageId} 的 PageV2 页面 ${name} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -97,7 +99,8 @@ export async function getPageV2ById(id: string) {
 
     return page;
   } catch (error) {
-    logger.error(`[PageV2] 获取 PageV2 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取 PageV2 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -128,10 +131,11 @@ export async function createPageV2(params: PageV2CreateParams) {
       },
     });
 
-    logger.info(`[PageV2] 为消息 ${messageId} 创建了页面: ${page.id} (${name})`);
+    logger.info(`为消息 ${messageId} 创建了页面: ${page.id} (${name})`);
     return page;
   } catch (error) {
-    logger.error('[PageV2] 创建 PageV2 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`为消息 ${messageId} 创建 PageV2 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -160,14 +164,15 @@ export async function createOrUpdatePageV2(params: PageV2CreateParams) {
         headRaw,
         sort,
       });
-      logger.info(`[PageV2] 更新了消息 ${messageId} 的页面: ${existingPage.id} (${name})`);
+      logger.info(`更新了消息 ${messageId} 的页面: ${existingPage.id} (${name})`);
       return updatedPage;
     }
 
     const newPage = await createPageV2(params);
     return newPage;
   } catch (error) {
-    logger.error('[PageV2] 创建或更新 PageV2 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`为消息 ${messageId} 创建或更新 PageV2 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -199,10 +204,11 @@ export async function createPagesV2(pages: PageV2CreateParams[]) {
       ),
     );
 
-    logger.info(`[PageV2] 批量创建了 ${createdPages.length} 个页面`);
+    logger.info(`批量创建了 ${createdPages.length} 个页面`);
     return createdPages;
   } catch (error) {
-    logger.error('[PageV2] 批量创建 PageV2 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`批量创建 PageV2 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -221,10 +227,11 @@ export async function createOrUpdatePagesV2(pages: PageV2CreateParams[]) {
       results.push(result);
     }
 
-    logger.info(`[PageV2] 批量创建或更新了 ${results.length} 个页面`);
+    logger.info(`批量创建或更新了 ${results.length} 个页面`);
     return results;
   } catch (error) {
-    logger.error('[PageV2] 批量创建或更新 PageV2 失败:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`批量创建或更新 PageV2 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -275,10 +282,11 @@ export async function updatePageV2(id: string, params: PageV2UpdateParams) {
       data: updateData,
     });
 
-    logger.info(`[PageV2] 更新了 PageV2: ${id}`);
+    logger.info(`更新了 PageV2: ${id}`);
     return updatedPage;
   } catch (error) {
-    logger.error(`[PageV2] 更新 PageV2 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新 PageV2 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -300,7 +308,8 @@ export async function updatePageV2ByMessageIdAndName(messageId: string, name: st
 
     return await updatePageV2(existingPage.id, params);
   } catch (error) {
-    logger.error(`[PageV2] 更新消息 ${messageId} 的页面 ${name} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`更新消息 ${messageId} 的页面 ${name} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -316,10 +325,11 @@ export async function deletePageV2(id: string) {
       where: { id },
     });
 
-    logger.info(`[PageV2] 删除了 PageV2: ${id}`);
+    logger.info(`删除了 PageV2: ${id}`);
     return true;
   } catch (error) {
-    logger.error(`[PageV2] 删除 PageV2 ${id} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 PageV2 ${id} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -335,10 +345,11 @@ export async function deletePageV2ByMessageId(messageId: string) {
       where: { messageId },
     });
 
-    logger.info(`[PageV2] 删除了消息 ${messageId} 的所有 PageV2 记录`);
+    logger.info(`删除了消息 ${messageId} 的所有 PageV2 记录`);
     return true;
   } catch (error) {
-    logger.error(`[PageV2] 删除消息 ${messageId} 的 PageV2 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除消息 ${messageId} 的 PageV2 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -358,10 +369,11 @@ export async function deletePageV2ByMessageIdAndName(messageId: string, name: st
       },
     });
 
-    logger.info(`[PageV2] 删除了消息 ${messageId} 的页面: ${name}`);
+    logger.info(`删除了消息 ${messageId} 的页面: ${name}`);
     return true;
   } catch (error) {
-    logger.error(`[PageV2] 删除消息 ${messageId} 的页面 ${name} 失败:`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除消息 ${messageId} 的页面 ${name} 失败: ${errorMessage}`);
     throw error;
   }
 }
@@ -378,7 +390,7 @@ export async function migratePageV1ToV2(messageId: string, pagesV1: any, userId?
     const pagesArray = JSON.parse(JSON.stringify(pagesV1)) as PageV1[];
 
     if (!pagesArray || pagesArray.length === 0) {
-      logger.warn(`[PageV2] 迁移 Page V1: 消息 ${messageId} 没有页面数据`);
+      logger.warn(`迁移 Page V1: 消息 ${messageId} 没有页面数据`);
       return [];
     }
 
@@ -428,13 +440,14 @@ export async function migratePageV1ToV2(messageId: string, pagesV1: any, userId?
       });
 
       const updateResults = await Promise.all(updatePromises.filter((p) => p !== null));
-      logger.info(`[PageV2] 迁移时更新了 ${updateResults.length} 个 Section 的 pageV2Id 字段`);
+      logger.info(`迁移时更新了 ${updateResults.length} 个 Section 的 pageV2Id 字段`);
     }
 
-    logger.info(`[PageV2] 成功将消息 ${messageId} 的 ${createdPages.length} 个 Page V1 页面迁移到 PageV2`);
+    logger.info(`成功将消息 ${messageId} 的 ${createdPages.length} 个 Page V1 页面迁移到 PageV2`);
     return createdPages;
   } catch (error) {
-    logger.error(`[PageV2] 迁移 Page V1 到 PageV2 失败 (messageId: ${messageId}):`, error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`迁移 Page V1 到 PageV2 失败 (messageId: ${messageId}): ${errorMessage}`);
     throw error;
   }
 }
@@ -461,11 +474,11 @@ async function extractAndSaveResourcesForPages(
       const dataUrlResources = extractDataUrlResources(html);
 
       if (dataUrlResources.length === 0) {
-        logger.debug(`[PageV2] 页面 ${page.name} 没有需要提取的 data URL 资源`);
+        logger.debug(`页面 ${page.name} 没有需要提取的 data URL 资源`);
         continue;
       }
 
-      logger.info(`[PageV2] 页面 ${page.name} 发现 ${dataUrlResources.length} 个 data URL 资源`);
+      logger.info(`页面 ${page.name} 发现 ${dataUrlResources.length} 个 data URL 资源`);
 
       const assetDirPath = getAssetDirPath(userId, messageId);
       const pathReplacements = new Map<string, string>();
@@ -500,24 +513,26 @@ async function extractAndSaveResourcesForPages(
             sort: 0,
           });
 
-          logger.debug(`[PageV2] 成功保存资源: ${uploadResult.filename}`);
+          logger.debug(`成功保存资源: ${uploadResult.filename}`);
         } catch (error) {
-          logger.error(`[PageV2] 保存资源失败: ${resource.suggestedFilename}`, error);
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          logger.error(`保存资源失败: ${resource.suggestedFilename} ${errorMessage}`);
         }
       }
 
       if (assetsToCreate.length > 0) {
         await createPageAssets(assetsToCreate);
-        logger.info(`[PageV2] 为页面 ${page.name} 创建了 ${assetsToCreate.length} 个资源记录`);
+        logger.info(`为页面 ${page.name} 创建了 ${assetsToCreate.length} 个资源记录`);
       }
 
       if (pathReplacements.size > 0) {
         const updatedHtml = replaceResourcePaths(html, pathReplacements);
         await updatePageV2(page.id, { content: updatedHtml });
-        logger.info(`[PageV2] 更新了页面 ${page.name} 的资源路径`);
+        logger.info(`更新了页面 ${page.name} 的资源路径`);
       }
     } catch (error) {
-      logger.error(`[PageV2] 处理页面 ${page.name} 的资源时出错:`, error);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`处理页面 ${page.name} 的资源时出错: ${errorMessage}`);
     }
   }
 }

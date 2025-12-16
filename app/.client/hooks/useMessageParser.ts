@@ -70,7 +70,7 @@ export function useMessageParser() {
           const textContent = extractTextContent(message);
           // 检查消息内容是否存在
           if (textContent === undefined || textContent === null) {
-            logger.warn(`Message ${message.id} has no text content`);
+            logger.warn(`消息 ${message.id} 没有文本内容`);
             continue;
           }
 
@@ -90,7 +90,8 @@ export function useMessageParser() {
           });
         } catch (error) {
           // 捕获并记录解析过程中的错误
-          logger.error(`Error parsing message ${message.id}:`, error);
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          logger.error(`解析消息 ${message.id} 失败: ${errorMessage}`);
 
           // 出错时保留原始消息内容
           setParsedMessages((prevParsed) => ({

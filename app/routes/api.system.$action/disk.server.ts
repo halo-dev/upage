@@ -16,7 +16,7 @@ try {
   }
 } catch {
   // In Cloudflare environment, this will fail, which is expected
-  logger.debug('Running in Cloudflare environment, child_process not available');
+  logger.debug('在 Cloudflare 环境中运行，child_process 不可用');
 }
 
 // For development environments, we'll always provide mock data if real data isn't available
@@ -123,7 +123,8 @@ const getDiskInfo = (): DiskInfo[] => {
             disk.size > 0,
         );
       } catch (error) {
-        logger.error('Failed to get macOS disk info:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`获取 macOS 磁盘信息失败: ${errorMessage}`);
         return [
           {
             filesystem: 'Unknown',
@@ -133,7 +134,7 @@ const getDiskInfo = (): DiskInfo[] => {
             percentage: 0,
             mountpoint: '/',
             timestamp: new Date().toISOString(),
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: errorMessage,
           },
         ];
       }
@@ -175,7 +176,8 @@ const getDiskInfo = (): DiskInfo[] => {
             disk.size > 0,
         );
       } catch (error) {
-        logger.error('Failed to get Linux disk info:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`获取 Linux 磁盘信息失败: ${errorMessage}`);
         return [
           {
             filesystem: 'Unknown',
@@ -185,7 +187,7 @@ const getDiskInfo = (): DiskInfo[] => {
             percentage: 0,
             mountpoint: '/',
             timestamp: new Date().toISOString(),
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: errorMessage,
           },
         ];
       }
@@ -219,7 +221,8 @@ const getDiskInfo = (): DiskInfo[] => {
           };
         });
       } catch (error) {
-        logger.error('Failed to get Windows disk info:', error);
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`获取 Windows 磁盘信息失败: ${errorMessage}`);
         return [
           {
             filesystem: 'Unknown',
@@ -229,12 +232,12 @@ const getDiskInfo = (): DiskInfo[] => {
             percentage: 0,
             mountpoint: 'C:\\',
             timestamp: new Date().toISOString(),
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: errorMessage,
           },
         ];
       }
     } else {
-      logger.warn(`Unsupported platform: ${platform}`);
+      logger.warn(`不支持的平台: ${platform}`);
       return [
         {
           filesystem: 'Unknown',
@@ -244,14 +247,15 @@ const getDiskInfo = (): DiskInfo[] => {
           percentage: 0,
           mountpoint: '/',
           timestamp: new Date().toISOString(),
-          error: `Unsupported platform: ${platform}`,
+          error: `不支持的平台: ${platform}`,
         },
       ];
     }
 
     return disks;
   } catch (error) {
-    logger.error('Failed to get disk info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取磁盘信息失败: ${errorMessage}`);
     return [
       {
         filesystem: 'Unknown',
@@ -261,7 +265,7 @@ const getDiskInfo = (): DiskInfo[] => {
         percentage: 0,
         mountpoint: '/',
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
       },
     ];
   }
@@ -271,7 +275,8 @@ export const diskLoader: LoaderFunction = async ({ request: _request }) => {
   try {
     return json(getDiskInfo());
   } catch (error) {
-    logger.error('Failed to get disk info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取磁盘信息失败: ${errorMessage}`);
     return json(
       [
         {
@@ -282,7 +287,7 @@ export const diskLoader: LoaderFunction = async ({ request: _request }) => {
           percentage: 0,
           mountpoint: '/',
           timestamp: new Date().toISOString(),
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: errorMessage,
         },
       ],
       { status: 500 },
@@ -294,7 +299,8 @@ export const diskAction = async ({ request: _request }: ActionFunctionArgs) => {
   try {
     return json(getDiskInfo());
   } catch (error) {
-    logger.error('Failed to get disk info:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`获取磁盘信息失败: ${errorMessage}`);
     return json(
       [
         {
@@ -305,7 +311,7 @@ export const diskAction = async ({ request: _request }: ActionFunctionArgs) => {
           percentage: 0,
           mountpoint: '/',
           timestamp: new Date().toISOString(),
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: errorMessage,
         },
       ],
       { status: 500 },

@@ -82,7 +82,8 @@ export async function handleWebsites({ request, userId }: HandleWebsitesArgs) {
     logger.warn('不支持的 HTTP 方法', JSON.stringify({ url: request.url, method: request.method }));
     return errorResponse(405, '不支持的 HTTP 方法');
   } catch (error) {
-    logger.error('处理 1Panel 网站请求错误:', error);
-    return errorResponse(500, '处理请求失败 - ' + (error instanceof Error ? error.message : String(error)));
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`处理 1Panel 网站请求错误: ${errorMessage}`);
+    return errorResponse(500, `处理请求失败 - ${errorMessage}`);
   }
 }

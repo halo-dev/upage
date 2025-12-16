@@ -74,7 +74,8 @@ export const EditorPanel = memo(
               <div className="h-full flex-1 overflow-hidden">
                 <ErrorBoundary
                   onError={(error) => {
-                    logger.error('Editor 组件发生错误', { error });
+                    const errorMessage = error instanceof Error ? error.message : '未知错误';
+                    logger.error(`Editor 组件发生错误: ${errorMessage}`);
                   }}
                 >
                   <EditorStudio
