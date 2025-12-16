@@ -59,6 +59,7 @@ export async function upsertMessage(params: MessageUpsertParams) {
         content,
         revisionId,
         annotations,
+        version: 2,
       },
       create: {
         id,
@@ -68,6 +69,7 @@ export async function upsertMessage(params: MessageUpsertParams) {
         content,
         revisionId,
         annotations,
+        version: 2,
       },
     });
 
