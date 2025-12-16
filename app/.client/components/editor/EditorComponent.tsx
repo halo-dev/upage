@@ -20,7 +20,7 @@ export function EditorComponent(props: EditorComponentProps) {
 
   const controllerRef = useRef<EditorController | null>(null);
   const lastContentRef = useRef<Record<string, string>>({});
-  const pageRefsRef = useRef<Record<string, RefObject<PageRenderRef>>>({});
+  const pageRefsRef = useRef<Record<string, RefObject<PageRenderRef | null>>>({});
   const currentPageRef = useRef<string | undefined>(currentPage);
 
   useEditorCommands(controllerRef);

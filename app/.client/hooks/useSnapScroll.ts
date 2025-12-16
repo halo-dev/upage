@@ -20,12 +20,12 @@ export function useSnapScroll(options: ScrollOptions = {}) {
 
   const autoScrollRef = useRef(true);
   const scrollNodeRef = useRef<HTMLDivElement | null>(null);
-  const onScrollRef = useRef<() => void>();
+  const onScrollRef = useRef<() => void | undefined>(undefined);
   const observerRef = useRef<ResizeObserver | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const animationFrameRef = useRef<number>(0);
   const lastScrollTopRef = useRef<number>(0);
-  const throttledSmoothScrollRef = useRef<(...args: any[]) => void>();
+  const throttledSmoothScrollRef = useRef<(...args: any[]) => void | undefined>(undefined);
 
   const smoothScroll = useCallback(
     (element: HTMLDivElement, targetPosition: number, duration: number, easingFunction: string) => {

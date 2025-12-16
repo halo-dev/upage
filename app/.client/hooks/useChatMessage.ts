@@ -50,7 +50,7 @@ export function useChatMessage({
     experimental_throttle: 50,
     onData: (dataPart) => {
       if (dataPart.type === 'data-progress') {
-        addProgressMessage(dataPart.data);
+        addProgressMessage(dataPart.data as ProgressAnnotation);
       }
     },
     onError: (e) => {
