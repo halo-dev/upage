@@ -38,7 +38,10 @@ export class PagesStore {
   private deletedPages: Set<string> = import.meta.hot?.data?.deletedPages ?? new Set();
 
   /**
-   * 页面映射，与 AI 做交互，基于 artifacts 数据解析而来。
+   * 页面映射，与 AI 做交互
+   * 对于新聊天、修改已有页面的操作，基于 artifacts 数据解析而来。
+   * 对于加载旧数据，则从 {@link web-builder#setPages} 中获取。
+   *
    * 因此，此数据表示与数据库通信的底层数据，未保存的数据将不会在此处体现。
    * 如果在编辑器中确定保存了数据，则需要实时同步进 #modifiedPages 中。
    */
@@ -318,6 +321,7 @@ export class PagesStore {
         const { title: pageTitle, actionIds = [] } = payload;
         const oldPage = this.pages.get()[pageName];
         this.pages.setKey(pageName, {
+          ...oldPage,
           id: oldPage?.id || generateUUID(),
           name: pageName,
           title: pageTitle,

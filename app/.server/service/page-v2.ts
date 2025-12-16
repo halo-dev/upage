@@ -25,6 +25,7 @@ export interface PageV2CreateParams {
   headStyles?: JsonValue;
   headRaw?: string;
   sort?: number;
+  assets?: PageAssetCreateParams[];
 }
 
 /**
@@ -224,6 +225,14 @@ export async function createOrUpdatePagesV2(pages: PageV2CreateParams[]) {
 
     for (const page of pages) {
       const result = await createOrUpdatePageV2(page);
+      // create or update page assets
+      const assets = page.assets?.map((asset) => {
+        asset.pageId = result.id;
+        return asset;
+      });
+      if (assets) {
+        await createPageAssets(assets);
+      }
       results.push(result);
     }
 

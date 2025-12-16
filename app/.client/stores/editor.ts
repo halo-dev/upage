@@ -1,7 +1,9 @@
 import { atom, computed, type MapStore, map, type WritableAtom } from 'nanostores';
 import type { Section } from '~/types/actions';
 import type { DocumentProperties, Editor } from '~/types/editor';
-import type { PageMap } from '~/types/pages';
+import type { PageData, PageMap } from '~/types/pages';
+import { replaceRelativePathsWithUrls } from '../utils/asset-path-converter';
+import { convertPageHeadToHTML } from '../utils/html-parse';
 import type { PagesStore } from './pages';
 
 /**
@@ -98,12 +100,20 @@ export class EditorStore {
               return [pageName, { ...oldDocument, name: pageName, title: page.title }];
             }
 
+            let convertedContent = page.content;
+            const pageWithAssets = page as typeof page & { assets?: any[] };
+            if (page.content && pageWithAssets.assets && pageWithAssets.assets.length > 0) {
+              convertedContent = replaceRelativePathsWithUrls(page.content, pageWithAssets.assets);
+            }
+
             return [
               pageName,
               {
+                ...page,
                 name: pageName,
+                head: convertPageHeadToHTML(page as PageData),
                 title: page.title,
-                content: page.content,
+                content: convertedContent,
               },
             ] as [string, DocumentProperties];
           })

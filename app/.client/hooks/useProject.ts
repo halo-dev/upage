@@ -22,12 +22,12 @@ export function useProject() {
   }, [fetcher]);
 
   /**
-   * 保存项目数据到后端数据库
+   * Save project data
    *
-   * @param messageId 消息ID
-   * @param projectData GrapesJS项目数据
-   * @param sections 页面区块数据
-   * @returns 保存是否成功
+   * @param messageId message ID
+   * @param projectData WebBuilder project data
+   * @param sections page section data
+   * @returns whether the project is saved successfully
    */
   async function saveProject(messageId: string) {
     if (!messageId) {
@@ -35,7 +35,7 @@ export function useProject() {
       return false;
     }
 
-    // 保存之前，先保存所有页面
+    // before saving, save all pages
     await webBuilderStore.saveAllPages('auto-save');
     const projectPages = Object.values(webBuilderStore.pagesStore.pages.get()).filter((page) => page !== undefined);
     const projectSections = Object.values(webBuilderStore.pagesStore.sections.get())

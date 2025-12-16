@@ -209,8 +209,6 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
       const lastMessage = previousMessages[previousMessages.length - 1];
       const pageData = await getPageV2ByMessageId(lastMessage.id);
       if (pageData) {
-        const pages = pageData as unknown as PageData[];
-        // 根据用户摘要和所有的页面数据，让 AI 根据摘要、用户消息、页面数据，选择一部分待修改的页面和待修改的 section。
         writer.write({
           type: 'data-progress',
           id: progressId,
@@ -222,6 +220,8 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
           },
           transient: true,
         });
+        const pages = pageData as unknown as PageData[];
+        // 根据用户摘要和所有的页面数据，让 AI 根据摘要、用户消息、页面数据，选择一部分待修改的页面和待修改的 section。
         const { context, totalUsage: selectContextUsage } = await selectContext({
           messages,
           summary,

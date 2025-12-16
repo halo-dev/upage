@@ -4,6 +4,7 @@ import { createScopedLogger } from '~/.client/utils/logger';
 import type { ChangeSource } from '~/types/actions';
 import type { PageData, PageMap } from '~/types/pages';
 import { base64ToBinary, getContentType, getExtensionFromMimeType, getFileName } from '~/utils/file-utils';
+import { replaceUrlsWithRelativePaths } from '../utils/asset-path-converter';
 import { ChatStore } from './chat';
 import { EditorStore } from './editor';
 import { PagesStore } from './pages';
@@ -128,8 +129,16 @@ export class WebBuilderStore {
     if (pageProperties === undefined) {
       return;
     }
+
+    let contentToSave = pageProperties.content as string;
+    const page = this.pagesStore.getPage(pageName);
+    const pageWithAssets = page as typeof page & { assets?: any[] };
+    if (page && pageWithAssets.assets && pageWithAssets.assets.length > 0) {
+      contentToSave = replaceUrlsWithRelativePaths(contentToSave, pageWithAssets.assets);
+    }
+
     // 触发 page 的保存
-    this.pagesStore.savePage(pageName, pageProperties.content as string, changeSource).then(() => {
+    this.pagesStore.savePage(pageName, contentToSave, changeSource).then(() => {
       this.editorStore.removeUnsavedDocument(pageName, true);
     });
   }
@@ -169,7 +178,7 @@ export class WebBuilderStore {
       // 只需更新 pagesStore，Document 将会监听 pagesStore 的变化，并更新自身。
       return await this.pagesStore.createPage(pageName, pageTitle);
     } catch (error) {
-      console.error('Failed to create page:', error);
+      logger.error(`创建页面失败: ${error}`);
       throw error;
     }
   }
@@ -200,7 +209,7 @@ export class WebBuilderStore {
 
       return success;
     } catch (error) {
-      console.error('Failed to delete page:', error);
+      logger.error(`删除页面失败: ${error}`);
       throw error;
     }
   }
@@ -429,7 +438,7 @@ export class WebBuilderStore {
           },
         });
         if (!response.ok) {
-          logger.error(`获取资源失败: ${resource.value} (status: ${response.status})`);
+          logger.error(`获取资源失败: ${resource.value} (状态: ${response.status})`);
           continue;
         }
         const filename = `${assetsFolder}/${getFileName(resource.value)}`;

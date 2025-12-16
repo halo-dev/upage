@@ -131,6 +131,8 @@ export interface PageData {
   createdAt?: Date;
   // updated time (optional)
   updatedAt?: Date;
+  // page assets data
+  assets?: PageAssetData[];
 }
 
 /**

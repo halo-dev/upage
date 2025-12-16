@@ -17,3 +17,42 @@ export const path = {
   parse: (path: string): ParsedPath => pathBrowserify.parse(path),
   format: (pathObject: ParsedPath): string => pathBrowserify.format(pathObject),
 } as const;
+
+/**
+ * Normalize asset path, used for matching
+ * Handle ./path, /path, ../path, path等各种情况
+ *
+ * @param assetPath original path
+ * @returns normalized path
+ */
+export function normalizeAssetPath(assetPath: string): string {
+  let normalized = assetPath.replace(/^\.?\/?/, '');
+  normalized = normalized.replace(/^(\.\.\/)+/, '');
+
+  return normalized;
+}
+
+/**
+ * Check if two asset paths match
+ * Support full path matching and file name matching
+ *
+ * @param path1 first path
+ * @param path2 second path
+ * @returns whether they match
+ */
+export function isAssetPathMatch(path1: string, path2: string): boolean {
+  const normalized1 = normalizeAssetPath(path1);
+  const normalized2 = normalizeAssetPath(path2);
+
+  // exact match
+  if (normalized1 === normalized2) {
+    return true;
+  }
+
+  // path ending match (handle js/app.js matching ./js/app.js case)
+  if (normalized1.endsWith(`/${normalized2}`) || normalized2.endsWith(`/${normalized1}`)) {
+    return true;
+  }
+
+  return false;
+}

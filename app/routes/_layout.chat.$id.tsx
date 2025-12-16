@@ -47,10 +47,6 @@ export async function loader(args: LoaderFunctionArgs) {
 
   // 处理 Page V1 到 PageV2 的迁移
   for (const message of chat.messages) {
-    if (message.pagesV2 && message.pagesV2.length > 0) {
-      continue;
-    }
-
     if (message.page && message.page.pages) {
       try {
         const migratedPages = await migratePageV1ToV2(message.id, message.page.pages, userId);

@@ -324,9 +324,9 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>${document.title}</title>
             <script src="${import.meta.env.BASE_URL}tailwindcss.js"></script>
             <script src="${import.meta.env.BASE_URL}iconify-icon.min.js"></script>
+            ${document.head}
 
             <style>
               html, body {

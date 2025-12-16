@@ -13,7 +13,6 @@ export const SERIALIZATION_MARKERS = {
   ABORT_SIGNAL_PREFIX: '__ABORT_SIGNAL__',
   ABORT_CONTROLLER_PREFIX: '__ABORT_CONTROLLER__',
 };
-
 /**
  * 将对象序列化为可存储在 IndexedDB 中的格式
  * 将函数转换为特殊格式的字符串
@@ -138,7 +137,6 @@ function deserializeFromIndexedDB<T>(data: any): T {
  * Compatibility notes:
  * - pages: old version page data (only used for reading history data)
  * - pagesV2: new version page data (new data saved to this field)
- * - assets: page asset data (used with pagesV2)
  * - sections: page section data (used with both old and new versions)
  */
 export interface IEditorMessageProject {
@@ -149,8 +147,6 @@ export interface IEditorMessageProject {
   sections: Section[];
   // new version page data (used for saving)
   pagesV2?: PageData[];
-  // page asset data
-  assets?: PageAssetData[];
 }
 
 export interface IProject {
@@ -167,7 +163,7 @@ const logger = createScopedLogger('EditorProjects');
  */
 export async function openEditorDatabase(): Promise<IDBDatabase | undefined> {
   if (typeof indexedDB === 'undefined') {
-    logger.debug('indexedDB 在当前环境中不可用');
+    logger.error('indexedDB 在当前环境中不可用');
     return undefined;
   }
 
@@ -204,7 +200,6 @@ export async function openEditorDatabase(): Promise<IDBDatabase | undefined> {
  * @param messageId message ID
  * @param pagesV2 new version page data (PageV2)
  * @param sections page section data
- * @param assets page asset data (optional)
  *
  * @note new data is only saved to pagesV2 field, pages field is set to an empty array to maintain structural compatibility
  */
@@ -213,13 +208,11 @@ export async function saveProject(
   messageId: string,
   pagesV2: PageData[],
   sections: Section[],
-  assets?: PageAssetData[],
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     // serialize data, handle non-serializable content
     const serializedPagesV2 = serializeForIndexedDB(pagesV2);
     const serializedSections = serializeForIndexedDB(sections);
-    const serializedAssets = assets ? serializeForIndexedDB(assets) : undefined;
 
     const transaction = db.transaction('projects', 'readwrite');
     const store = transaction.objectStore('projects');
@@ -249,7 +242,6 @@ export async function saveProject(
                   pages: [],
                   sections: serializedSections,
                   pagesV2: serializedPagesV2,
-                  assets: serializedAssets,
                 }
               : p,
           );
@@ -262,7 +254,6 @@ export async function saveProject(
               pages: [],
               sections: serializedSections,
               pagesV2: serializedPagesV2,
-              assets: serializedAssets,
             },
           ];
         }
@@ -286,7 +277,6 @@ export async function saveProject(
               pages: [],
               sections: serializedSections,
               pagesV2: serializedPagesV2,
-              assets: serializedAssets,
             },
           ],
           timestamp,
@@ -344,7 +334,6 @@ export async function getEditorProjects(db: IDBDatabase, chatId: string): Promis
             pages: mp.pages ? deserializeFromIndexedDB<Page[]>(mp.pages) : [],
             sections: mp.sections ? deserializeFromIndexedDB<Section[]>(mp.sections) : [],
             pagesV2: mp.pagesV2 ? deserializeFromIndexedDB<PageData[]>(mp.pagesV2) : undefined,
-            assets: mp.assets ? deserializeFromIndexedDB<PageAssetData[]>(mp.assets) : undefined,
           })),
         };
         resolve(deserializedProject);
@@ -398,7 +387,6 @@ export async function getEditorProject(
         const deserializedPages = data?.pages ? deserializeFromIndexedDB<Page[]>(data.pages) : [];
         const deserializedSections = data?.sections ? deserializeFromIndexedDB<Section[]>(data.sections) : undefined;
         const deserializedPagesV2 = data?.pagesV2 ? deserializeFromIndexedDB<PageData[]>(data.pagesV2) : undefined;
-        const deserializedAssets = data?.assets ? deserializeFromIndexedDB<PageAssetData[]>(data.assets) : undefined;
         const pagesV2: PageData[] = deserializedPages.map((page) => ({
           id: generateUUID(),
           messageId: data?.messageId ?? '',
@@ -411,7 +399,6 @@ export async function getEditorProject(
         resolve({
           pages: deserializedPagesV2 || pagesV2,
           sections: deserializedSections,
-          assets: deserializedAssets,
           project,
         });
       } else {
@@ -434,9 +421,6 @@ export async function getEditorProject(
           const deserializedPagesV2 = lastMessageProject?.pagesV2
             ? deserializeFromIndexedDB<PageData[]>(lastMessageProject.pagesV2)
             : undefined;
-          const deserializedAssets = lastMessageProject?.assets
-            ? deserializeFromIndexedDB<PageAssetData[]>(lastMessageProject.assets)
-            : undefined;
 
           const pagesV2: PageData[] = deserializedPages.map((page) => ({
             id: generateUUID(),
@@ -450,7 +434,6 @@ export async function getEditorProject(
           resolve({
             pages: deserializedPagesV2 || pagesV2,
             sections: deserializedSections,
-            assets: deserializedAssets,
             project,
           });
         }
@@ -580,15 +563,9 @@ export function useEditorStorage() {
    * @param messageId message ID
    * @param pagesV2 new version page data
    * @param sections page section data
-   * @param assets page asset data (optional)
    * @returns whether the project is saved successfully
    */
-  const saveEditorProject = async (
-    messageId: string | undefined,
-    pagesV2: PageData[],
-    sections: Section[],
-    assets?: PageAssetData[],
-  ) => {
+  const saveEditorProject = async (messageId: string | undefined, pagesV2: PageData[], sections: Section[]) => {
     const db = await openEditorDatabase();
 
     if (!db || !messageId) {
@@ -596,7 +573,7 @@ export function useEditorStorage() {
     }
 
     try {
-      await saveProject(db, messageId, pagesV2, sections, assets);
+      await saveProject(db, messageId, pagesV2, sections);
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';

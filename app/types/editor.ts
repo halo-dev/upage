@@ -2,6 +2,7 @@ export interface DocumentProperties {
   name: string;
   title: string;
   content: string;
+  head: string;
 }
 
 export interface Editor {

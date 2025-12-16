@@ -1,9 +1,189 @@
 import { createScopedLogger } from '~/.client/utils/logger';
+import type { PageAssetData, PageData, PageHeadLink, PageHeadMeta, PageHeadScript, PageHeadStyle } from '~/types/pages';
+import { replaceRelativePathsWithUrls } from './asset-path-converter';
 
 const logger = createScopedLogger('htmlParse');
 
 export function isScriptContent(content: string): boolean {
   return content.trim().startsWith('<script');
+}
+
+/**
+ * Convert page's head attribute to HEAD HTML string
+ * Automatically handles path conversion (relative path -> URL)
+ *
+ * @param page page data
+ * @returns HEAD HTML string
+ */
+export function convertPageHeadToHTML(page: PageData): string {
+  const headParts: string[] = [];
+  const pageWithAssets = page as typeof page & { assets?: PageAssetData[] };
+  const assets = pageWithAssets.assets || [];
+
+  if (page.title) {
+    headParts.push(`<title>${escapeHTML(page.title)}</title>`);
+  }
+
+  if (page.headMeta && Array.isArray(page.headMeta)) {
+    for (const meta of page.headMeta) {
+      headParts.push(convertMetaToHTML(meta, assets));
+    }
+  }
+
+  if (page.headLinks && Array.isArray(page.headLinks)) {
+    for (const link of page.headLinks) {
+      headParts.push(convertLinkToHTML(link, assets));
+    }
+  }
+
+  if (page.headStyles && Array.isArray(page.headStyles)) {
+    for (const style of page.headStyles) {
+      headParts.push(convertStyleToHTML(style, assets));
+    }
+  }
+
+  if (page.headScripts && Array.isArray(page.headScripts)) {
+    for (const script of page.headScripts) {
+      headParts.push(convertScriptToHTML(script, assets));
+    }
+  }
+
+  if (page.headRaw && typeof page.headRaw === 'string') {
+    const convertedRaw = assets.length > 0 ? replaceRelativePathsWithUrls(page.headRaw, assets) : page.headRaw;
+    headParts.push(convertedRaw);
+  }
+
+  return headParts.join('\n');
+}
+
+function convertMetaToHTML(meta: PageHeadMeta, assets: PageAssetData[]): string {
+  const attrs: string[] = [];
+
+  for (const [key, value] of Object.entries(meta)) {
+    if (value !== undefined && value !== null) {
+      let finalValue = String(value);
+
+      if (key === 'content' && assets.length > 0) {
+        const matchedAsset = assets.find((asset) => {
+          const normalizedFilename = asset.filename.replace(/^\.?\/?/, '');
+          const normalizedValue = finalValue.replace(/^\.?\/?/, '');
+          return normalizedValue === normalizedFilename || normalizedValue.endsWith(`/${normalizedFilename}`);
+        });
+        if (matchedAsset) {
+          finalValue = matchedAsset.url;
+        }
+      }
+
+      attrs.push(`${key}="${escapeHTML(finalValue)}"`);
+    }
+  }
+
+  return `<meta ${attrs.join(' ')}>`;
+}
+
+function convertLinkToHTML(link: PageHeadLink, assets: PageAssetData[]): string {
+  const attrs: string[] = [];
+
+  for (const [key, value] of Object.entries(link)) {
+    if (value !== undefined && value !== null) {
+      let finalValue = String(value);
+
+      if (key === 'href' && assets.length > 0) {
+        const matchedAsset = assets.find((asset) => {
+          const normalizedFilename = asset.filename.replace(/^\.?\/?/, '');
+          const normalizedHref = finalValue.replace(/^\.?\/?/, '');
+          return normalizedHref === normalizedFilename || normalizedHref.endsWith(`/${normalizedFilename}`);
+        });
+        if (matchedAsset) {
+          finalValue = matchedAsset.url;
+        }
+      }
+
+      attrs.push(`${key}="${escapeHTML(finalValue)}"`);
+    }
+  }
+
+  return `<link ${attrs.join(' ')}>`;
+}
+
+function convertStyleToHTML(style: PageHeadStyle, assets: PageAssetData[]): string {
+  let content = style.content;
+
+  if (assets.length > 0) {
+    content = replaceRelativePathsWithUrls(content, assets);
+  }
+
+  const attrs: string[] = [];
+  if (style.media) {
+    attrs.push(`media="${escapeHTML(style.media)}"`);
+  }
+
+  for (const [key, value] of Object.entries(style)) {
+    if (key !== 'content' && key !== 'media' && value !== undefined && value !== null) {
+      attrs.push(`${key}="${escapeHTML(String(value))}"`);
+    }
+  }
+
+  const attrString = attrs.length > 0 ? ` ${attrs.join(' ')}` : '';
+  return `<style${attrString}>\n${content}\n</style>`;
+}
+
+function convertScriptToHTML(script: PageHeadScript, assets: PageAssetData[]): string {
+  const attrs: string[] = [];
+  let hasContent = false;
+  let content = '';
+
+  for (const [key, value] of Object.entries(script)) {
+    if (value === undefined || value === null) {
+      continue;
+    }
+
+    if (key === 'content') {
+      hasContent = true;
+      content = String(value);
+      continue;
+    }
+
+    if (key === 'src') {
+      let srcValue = String(value);
+      if (assets.length > 0) {
+        const matchedAsset = assets.find((asset) => {
+          const normalizedFilename = asset.filename.replace(/^\.?\/?/, '');
+          const normalizedSrc = srcValue.replace(/^\.?\/?/, '');
+          return normalizedSrc === normalizedFilename || normalizedSrc.endsWith(`/${normalizedFilename}`);
+        });
+        if (matchedAsset) {
+          srcValue = matchedAsset.url;
+        }
+      }
+      attrs.push(`src="${escapeHTML(srcValue)}"`);
+      continue;
+    }
+
+    if (typeof value === 'boolean') {
+      if (value) {
+        attrs.push(key);
+      }
+    } else {
+      attrs.push(`${key}="${escapeHTML(String(value))}"`);
+    }
+  }
+
+  const attrString = attrs.length > 0 ? ` ${attrs.join(' ')}` : '';
+
+  if (hasContent) {
+    return `<script${attrString}>\n${content}\n</script>`;
+  }
+  return `<script${attrString}></script>`;
+}
+
+function escapeHTML(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**

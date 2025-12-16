@@ -72,32 +72,26 @@ function convertAssetPaths(html: string, inner: boolean): string {
     return html;
   }
 
-  // external export, convert /uploads/assets/userId/messageId/filename to relative path ./assets/filename
+  // external export, convert /uploads/assets/userId/messageId/filename to relative path ./filename
   // match /uploads/ in src="..." and href="..."
   let result = html;
 
   // handle /uploads/assets/xxx/xxx/filename format
   result = result.replace(
     /(\s(?:src|href|data-src|data-href|background))=["']\/uploads\/assets\/[^\/]+\/[^\/]+\/([^"']+)["']/gi,
-    '$1="./assets/$2"',
+    '$1="./$2"',
   );
 
   // handle other formats of /uploads/... (compatibility)
-  result = result.replace(
-    /(\s(?:src|href|data-src|data-href|background))=["']\/uploads\/([^"']+)["']/gi,
-    '$1="./assets/$2"',
-  );
+  result = result.replace(/(\s(?:src|href|data-src|data-href|background))=["']\/uploads\/([^"']+)["']/gi, '$1="./$2"');
 
   // handle already /assets/... paths
-  result = result.replace(
-    /(\s(?:src|href|data-src|data-href|background))=["']\/assets\/([^"']+)["']/gi,
-    '$1="./assets/$2"',
-  );
+  result = result.replace(/(\s(?:src|href|data-src|data-href|background))=["']\/assets\/([^"']+)["']/gi, '$1="./$2"');
 
   // handle url() in inline styles
-  result = result.replace(/url\(["']?\/uploads\/assets\/[^\/]+\/[^\/]+\/([^"')]+)["']?\)/gi, 'url("./assets/$1")');
-  result = result.replace(/url\(["']?\/uploads\/([^"')]+)["']?\)/gi, 'url("./assets/$1")');
-  result = result.replace(/url\(["']?\/assets\/([^"')]+)["']?\)/gi, 'url("./assets/$1")');
+  result = result.replace(/url\(["']?\/uploads\/assets\/[^\/]+\/[^\/]+\/([^"')]+)["']?\)/gi, 'url("./$1")');
+  result = result.replace(/url\(["']?\/uploads\/([^"')]+)["']?\)/gi, 'url("./$1")');
+  result = result.replace(/url\(["']?\/assets\/([^"')]+)["']?\)/gi, 'url("./$1")');
 
   return result;
 }
@@ -382,7 +376,7 @@ export async function generateFilesFromPagesV2(pages: PageV2[], params: Generate
         try {
           const storagePath = asset.storagePath;
           const content = await readFileContent(storagePath);
-          const assetPath = `assets/${asset.filename}`;
+          const assetPath = asset.filename;
           files[assetPath] = content;
           logger.debug(`添加资源文件: ${assetPath}`);
         } catch (error) {

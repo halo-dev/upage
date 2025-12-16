@@ -49,8 +49,10 @@ export class LocalStorageProvider extends BaseStorageProvider {
     }
 
     try {
+      const fileDir = path.dirname(filePath);
+      this.ensureDirectoryExists(fileDir);
+
       if (typeof data === 'string') {
-        // base64 数据
         if (data.startsWith('data:')) {
           const base64Data = data.split(',')[1];
           await fs.promises.writeFile(filePath, Buffer.from(base64Data, 'base64'));
@@ -60,7 +62,6 @@ export class LocalStorageProvider extends BaseStorageProvider {
       } else if (Buffer.isBuffer(data)) {
         await fs.promises.writeFile(filePath, data);
       } else {
-        // 处理 Blob 类型
         const arrayBuffer = await data.arrayBuffer();
         await fs.promises.writeFile(filePath, Buffer.from(arrayBuffer));
       }
