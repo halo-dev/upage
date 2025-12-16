@@ -5,7 +5,7 @@ import {
   saveGitHubConnectionSettings,
 } from '~/.server/service/connection-settings';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { GitHubAuthRequest, GitHubAuthResponse } from './type';
 
 const logger = createScopedLogger('api.github.auth');

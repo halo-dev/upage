@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { StreamingMessageParser } from '~/.client/runtime/message-parser';
 import { webBuilderStore } from '~/.client/stores/web-builder';
+import { createScopedLogger } from '~/.client/utils/logger';
 import type { UPageUIMessage } from '~/types/message';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('useMessageParser');
 

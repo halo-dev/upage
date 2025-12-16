@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { logStore } from '~/stores/logs';
+import { logStore } from '~/.client/stores/logs';
 
 interface NotificationDetails {
   type?: string;

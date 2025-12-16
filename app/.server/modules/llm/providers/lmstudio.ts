@@ -2,8 +2,8 @@ import { createOpenAI } from '@ai-sdk/openai';
 import type { LanguageModel } from 'ai';
 import { BaseProvider } from '~/.server/modules/llm/base-provider';
 import type { ModelInfo } from '~/.server/modules/llm/types';
+import { logger } from '~/.server/utils/logger';
 import type { IProviderSetting } from '~/types/model';
-import { logger } from '~/utils/logger';
 
 export const BASE_URL = 'http://127.0.0.1:1234/';
 export default class LMStudioProvider extends BaseProvider {

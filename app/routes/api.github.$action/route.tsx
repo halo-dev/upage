@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
 import { requireAuth } from '~/.server/service/auth';
 import { errorResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { handleGitHubAuth, handleGitHubDisconnect } from './auth.server';
 import { handleGitHubPush } from './push.server';
 import { getGitHubRepos } from './repos.server';

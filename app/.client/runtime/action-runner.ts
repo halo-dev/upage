@@ -1,9 +1,9 @@
 import { atom, type MapStore, map } from 'nanostores';
 import type { EditorBridge } from '~/.client/bridge';
 import { isValidContent } from '~/.client/utils/html-parse';
+import { createScopedLogger } from '~/.client/utils/logger';
 import { unreachable } from '~/.client/utils/unreachable';
 import type { ActionAlert, UPageAction } from '~/types/actions';
-import { createScopedLogger } from '~/utils/logger';
 import type { ActionCallbackData } from './message-parser';
 
 export type ActionPage = {

@@ -17,10 +17,10 @@ import { upsertChat } from '~/.server/service/chat';
 import { ChatUsageStatus, recordUsage, updateUsageStatus } from '~/.server/service/chat-usage';
 import { getHistoryChatMessages, saveChatMessages, updateDiscardedMessage } from '~/.server/service/message';
 import { getPageByMessageId } from '~/.server/service/page';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { approximateUsageFromContent } from '~/.server/utils/token';
 import type { Page } from '~/types/actions';
 import type { UPageUIMessage } from '~/types/message';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.chat.chat');
 

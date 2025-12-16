@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from '@remix-run/node';
 import { get1PanelConnectionSettings } from '~/.server/service/connection-settings';
 import { deleteDeploymentById, getDeploymentById } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { deleteWebsite } from './1panel.server';
 
 const logger = createScopedLogger('api.1panel.delete');

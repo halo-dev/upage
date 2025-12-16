@@ -1,4 +1,4 @@
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.client/utils/logger';
 
 const logger = createScopedLogger('htmlParse');
 

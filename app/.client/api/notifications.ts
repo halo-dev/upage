@@ -1,5 +1,4 @@
-import type { LogEntry } from '~/stores/logs';
-import { logStore } from '~/stores/logs';
+import { type LogEntry, logStore } from '~/.client/stores/logs';
 
 export interface Notification {
   id: string;

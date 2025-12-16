@@ -1,5 +1,5 @@
 import { deleteUserSetting, deleteUserSettings, getUserSetting, setUserSetting } from '~/.server/service/user-settings';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 const logger = createScopedLogger('connectionSettings.server');
 

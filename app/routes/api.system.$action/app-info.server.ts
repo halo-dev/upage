@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 // These are injected by Vite at build time
 declare const __PKG_NAME: string;

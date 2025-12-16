@@ -1,10 +1,10 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { useChatHistory } from '~/.client/persistence';
 import { isValidContent } from '~/.client/utils/html-parse';
+import { logger } from '~/.client/utils/logger';
 import { throttleWithTrailing } from '~/.client/utils/throttle';
 import type { Section } from '~/types/actions';
 import type { DocumentProperties, Editor } from '~/types/editor';
-import { logger } from '~/utils/logger';
 import { EditorComponent } from './EditorComponent';
 
 export interface ScrollPosition {

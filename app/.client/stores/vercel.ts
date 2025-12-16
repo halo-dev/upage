@@ -1,6 +1,6 @@
 import { atom } from 'nanostores';
 import { toast } from 'sonner';
-import { logStore } from '~/stores/logs';
+import { logStore } from '~/.client/stores/logs';
 import type { VercelConnection } from '~/types/vercel';
 
 // Initialize with stored connection or defaults

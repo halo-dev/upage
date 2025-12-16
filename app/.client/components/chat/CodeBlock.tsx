@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { memo, useEffect, useState } from 'react';
 import { type BundledLanguage, bundledLanguages, codeToHtml, isSpecialLang, type SpecialLanguage } from 'shiki';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.client/utils/logger';
 
 import styles from './CodeBlock.module.scss';
 

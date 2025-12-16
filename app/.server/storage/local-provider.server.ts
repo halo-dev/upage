@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { BaseStorageProvider } from './base-provider.server';
 import type { StorageFile, StorageUploadOptions } from './types';
 

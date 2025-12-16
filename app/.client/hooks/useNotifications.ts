@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 import { getNotifications, markNotificationRead, type Notification } from '~/.client/api/notifications';
-import { logStore } from '~/stores/logs';
+import { logStore } from '~/.client/stores/logs';
 
 export const useNotifications = () => {
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);

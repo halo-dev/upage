@@ -1,10 +1,10 @@
 import JSZip from 'jszip';
 import { atom, type WritableAtom } from 'nanostores';
 import { toast } from 'sonner';
+import { createScopedLogger } from '~/.client/utils/logger';
 import type { ChangeSource, Page } from '~/types/actions';
 import type { PageMap } from '~/types/pages';
 import { base64ToBinary, getContentType, getExtensionFromMimeType, getFileName } from '~/utils/file-utils';
-import { createScopedLogger } from '~/utils/logger';
 import { ChatStore } from './chat';
 import { EditorStore } from './editor';
 import { PagesStore } from './pages';

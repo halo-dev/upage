@@ -2,7 +2,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.client/utils/logger';
 
 const logger = createScopedLogger('usePromptEnhancement');
 

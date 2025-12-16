@@ -1,7 +1,7 @@
 import { type CallSettings, generateText, type LanguageModel } from 'ai';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { Page } from '~/types/actions';
 import type { UPageUIMessage } from '~/types/message';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('select-context');
 

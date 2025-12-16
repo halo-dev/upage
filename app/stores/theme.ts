@@ -1,6 +1,6 @@
 import { atom } from 'nanostores';
 import type { Theme } from '~/types/theme';
-import { logStore } from './logs';
+import { logStore } from '../.client/stores/logs';
 
 export const kTheme = 'upage_theme';
 

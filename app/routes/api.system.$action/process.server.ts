@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 // Only import child_process if we're not in a Cloudflare environment
 let execSync: any;

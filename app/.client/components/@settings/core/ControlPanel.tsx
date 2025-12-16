@@ -14,7 +14,7 @@ import { useDebugStatus } from '~/.client/hooks/useDebugStatus';
 import { useNotifications } from '~/.client/hooks/useNotifications';
 import { profileStore } from '~/.client/stores/profile';
 import { resetTabConfiguration, tabConfigurationStore } from '~/.client/stores/settings';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.client/utils/logger';
 import { AvatarDropdown } from './AvatarDropdown';
 import { DEFAULT_TAB_CONFIG, TAB_DESCRIPTIONS } from './constants';
 import type { Profile, TabType, TabVisibilityConfig } from './types';

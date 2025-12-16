@@ -3,7 +3,7 @@ import type { PageCreateParams } from '~/.server/service/page';
 import { savePagesAndSections } from '~/.server/service/project-service';
 import type { SectionCreateParams } from '~/.server/service/section';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 const logger = createScopedLogger('api.project');
 

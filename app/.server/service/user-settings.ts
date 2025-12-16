@@ -1,5 +1,5 @@
 import { prisma } from '~/.server/service/prisma';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 const logger = createScopedLogger('userSettings.server');
 

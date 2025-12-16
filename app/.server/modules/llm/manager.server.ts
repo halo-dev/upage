@@ -1,5 +1,5 @@
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { IProviderSetting } from '~/types/model';
-import { createScopedLogger } from '~/utils/logger';
 import { BaseProvider } from './base-provider';
 import * as providers from './registry';
 import type { ModelInfo, ProviderInfo } from './types';

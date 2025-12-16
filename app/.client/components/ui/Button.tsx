@@ -8,12 +8,12 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-upage-elements-background text-upage-elements-textPrimary hover:bg-upage-elements-background-depth-2 dark:bg-upage-elements-background-depth-2 dark:text-upage-elements-textPrimary dark:hover:bg-upage-elements-background-depth-3',
-        destructive: 'bg-red-500 text-white hover:bg-red-600',
+          'bg-[var(--upage-elements-button-primary-background)] text-[var(--upage-elements-button-primary-text)] hover:bg-[var(--upage-elements-button-primary-backgroundHover)] font-medium shadow-sm',
+        destructive: 'bg-red-500 text-white hover:bg-red-600 font-medium shadow-sm',
         outline:
           'border border-upage-elements-borderColor bg-transparent hover:bg-upage-elements-background-depth-2 hover:text-upage-elements-textPrimary text-upage-elements-textPrimary dark:border-upage-elements-borderColorActive',
         secondary:
-          'bg-upage-elements-background-depth-1 text-upage-elements-textPrimary hover:bg-upage-elements-background-depth-2',
+          'bg-[var(--upage-elements-button-secondary-background)] text-[var(--upage-elements-button-secondary-text)] hover:bg-[var(--upage-elements-button-secondary-backgroundHover)] font-medium',
         ghost: 'hover:bg-upage-elements-background-depth-1 hover:text-upage-elements-textPrimary',
         link: 'text-upage-elements-textPrimary underline-offset-4 hover:underline',
       },

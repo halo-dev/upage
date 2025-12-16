@@ -4,7 +4,7 @@ import { streamEnhancer } from '~/.server/llm/stream-enhancer';
 import { getModel, MINOR_MODEL } from '~/.server/modules/constants';
 import { requireAuth } from '~/.server/service/auth';
 import { errorResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 export async function action(args: ActionFunctionArgs) {
   const authResult = await requireAuth(args.request, { isApi: true });

@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '~/.client/c
 import { Dialog, DialogRoot, DialogTitle } from '~/.client/components/ui/Dialog';
 import { Progress } from '~/.client/components/ui/Progress';
 import { ScrollArea } from '~/.client/components/ui/ScrollArea';
-import { type LogEntry, logStore } from '~/stores/logs';
+import { type LogEntry, logStore } from '~/.client/stores/logs';
 
 interface SystemInfo {
   os: string;

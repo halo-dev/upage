@@ -1,6 +1,6 @@
 import { type CallSettings, generateText, type LanguageModel } from 'ai';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { UPageUIMessage } from '~/types/message';
-import { createScopedLogger } from '~/utils/logger';
 import { extractCurrentContext, getUserMessageContent, simplifyUPageActions } from './utils';
 
 const logger = createScopedLogger('create-summary');

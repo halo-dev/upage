@@ -3,8 +3,8 @@ import { requireAuth } from '~/.server/service/auth';
 import { getNetlifyConnectionSettings } from '~/.server/service/connection-settings';
 import { deleteDeploymentsByPlatformAndId } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { DeploymentPlatformEnum } from '~/types/deployment';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.netlify.sites');
 

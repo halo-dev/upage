@@ -17,6 +17,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Toaster } from 'sonner';
+import { logStore } from '~/.client/stores/logs';
 import { getUser } from '~/.server/service/auth';
 import { getUserUsageStats } from '~/.server/service/chat-usage';
 import {
@@ -25,7 +26,6 @@ import {
   getNetlifyConnectionSettings,
   getVercelConnectionSettings,
 } from '~/.server/service/connection-settings';
-import { logStore } from '~/stores/logs';
 import { themeStore } from '~/stores/theme';
 import { stripIndents } from '~/utils/strip-indent';
 import globalStyles from './styles/index.scss?url';

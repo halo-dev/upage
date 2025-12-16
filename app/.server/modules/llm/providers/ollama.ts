@@ -2,8 +2,8 @@ import type { LanguageModel } from 'ai';
 import { createOllama } from 'ollama-ai-provider-v2';
 import { BaseProvider } from '~/.server/modules/llm/base-provider';
 import type { ModelInfo } from '~/.server/modules/llm/types';
+import { logger } from '~/.server/utils/logger';
 import type { IProviderSetting } from '~/types/model';
-import { logger } from '~/utils/logger';
 
 interface OllamaModelDetails {
   parent_model: string;

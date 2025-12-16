@@ -3,10 +3,10 @@ import { useSearchParams } from '@remix-run/react';
 import { DefaultChatTransport, type FileUIPart } from 'ai';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { createScopedLogger } from '~/.client/utils/logger';
 import { pagesToArtifacts } from '~/.client/utils/page';
 import type { ChatMessage } from '~/types/chat';
 import type { ProgressAnnotation, UPageUIMessage } from '~/types/message';
-import { createScopedLogger } from '~/utils/logger';
 import {
   getChatStarted,
   setAborted,

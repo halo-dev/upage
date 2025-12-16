@@ -1,7 +1,7 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
 import { toast } from 'sonner';
-import { logger } from '~/utils/logger';
+import { logger } from '~/.client/utils/logger';
 
 interface Props {
   children: ReactNode;

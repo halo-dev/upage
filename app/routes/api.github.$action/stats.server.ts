@@ -1,8 +1,8 @@
 import { Octokit } from '@octokit/rest';
 import { getGitHubConnectionSettings } from '~/.server/service/connection-settings';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { GitHubLanguageStats, GitHubRepoInfo, GitHubStats } from '~/types/github';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.github.stats');
 

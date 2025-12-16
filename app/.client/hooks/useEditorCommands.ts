@@ -1,7 +1,7 @@
 import { type RefObject, useCallback, useEffect } from 'react';
 import { editorCommands } from '~/.client/stores/editor';
+import { logger } from '~/.client/utils/logger';
 import type { Editor } from '~/types/editor';
-import { logger } from '~/utils/logger';
 
 /**
  * 用于监听编辑器命令的自定义 hook

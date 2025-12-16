@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from '@remix-run/node';
 import { generateId } from 'ai';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 const logger = createScopedLogger('api.chat.mock-chat');
 

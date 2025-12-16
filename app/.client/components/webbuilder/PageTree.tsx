@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 import { Button } from '~/.client/components/ui/Button';
 import { ConfirmationDialog, Dialog, DialogDescription, DialogRoot, DialogTitle } from '~/.client/components/ui/Dialog';
 import { webBuilderStore } from '~/.client/stores/web-builder';
+import { createScopedLogger, renderLogger } from '~/.client/utils/logger';
 import type { PageMap } from '~/types/pages';
-import { createScopedLogger, renderLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('PageTree');
 

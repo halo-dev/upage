@@ -12,11 +12,14 @@ export interface ApiResponse<T = any> {
   data?: T;
 }
 
+export type DebugLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
+
 declare global {
   interface Window {
     webkitSpeechRecognition: typeof SpeechRecognition;
     SpeechRecognition: typeof SpeechRecognition;
     ENV: {
+      LOG_LEVEL?: DebugLevel;
       OPERATING_ENV: 'production' | 'development' | 'test';
       MAX_UPLOAD_SIZE_MB: number;
     };
@@ -30,11 +33,9 @@ declare global {
     };
   }
 
-  // 扩展 Request 接口，使 json 方法支持泛型
   interface Request {
     json<T = any>(): Promise<T>;
   }
 }
 
-// 确保文件被视为模块
 export {};

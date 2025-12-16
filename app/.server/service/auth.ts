@@ -2,8 +2,8 @@ import type { IdTokenClaims } from '@logto/node';
 import { type LogtoContext, makeLogtoRemix } from '@logto/remix';
 import type { LoaderFunctionArgs } from '@remix-run/node';
 import { createCookieSessionStorage, redirect } from '@remix-run/node';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { LogtoUser } from '~/types/logto';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('auth.server');
 

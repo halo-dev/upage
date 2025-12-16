@@ -14,10 +14,10 @@ import {
   netlifyConnection,
   updateNetlifyConnection,
 } from '~/.client/stores/netlify';
+import { logger } from '~/.client/utils/logger';
 import type { ConnectionSettings } from '~/root';
 import type { ApiResponse } from '~/types/global';
 import type { NetlifyBuild, NetlifyDeploy, NetlifySite } from '~/types/netlify';
-import { logger } from '~/utils/logger';
 import ConnectionBorder from './components/ConnectionBorder';
 
 // Add new interface for site actions

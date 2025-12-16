@@ -3,10 +3,10 @@ import { useFetcher, useRouteLoaderData } from '@remix-run/react';
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { logStore } from '~/.client/stores/logs';
 import { fetchVercelStats, isFetchingStats, updateVercelConnection, vercelConnection } from '~/.client/stores/vercel';
+import { logger } from '~/.client/utils/logger';
 import type { ConnectionSettings } from '~/root';
-import { logStore } from '~/stores/logs';
-import { logger } from '~/utils/logger';
 import ConnectionBorder from './components/ConnectionBorder';
 
 interface ApiResponse {

@@ -3,9 +3,9 @@ import { atom, computed, type MapStore, map, type WritableAtom } from 'nanostore
 import { type EditorBridge, type EventPayload, editorBridge } from '~/.client/bridge';
 import { computePageModifications, diffPages } from '~/.client/utils/diff';
 import { isValidContent } from '~/.client/utils/html-parse';
+import { createScopedLogger } from '~/.client/utils/logger';
 import type { ChangeSource, Page, PageHistory } from '~/types/actions';
 import type { PageMap, PageSection, SectionMap } from '~/types/pages';
-import { createScopedLogger } from '~/utils/logger';
 import { normalizeContent } from '~/utils/prettier';
 
 const logger = createScopedLogger('PagesStore');

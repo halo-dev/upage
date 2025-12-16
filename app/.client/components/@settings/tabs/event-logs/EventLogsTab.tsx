@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogRoot, DialogTitle } from '~/.client/components/ui/Dialog';
 import { Switch } from '~/.client/components/ui/Switch';
-import { type LogEntry, logStore } from '~/stores/logs';
+import { type LogEntry, logStore } from '~/.client/stores/logs';
 
 interface SelectOption {
   value: string;

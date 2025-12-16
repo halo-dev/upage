@@ -1,8 +1,8 @@
 import { useFetcher } from '@remix-run/react';
 import { useEditorStorage } from '~/.client/persistence/editor';
 import { webBuilderStore } from '~/.client/stores/web-builder';
+import { createScopedLogger } from '~/.client/utils/logger';
 import type { ApiResponse } from '~/types/global';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('useGrapesProject');
 

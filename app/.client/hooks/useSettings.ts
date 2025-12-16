@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import { useCallback, useState } from 'react';
 import type { TabVisibilityConfig, TabWindowConfig } from '~/.client/components/@settings/core/types';
 import { getLocalStorage, setLocalStorage } from '~/.client/persistence';
+import { logStore } from '~/.client/stores/logs';
 import {
   isDebugMode,
   isEventLogsEnabled,
@@ -15,7 +16,6 @@ import {
   updatePromptId,
   updateTabConfiguration as updateTabConfig,
 } from '~/.client/stores/settings';
-import { logStore } from '~/stores/logs';
 
 export interface Settings {
   theme: 'light' | 'dark' | 'system';

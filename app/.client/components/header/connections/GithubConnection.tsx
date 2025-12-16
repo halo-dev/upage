@@ -6,8 +6,8 @@ import { toast } from 'sonner';
 import { Button } from '~/.client/components/ui/Button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '~/.client/components/ui/Collapsible';
 import { clearGitHubConnection, githubConnection, updateGitHubConnection } from '~/.client/stores/github';
-import { logStore } from '~/stores/logs';
-import { logger } from '~/utils/logger';
+import { logStore } from '~/.client/stores/logs';
+import { logger } from '~/.client/utils/logger';
 import ConnectionBorder from './components/ConnectionBorder';
 
 export default function GitHubConnection() {

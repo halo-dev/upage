@@ -2,8 +2,8 @@ import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 import { getGitHubConnectionSettings } from '~/.server/service/connection-settings';
 import { createOrUpdateDeployment } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { DeploymentPlatformEnum, DeploymentStatusEnum } from '~/types/deployment';
-import { createScopedLogger } from '~/utils/logger';
 import { formatFile } from '~/utils/prettier';
 import type { GitHubPushRequest, GitHubPushResponse } from './type';
 

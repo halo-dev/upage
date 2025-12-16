@@ -2,8 +2,8 @@ import type { Message } from '@prisma/client';
 import type { JsonArray } from '@prisma/client/runtime/library';
 import type { TextUIPart, UIMessagePart } from 'ai';
 import { prisma } from '~/.server/service/prisma';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { SummaryAnnotation, UPageDataParts, UPageUIMessage } from '~/types/message';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('message.server');
 

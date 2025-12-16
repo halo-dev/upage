@@ -1,7 +1,7 @@
 import { getNetlifyConnectionSettings } from '~/.server/service/connection-settings';
 import { deleteDeploymentById, getDeploymentById } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 const logger = createScopedLogger('api.netlify.delete');
 

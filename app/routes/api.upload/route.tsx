@@ -2,7 +2,7 @@ import { type ActionFunctionArgs } from '@remix-run/node';
 import { requireAuth } from '~/.server/service/auth';
 import { storageProvider } from '~/.server/storage/index.server';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 
 const logger = createScopedLogger('api.upload');
 

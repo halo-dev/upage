@@ -1,7 +1,7 @@
 import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
 import { requireAuth } from '~/.server/service/auth';
 import { errorResponse } from '~/.server/utils/api-response';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { handleVercelAuth } from './auth.server';
 import { deletePage } from './delete.server';
 import { getVercelDeployByProjectId, handleVercelDeploy } from './deploy.server';

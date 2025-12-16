@@ -2,7 +2,7 @@ import { getVercelConnectionSettings } from '~/.server/service/connection-settin
 import { getDeploymentById, updateDeploymentStatus } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { request } from '~/.server/utils/fetch';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { VercelAlias, VercelResponseAliases, VercelResponseError } from './type';
 
 const logger = createScopedLogger('api.vercel.manage');

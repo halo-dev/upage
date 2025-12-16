@@ -1,7 +1,7 @@
+import { createScopedLogger } from '~/.client/utils/logger';
 import { unreachable } from '~/.client/utils/unreachable';
 import type { UPageAction, UPageActionData } from '~/types/actions';
 import type { UPageArtifactData } from '~/types/artifact';
-import { createScopedLogger } from '~/utils/logger';
 
 const ARTIFACT_TAG_OPEN = '<uPageArtifact';
 const ARTIFACT_TAG_CLOSE = '</uPageArtifact>';

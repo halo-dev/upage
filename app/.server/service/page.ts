@@ -1,6 +1,6 @@
 import type { JsonArray, JsonObject } from '@prisma/client/runtime/library';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { Page } from '~/types/actions';
-import { createScopedLogger } from '~/utils/logger';
 import { prisma } from './prisma';
 
 const logger = createScopedLogger('page.server');

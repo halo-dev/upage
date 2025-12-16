@@ -1,7 +1,7 @@
 import { useSearchParams } from '@remix-run/react';
 import { getChatId } from '~/.client/stores/ai-state';
+import { createScopedLogger } from '~/.client/utils/logger';
 import type { Page, Section } from '~/types/actions';
-import { createScopedLogger } from '~/utils/logger';
 
 /**
  * 序列化标记常量

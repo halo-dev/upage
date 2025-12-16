@@ -1,6 +1,7 @@
-export type DebugLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
-
 import { Chalk } from 'chalk';
+import type { DebugLevel } from '~/types/global';
+
+export type { DebugLevel };
 
 const chalk = new Chalk({ level: 3 });
 
@@ -15,8 +16,6 @@ interface Logger {
   setLevel: (level: DebugLevel) => void;
 }
 
-const isServer = typeof window === 'undefined';
-
 let currentLevel: DebugLevel =
   (process.env.LOG_LEVEL as DebugLevel | undefined) || (import.meta.env.DEV ? 'debug' : 'info');
 
@@ -24,7 +23,7 @@ let winstonLogger: any = null;
 let winstonInitialized = false;
 
 async function initializeWinston() {
-  if (!isServer || winstonInitialized) {
+  if (winstonInitialized) {
     return;
   }
 
@@ -63,21 +62,21 @@ async function initializeWinston() {
         }),
       ),
       transports: [
-        // 按日期分割的错误日志文件
+        // Error log file split by date
         new DailyRotateFile({
           filename: path.join(logDir, 'error-%DATE%.log'),
           datePattern: 'YYYY-MM-DD',
           level: 'error',
-          maxSize: '10m', // 10MB
-          maxFiles: 14, // 保留14天
+          maxSize: '10m', // 10 MB
+          maxFiles: 14, // Keep 14 days
           format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
         }) as any,
-        // 所有级别日志
+        // All levels log
         new DailyRotateFile({
           filename: path.join(logDir, 'combined-%DATE%.log'),
           datePattern: 'YYYY-MM-DD',
-          maxSize: '20m', // 20MB
-          maxFiles: 7, // 保留7天
+          maxSize: '20m', // 20 MB
+          maxFiles: 7, // Keep 7 days
           format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
         }) as any,
       ],
@@ -87,9 +86,7 @@ async function initializeWinston() {
   }
 }
 
-if (isServer) {
-  initializeWinston();
-}
+initializeWinston();
 
 export const logger: Logger = {
   trace: (...messages: any[]) => log('trace', undefined, messages),
@@ -118,7 +115,7 @@ function setLevel(level: DebugLevel) {
 
   currentLevel = level;
 
-  // 更新 Winston logger 级别
+  // Update Winston logger level
   if (winstonLogger) {
     winstonLogger.level = level;
   }
@@ -134,74 +131,53 @@ function log(level: DebugLevel, scope: string | undefined, messages: any[]) {
   const labelBackgroundColor = getColorForLevel(level);
   const labelTextColor = level === 'warn' ? '#000000' : '#FFFFFF';
 
-  // 控制台日志 - 根据环境使用不同格式
-  if (typeof window !== 'undefined') {
-    // 浏览器环境 - 保持对象原样，利用浏览器的原生格式化
-    const labelStyles = getLabelStyles(labelBackgroundColor, labelTextColor);
-    const scopeStyles = getLabelStyles('#77828D', 'white');
-
-    const styles = [labelStyles];
-
-    if (typeof scope === 'string') {
-      styles.push('', scopeStyles);
-    }
-
-    // 直接传递原始消息，浏览器会自动格式化对象
-    console.log(`%c${level.toUpperCase()}${scope ? `%c %c${scope}` : ''}`, ...styles, ...messages);
-  } else {
-    // Node.js 环境 - 将对象格式化为 JSON 字符串
-    const formattedMessages = messages.map((msg) => {
-      if (typeof msg === 'object' && msg !== null) {
-        try {
-          return JSON.stringify(msg, null, 2);
-        } catch {
-          return String(msg);
-        }
-      }
-      return msg;
-    });
-
-    const allMessages = formattedMessages.reduce((acc, current) => {
-      if (acc.endsWith('\n')) {
-        return acc + current;
-      }
-
-      if (!acc) {
-        return current;
-      }
-
-      return `${acc} ${current}`;
-    }, '');
-
-    let labelText = formatText(` ${level.toUpperCase()} `, labelTextColor, labelBackgroundColor);
-
-    if (scope) {
-      labelText = `${labelText} ${formatText(` ${scope} `, '#FFFFFF', '77828D')}`;
-    }
-
-    console.log(`${labelText}`, allMessages);
-
-    // 写入文件日志（仅服务端）
-    if (winstonLogger) {
+  // Format objects as JSON strings
+  const formattedMessages = messages.map((msg) => {
+    if (typeof msg === 'object' && msg !== null) {
       try {
-        winstonLogger.log({
-          level,
-          message: allMessages,
-          scope,
-        });
-      } catch (error) {
-        console.error('Failed to write to log file:', error);
+        return JSON.stringify(msg, null, 2);
+      } catch {
+        return String(msg);
       }
+    }
+    return msg;
+  });
+
+  const allMessages = formattedMessages.reduce((acc, current) => {
+    if (acc.endsWith('\n')) {
+      return acc + current;
+    }
+
+    if (!acc) {
+      return current;
+    }
+
+    return `${acc} ${current}`;
+  }, '');
+
+  let labelText = formatText(` ${level.toUpperCase()} `, labelTextColor, labelBackgroundColor);
+
+  if (scope) {
+    labelText = `${labelText} ${formatText(` ${scope} `, '#FFFFFF', '77828D')}`;
+  }
+
+  console.log(`${labelText}`, allMessages);
+
+  if (winstonLogger) {
+    try {
+      winstonLogger.log({
+        level,
+        message: allMessages,
+        scope,
+      });
+    } catch (error) {
+      console.error('Failed to write to log file:', error);
     }
   }
 }
 
 function formatText(text: string, color: string, bg: string) {
   return chalk.bgHex(bg)(chalk.hex(color)(text));
-}
-
-function getLabelStyles(color: string, textColor: string) {
-  return `background-color: ${color}; color: white; border: 4px solid ${color}; color: ${textColor};`;
 }
 
 function getColorForLevel(level: DebugLevel): string {

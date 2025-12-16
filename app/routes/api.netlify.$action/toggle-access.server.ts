@@ -2,8 +2,8 @@ import { getNetlifyConnectionSettings } from '~/.server/service/connection-setti
 import { getDeploymentById, updateDeploymentStatus } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { request } from '~/.server/utils/fetch';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { NetlifySite } from '~/types/netlify';
-import { createScopedLogger } from '~/utils/logger';
 import { generateUUID } from '~/utils/uuid';
 
 const logger = createScopedLogger('api.netlify.toggle-access');

@@ -1,4 +1,4 @@
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { LocalStorageProvider } from './local-provider.server';
 import type { StorageProvider } from './types';
 

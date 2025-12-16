@@ -1,6 +1,6 @@
 import { prisma } from '~/.server/service/prisma';
+import { createScopedLogger } from '~/.server/utils/logger';
 import type { Section } from '~/types/actions';
-import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('section.server');
 

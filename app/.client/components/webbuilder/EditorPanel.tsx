@@ -2,10 +2,10 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { memo } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { ErrorBoundary } from '~/.client/components/ErrorBoundary';
+import { logger, renderLogger } from '~/.client/utils/logger';
 import type { PageHistory, Section } from '~/types/actions';
 import type { DocumentProperties } from '~/types/editor';
 import type { PageMap } from '~/types/pages';
-import { logger, renderLogger } from '~/utils/logger';
 import {
   EditorStudio,
   type OnChangeCallback,

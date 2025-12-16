@@ -1,6 +1,6 @@
 import { convertToModelMessages, type LanguageModel, streamText, type UIMessage } from 'ai';
 import { DEFAULT_PROVIDER } from '~/.server/modules/constants';
-import { createScopedLogger } from '~/utils/logger';
+import { createScopedLogger } from '~/.server/utils/logger';
 import { stripIndents } from '~/utils/strip-indent';
 
 const logger = createScopedLogger('stream-enhancer');
