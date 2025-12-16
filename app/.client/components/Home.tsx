@@ -3,7 +3,7 @@ import { useNavigate } from '@remix-run/react';
 import { generateId } from 'ai';
 import classNames from 'classnames';
 import { AnimatePresence, motion, useAnimate } from 'framer-motion';
-import { useState } from 'react';
+import { startTransition, useState } from 'react';
 import { ChatTextarea } from './chat/ChatTextarea';
 import { ExamplePrompts } from './chat/ExamplePrompts';
 import FilePreview from './chat/FilePreview';
@@ -14,20 +14,35 @@ export function Home({ className }: { className?: string }) {
 
   const [animationScope] = useAnimate();
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [isNavigating, setIsNavigating] = useState(false);
+
   const handleSendMessage = (message?: string) => {
     if (!message) {
       return;
     }
+
+    setIsNavigating(true);
+
     const id = generateId();
-    navigate(`/chat/${id}`, {
-      state: { message, files: uploadFiles },
-      preventScrollReset: true,
-      viewTransition: true,
+
+    startTransition(() => {
+      navigate(`/chat/${id}`, {
+        state: { message, files: uploadFiles },
+        preventScrollReset: true,
+      });
     });
   };
 
   return (
     <>
+      {isNavigating && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="relative w-6 h-6">
+            <div className="absolute inset-0 border-2 border-blue-500/30 rounded-full"></div>
+            <div className="absolute inset-0 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+      )}
       {
         <Tooltip.Provider delayDuration={200}>
           <div ref={animationScope} className={classNames('relative flex', className)}>
