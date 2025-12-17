@@ -1,4 +1,4 @@
-import { json, type TypedResponse } from '@remix-run/node';
+import { data as remixData } from '@remix-run/node';
 import type { ApiResponse } from '~/types/global';
 
 /**
@@ -15,7 +15,7 @@ export function apiResponse<T = any>(
   message?: string,
   success: boolean = true,
   headers?: HeadersInit,
-): TypedResponse<ApiResponse<T>> {
+) {
   const finalSuccess = success ?? (status >= 200 && status < 300);
 
   const responseBody: ApiResponse<T> = {
@@ -24,7 +24,7 @@ export function apiResponse<T = any>(
     ...(message !== undefined ? { message } : {}),
   };
 
-  return json(responseBody, { status, headers });
+  return remixData(responseBody, { status, headers });
 }
 
 /**
@@ -33,11 +33,7 @@ export function apiResponse<T = any>(
  * @param message 成功消息
  * @returns 成功的 API 响应
  */
-export function successResponse<T = any>(
-  data?: T,
-  message?: string,
-  headers?: HeadersInit,
-): TypedResponse<ApiResponse<T>> {
+export function successResponse<T = any>(data?: T, message?: string, headers?: HeadersInit) {
   return apiResponse(200, data, message, true, headers);
 }
 
@@ -48,10 +44,6 @@ export function successResponse<T = any>(
  * @param data 额外的错误数据
  * @returns 错误的 API 响应
  */
-export function errorResponse<T = any>(
-  status: number = 400,
-  errorDetails?: string,
-  headers?: HeadersInit,
-): TypedResponse<ApiResponse<T>> {
+export function errorResponse<T = any>(status: number = 400, errorDetails?: string, headers?: HeadersInit) {
   return apiResponse<T>(status, undefined, errorDetails, false, headers);
 }

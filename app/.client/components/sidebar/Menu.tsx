@@ -4,9 +4,7 @@ import classNames from 'classnames';
 import { motion, type Variants } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { ControlPanel } from '~/.client/components/@settings/core/ControlPanel';
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/.client/components/ui/Dialog';
-import { SettingsButton } from '~/.client/components/ui/SettingsButton';
 import { useAuth } from '~/.client/hooks';
 import { type ServerChatItem, useChatEntries } from '~/.client/hooks/useChatEntries';
 import { useChatOperate } from '~/.client/hooks/useChatOperate';
@@ -46,7 +44,6 @@ export const Menu = memo(({ className }: { className?: string }) => {
   const { chatId } = useStore(aiState);
   const menuRef = useRef<HTMLDivElement>(null);
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const sidebar = useStore(sidebarStore);
@@ -154,16 +151,7 @@ export const Menu = memo(({ className }: { className?: string }) => {
     loadChatEntries();
   };
 
-  const handleSettingsClick = () => {
-    setIsSettingsOpen(true);
-  };
-
-  const handleSettingsClose = () => {
-    setIsSettingsOpen(false);
-  };
-
   const setDialogContentWithLogging = useCallback((content: DialogContent) => {
-    console.log('Setting dialog content:', content);
     setDialogContent(content);
   }, []);
 
@@ -203,9 +191,8 @@ export const Menu = memo(({ className }: { className?: string }) => {
         className={classNames(
           'flex selection-accent flex-col side-menu absolute',
           'bg-upage-elements-background-depth-1 border-r rounded border-gray-100 dark:border-gray-800/50',
-          'shadow-sm text-sm',
+          'shadow-sm text-sm z-sidebar',
           className,
-          isSettingsOpen ? 'z-40' : 'z-sidebar',
         )}
       >
         <div className="flex-1 flex flex-col size-full overflow-hidden">
@@ -369,15 +356,8 @@ export const Menu = memo(({ className }: { className?: string }) => {
               </div>
             </motion.div>
           )}
-          {import.meta.env.MODE === 'development' && (
-            <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
-              <SettingsButton onClick={handleSettingsClick} />
-            </div>
-          )}
         </div>
       </motion.div>
-
-      {import.meta.env.MODE === 'development' && <ControlPanel open={isSettingsOpen} onClose={handleSettingsClose} />}
     </TooltipProvider>
   );
 });
