@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
+import { type ActionFunctionArgs } from 'react-router';
 import { requireAuth } from '~/.server/service/auth';
 import { errorResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';

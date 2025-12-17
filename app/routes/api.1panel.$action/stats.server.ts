@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
+import { type LoaderFunctionArgs } from 'react-router';
 import { get1PanelConnectionSettings } from '~/.server/service/connection-settings';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';

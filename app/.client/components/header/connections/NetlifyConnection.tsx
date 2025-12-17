@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useFetcher, useRouteLoaderData } from '@remix-run/react';
+import { useFetcher, useRouteLoaderData } from 'react-router';
 import classNames from 'classnames';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale/zh-CN';

@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
+import { type ActionFunctionArgs } from 'react-router';
 import type { UIMessage } from 'ai';
 import { streamEnhancer } from '~/.server/llm/stream-enhancer';
 import { getModel, MINOR_MODEL } from '~/.server/modules/constants';

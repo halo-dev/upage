@@ -1,7 +1,7 @@
 import type { IdTokenClaims } from '@logto/node';
 import { type LogtoContext, makeLogtoRemix } from '@logto/remix';
-import type { LoaderFunctionArgs } from '@remix-run/node';
-import { createCookieSessionStorage, redirect } from '@remix-run/node';
+import type { LoaderFunctionArgs } from 'react-router';
+import { createCookieSessionStorage, redirect } from 'react-router';
 import { createScopedLogger } from '~/.server/utils/logger';
 import type { LogtoUser } from '~/types/logto';
 

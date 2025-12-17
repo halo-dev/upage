@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useLocation } from '@remix-run/react';
+import { useLocation } from 'react-router';
 import classNames from 'classnames';
 import type { ForwardedRef } from 'react';
 import { Fragment, forwardRef, memo, useEffect, useMemo, useRef } from 'react';

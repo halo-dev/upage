@@ -1,4 +1,4 @@
-import { data, type LoaderFunctionArgs } from '@remix-run/node';
+import { data, type LoaderFunctionArgs } from 'react-router';
 import { getUser } from '~/.server/service/auth';
 
 /**

@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useFetcher } from '@remix-run/react';
+import { useFetcher } from 'react-router';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

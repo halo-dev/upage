@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
+import { type LoaderFunctionArgs } from 'react-router';
 import { errorResponse } from '~/.server/utils/api-response';
 import { assetsUser } from './user.server';
 

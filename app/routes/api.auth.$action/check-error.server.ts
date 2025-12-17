@@ -1,5 +1,5 @@
-import type { LoaderFunctionArgs } from '@remix-run/node';
-import { data } from '@remix-run/node';
+import type { LoaderFunctionArgs } from 'react-router';
+import { data } from 'react-router';
 import { getAuthError } from '~/.server/service/auth';
 
 /**

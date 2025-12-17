@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useLoaderData, useLocation, useNavigate } from '@remix-run/react';
+import { useLoaderData, useLocation, useNavigate } from 'react-router';
 import classNames from 'classnames';
 import { useAnimate } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';

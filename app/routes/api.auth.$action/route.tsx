@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from '@remix-run/node';
+import type { LoaderFunctionArgs } from 'react-router';
 import { logto } from '~/.server/service/auth';
 import { checkErrorLoader } from './check-error.server';
 import { userLoader } from './user.server';

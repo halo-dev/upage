@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
+import { type LoaderFunctionArgs } from 'react-router';
 import { requireAuth } from '~/.server/service/auth';
 import { getUserPlatformDeploymentsWithPagination } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';

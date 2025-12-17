@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
+import { type LoaderFunctionArgs } from 'react-router';
 import { successResponse } from '~/.server/utils/api-response';
 
 export const loader = async ({ request: _request }: LoaderFunctionArgs) => {

@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
+import { type ActionFunctionArgs } from 'react-router';
 import { get1PanelConnectionSettings, save1PanelConnectionSettings } from '~/.server/service/connection-settings';
 import { deleteDeploymentsByPlatformAndId } from '~/.server/service/deployment';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';

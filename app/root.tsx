@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
-import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
-import { data } from '@remix-run/node';
+import type { LinksFunction, LoaderFunctionArgs } from 'react-router';
+import { data } from 'react-router';
 import {
   isRouteErrorResponse,
   Links,
@@ -10,7 +10,7 @@ import {
   ScrollRestoration,
   useRouteError,
   useRouteLoaderData,
-} from '@remix-run/react';
+} from 'react-router';
 import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
 import { useEffect } from 'react';
 import { DndProvider } from 'react-dnd';

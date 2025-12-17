@@ -1,4 +1,4 @@
-import { useParams } from '@remix-run/react';
+import { useParams } from 'react-router';
 import classNames from 'classnames';
 import { type ForwardedRef, forwardRef, useCallback } from 'react';
 import { Checkbox } from '~/.client/components/ui/Checkbox';

@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useRevalidator } from '@remix-run/react';
+import { useRevalidator } from 'react-router';
 import classNames from 'classnames';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';

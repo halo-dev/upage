@@ -1,4 +1,4 @@
-import { useRevalidator, useRouteLoaderData } from '@remix-run/react';
+import { useRevalidator, useRouteLoaderData } from 'react-router';
 import { useState } from 'react';
 import { useAuth } from './useAuth';
 

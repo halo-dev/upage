@@ -1,5 +1,5 @@
 import { useStore } from '@nanostores/react';
-import { useFetcher, useRouteLoaderData } from '@remix-run/react';
+import { useFetcher, useRouteLoaderData } from 'react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { aiState } from '~/.client/stores/ai-state';

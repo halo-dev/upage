@@ -1,6 +1,6 @@
 import type { UserInfoResponse } from '@logto/node';
 import type { Deployment } from '@prisma/client';
-import { data, type LoaderFunctionArgs, redirect } from '@remix-run/node';
+import { data, type LoaderFunctionArgs, redirect } from 'react-router';
 import { Chat } from '~/.client/components/chat/Chat';
 import { getUser, requireAuth } from '~/.server/service/auth';
 import { getUserChatById } from '~/.server/service/chat';

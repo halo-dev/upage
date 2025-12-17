@@ -1,4 +1,4 @@
-import { data, type LoaderFunctionArgs, type MetaFunction } from '@remix-run/node';
+import { data, type LoaderFunctionArgs, type MetaFunction } from 'react-router';
 import { Home } from '~/.client/components/Home';
 import { getUser } from '~/.server/service/auth';
 import { getUserUsageStats } from '~/.server/service/chat-usage';

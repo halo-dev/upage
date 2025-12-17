@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs } from '@remix-run/node';
+import type { ActionFunctionArgs } from 'react-router';
 import { generateId } from 'ai';
 import { readFile } from 'fs/promises';
 import { join } from 'path';

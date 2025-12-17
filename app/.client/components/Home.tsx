@@ -1,5 +1,5 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useNavigate } from '@remix-run/react';
+import { useNavigate } from 'react-router';
 import { generateId } from 'ai';
 import classNames from 'classnames';
 import { AnimatePresence, motion, useAnimate } from 'framer-motion';

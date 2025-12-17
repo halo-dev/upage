@@ -1,4 +1,4 @@
-import { useRevalidator } from '@remix-run/react';
+import { useRevalidator } from 'react-router';
 import { useCallback, useState } from 'react';
 import type { DeploymentPlatform } from '~/types/deployment';
 import { DeploymentPlatformEnum } from '~/types/deployment';

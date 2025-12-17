@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
+import { type ActionFunctionArgs } from 'react-router';
 import { delete1PanelConnectionSettings, save1PanelConnectionSettings } from '~/.server/service/connection-settings';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';

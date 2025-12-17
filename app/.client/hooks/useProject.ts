@@ -1,4 +1,4 @@
-import { useFetcher } from '@remix-run/react';
+import { useFetcher } from 'react-router';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { createScopedLogger } from '~/.client/utils/logger';

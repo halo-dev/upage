@@ -1,4 +1,4 @@
-import { vitePlugin as remixVitePlugin } from '@remix-run/dev';
+import { reactRouter } from '@react-router/dev/vite';
 import * as dotenv from 'dotenv';
 import UnoCSS from 'unocss/vite';
 import { type ViteDevServer, defineConfig } from 'vite';
@@ -30,16 +30,7 @@ export default defineConfig((config) => {
       entries: ['./app/entry.client.tsx', './app/root.tsx', './app/routes/*'],
     },
     plugins: [
-      remixVitePlugin({
-        future: {
-          v3_fetcherPersist: true,
-          v3_relativeSplatPath: true,
-          v3_throwAbortReason: true,
-          v3_singleFetch: true,
-          v3_lazyRouteDiscovery: true,
-        },
-        serverModuleFormat: 'esm',
-      }),
+      reactRouter(),
       UnoCSS(),
       tsconfigPaths(),
       chrome129IssuePlugin(),

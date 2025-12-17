@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node';
+import { type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 import { requireAuth } from '~/.server/service/auth';
 import {
   deleteUserSetting,

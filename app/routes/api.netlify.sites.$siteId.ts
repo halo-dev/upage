@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@remix-run/node';
+import { type ActionFunctionArgs } from 'react-router';
 import { requireAuth } from '~/.server/service/auth';
 import { getNetlifyConnectionSettings } from '~/.server/service/connection-settings';
 import { deleteDeploymentsByPlatformAndId } from '~/.server/service/deployment';

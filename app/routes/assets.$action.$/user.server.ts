@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs } from '@remix-run/node';
+import { type LoaderFunctionArgs } from 'react-router';
 import fs from 'fs';
 import { getUser, requireAuth } from '~/.server/service/auth';
 import { storageProvider } from '~/.server/storage/index.server';
