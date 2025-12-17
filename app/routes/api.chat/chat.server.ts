@@ -1,4 +1,3 @@
-import type { ActionFunctionArgs } from 'react-router';
 import {
   consumeStream,
   createUIMessageStream,
@@ -6,6 +5,7 @@ import {
   generateId,
   type UIMessageStreamWriter,
 } from 'ai';
+import type { ActionFunctionArgs } from 'react-router';
 import { chatStreamText } from '~/.server/llm/chat-stream-text';
 import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS } from '~/.server/llm/constants';
 import { createSummary } from '~/.server/llm/create-summary';

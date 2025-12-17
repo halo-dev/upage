@@ -1,5 +1,5 @@
-import { Outlet } from 'react-router';
 import { useEffect, useState } from 'react';
+import { Outlet } from 'react-router';
 import { Header } from '~/.client/components/layouts/Header';
 import { Menu } from '~/.client/components/sidebar/Menu';
 

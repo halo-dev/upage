@@ -1,9 +1,9 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useNavigate } from 'react-router';
 import { generateId } from 'ai';
 import classNames from 'classnames';
 import { AnimatePresence, motion, useAnimate } from 'framer-motion';
 import { startTransition, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { ChatTextarea } from './chat/ChatTextarea';
 import { ExamplePrompts } from './chat/ExamplePrompts';
 import FilePreview from './chat/FilePreview';

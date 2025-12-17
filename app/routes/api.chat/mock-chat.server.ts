@@ -1,7 +1,7 @@
-import type { ActionFunctionArgs } from 'react-router';
 import { generateId } from 'ai';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import type { ActionFunctionArgs } from 'react-router';
 import { createScopedLogger } from '~/.server/utils/logger';
 
 const logger = createScopedLogger('api.chat.mock-chat');

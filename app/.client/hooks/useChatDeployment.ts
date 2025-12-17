@@ -1,6 +1,6 @@
 import type { Deployment } from '@prisma/client';
-import { useRouteLoaderData } from 'react-router';
 import { useCallback, useMemo } from 'react';
+import { useRouteLoaderData } from 'react-router';
 import type { DeploymentPlatform } from '~/types/deployment';
 
 /**

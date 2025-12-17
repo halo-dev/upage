@@ -1,6 +1,6 @@
-import { useParams } from 'react-router';
 import classNames from 'classnames';
 import { type ForwardedRef, forwardRef, useCallback } from 'react';
+import { useParams } from 'react-router';
 import { Checkbox } from '~/.client/components/ui/Checkbox';
 import WithTooltip from '~/.client/components/ui/Tooltip';
 import { useEditChatDescription } from '~/.client/hooks';
