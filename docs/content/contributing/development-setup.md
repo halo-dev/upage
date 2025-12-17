@@ -11,7 +11,7 @@ title: 开发环境设置
 
 开始开发 UPage 前，请确保您的系统满足以下要求：
 
-- **Node.js**: 18.18.0 或更高版本
+- **Node.js**: 20.19.0 或更高版本
 - **pnpm**: 9.4.0 或更高版本
 - **Git**: 最新版本
 
@@ -21,8 +21,8 @@ title: 开发环境设置
 
 ```bash
 # 使用 nvm 安装 Node.js
-nvm install 18.18.0
-nvm use 18.18.0
+nvm install 20.19.0
+nvm use 20.19.0
 ```
 
 ### 安装 pnpm
