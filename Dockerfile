@@ -1,5 +1,5 @@
 # ---- build stage ----
-FROM node:20.18.0-alpine  AS build
+FROM node:20.19.0-alpine  AS build
 WORKDIR /app
 
 ENV HUSKY=0
@@ -29,7 +29,7 @@ RUN NODE_OPTIONS=--max-old-space-size=4096 pnpm run build
 RUN pnpm prune --prod --ignore-scripts
 
 # ---- runtime stage ----
-FROM node:20.18.0-alpine  AS runtime
+FROM node:20.19.0-alpine  AS runtime
 WORKDIR /app
 
 ENV OPERATING_ENV=production
