@@ -31,8 +31,6 @@ import { stripIndents } from '~/utils/strip-indent';
 import globalStyles from './styles/index.scss?url';
 
 import 'virtual:uno.css';
-import type { ComponentType } from 'react';
-import { useState } from 'react';
 
 // 定义连接设置类型
 export interface ConnectionSettings {
@@ -154,7 +152,6 @@ export function Layout() {
             </DndProvider>
           )}
         </ClientOnly>
-        <ClientOnly>{() => <LazyAuthErrorToast />}</ClientOnly>
         <ScrollRestoration />
         <Scripts />
         <Toaster
@@ -242,15 +239,3 @@ export default function App() {
 
   return <Outlet />;
 }
-
-const LazyAuthErrorToast = () => {
-  const [AuthErrorToast, setAuthErrorToast] = useState<ComponentType | null>(null);
-
-  useEffect(() => {
-    import('~/.client/components/AuthErrorToast.client').then((module) => {
-      setAuthErrorToast(() => module.AuthErrorToast);
-    });
-  }, []);
-
-  return AuthErrorToast ? <AuthErrorToast /> : null;
-};
