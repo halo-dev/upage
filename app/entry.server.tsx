@@ -11,6 +11,9 @@ import type { AppLoadContext, EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { PassThrough } from 'stream';
 
+// Reject/cancel all pending promises after 5 seconds
+export const streamTimeout = 5000;
+
 export default function handleRequest(
   request: Request,
   responseStatusCode: number,
@@ -65,7 +68,7 @@ function handleBotRequest(
       },
     });
 
-    setTimeout(abort);
+    setTimeout(abort, streamTimeout + 1000);
   });
 }
 
@@ -108,6 +111,6 @@ function handleBrowserRequest(
       },
     });
 
-    setTimeout(abort);
+    setTimeout(abort, streamTimeout + 1000);
   });
 }
