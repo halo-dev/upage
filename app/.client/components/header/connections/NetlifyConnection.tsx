@@ -112,7 +112,7 @@ export default function NetlifyConnection() {
     try {
       setIsActionLoading(true);
 
-      const response = await fetch(`/api/netlify/deploys/${deployId}/${action}`, {
+      const response = await fetch(`/api/netlify/actions/${deployId}/${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

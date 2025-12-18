@@ -42,7 +42,7 @@
     "@headlessui/react": "^2.2.9",
     "@iconify-json/svg-spinners": "^1.2.4",
     "@logto/node": "^3.1.6",
-    "@logto/remix": "^3.0.10",
+    "@logto/react-router": "^1.0.0",
     "@nanostores/react": "^1.0.0",
     "@octokit/rest": "^22.0.0",
     "@openrouter/ai-sdk-provider": "^1.2.0",

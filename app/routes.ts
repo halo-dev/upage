@@ -1,66 +1,95 @@
-import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
+import { index, layout, prefix, type RouteConfig, route } from '@react-router/dev/routes';
 
 /**
  * 路由配置文件
- * 从 Remix v2 文件系统路由迁移到 React Router v7 配置化路由
  */
 export default [
   // ============================================
-  // 页面路由 (使用 pathless layout)
+  // 页面路由
   // ============================================
-  layout('routes/_layout.tsx', [
+  layout('routes/layout.tsx', [
     // 首页
-    index('routes/_layout._index.tsx'),
+    index('routes/home.tsx'),
     // 聊天详情页
-    route('chat/:id', 'routes/_layout.chat.$id.tsx'),
+    route('chat/:id', 'routes/chat.tsx'),
   ]),
 
   // ============================================
   // API 资源路由
   // ============================================
 
-  // 1Panel 部署相关
-  route('api/1panel/:action', 'routes/api.1panel.$action/route.tsx'),
+  ...prefix('api', [
+    // 1Panel 相关
+    ...prefix('1panel', [
+      route('deploy', 'routes/api/1panel/deploy.ts'),
+      route('websites', 'routes/api/1panel/websites.ts'),
+      route('stats', 'routes/api/1panel/stats.ts'),
+      route('auth', 'routes/api/1panel/auth.ts'),
+      route('toggle-access', 'routes/api/1panel/toggle-access.ts'),
+      route('delete', 'routes/api/1panel/delete.ts'),
+    ]),
+    // 用户认证相关
+    ...prefix('auth', [route('user', 'routes/api/auth/user.ts'), route(':action', 'routes/api/auth/logto.ts')]),
+    // 聊天相关
+    ...prefix('chat', [
+      index('routes/api/chat/index.ts'),
+      route('list', 'routes/api/chat/list.ts'),
+      route('update', 'routes/api/chat/update.ts'),
+      route('delete', 'routes/api/chat/delete.ts'),
+      route('fork', 'routes/api/chat/fork.ts'),
+    ]),
+    // 部署记录相关
+    ...prefix('deployments', [
+      index('routes/api/deployments/index.ts'),
+      route('get-by-chat', 'routes/api/deployments/get-by-chat.ts'),
+      route('stats', 'routes/api/deployments/stats.ts'),
+    ]),
+    // AI 提示词增强
+    route('enhancer', 'routes/api/enhancer/index.ts'),
+    // GitHub 相关
+    ...prefix('github', [
+      route('auth', 'routes/api/github/auth.ts'),
+      route('disconnect', 'routes/api/github/disconnect.ts'),
+      route('push', 'routes/api/github/push.ts'),
+      route('stats', 'routes/api/github/stats.ts'),
+      route('repos', 'routes/api/github/repos.ts'),
+    ]),
+    // 健康检查
+    route('health', 'routes/api/health.ts'),
+    // Netlify 相关
+    ...prefix('netlify', [
+      route('auth', 'routes/api/netlify/auth.ts'),
+      route('delete', 'routes/api/netlify/delete.ts'),
+      route('deploy', 'routes/api/netlify/deploy.ts'),
+      route('stats', 'routes/api/netlify/stats.ts'),
+      route('toggle-access', 'routes/api/netlify/toggle-access.ts'),
+      route('actions/:deployId/:action', 'routes/api/netlify/actions.ts'),
 
-  // 用户认证相关
-  route('api/auth/:action', 'routes/api.auth.$action/route.tsx'),
+      ...prefix('sites/:siteId', [
+        index('routes/api/netlify/sites/index.ts'),
+        route('cache', 'routes/api/netlify/sites/cache.ts'),
+      ]),
+    ]),
+    // 项目相关
+    ...prefix('project', [
+      index('routes/api/project/index.ts'),
+      route('export', 'routes/api/project/export.ts'),
+      route('files', 'routes/api/project/files.ts'),
+    ]),
+    // 文件上传相关
+    ...prefix('upload', [route('asset', 'routes/api/upload/asset.ts')]),
+    // Vercel
+    ...prefix('vercel', [
+      route('auth', 'routes/api/vercel/auth.ts'),
+      route('toggle-access', 'routes/api/vercel/toggle-access.ts'),
+      route('delete', 'routes/api/vercel/delete.ts'),
+      route('deploy', 'routes/api/vercel/deploy.ts'),
+      route('stats', 'routes/api/vercel/stats.ts'),
+    ]),
+    // 用户设置相关
+    route('user/settings', 'routes/api/user-settings.ts'),
+  ]),
 
-  // 聊天相关
-  route('api/chat', 'routes/api.chat/route.tsx'),
-  route('api/chat/:action', 'routes/api.chat.$action/route.tsx'),
-
-  // 部署记录相关
-  route('api/deployments', 'routes/api.deployments/route.tsx'),
-  route('api/deployments/:action', 'routes/api.deployments.$action/route.tsx'),
-
-  // AI 增强相关
-  route('api/enhancer', 'routes/api.enhancer/route.tsx'),
-
-  // GitHub 相关
-  route('api/github/:action', 'routes/api.github.$action/route.tsx'),
-
-  // 健康检查
-  route('api/health', 'routes/api.health/route.tsx'),
-
-  // Netlify 部署相关
-  route('api/netlify/:action', 'routes/api.netlify.$action/route.tsx'),
-  route('api/netlify/deploys/:deployId/:action', 'routes/api.netlify.deploys.$deployId.$action.ts'),
-  route('api/netlify/sites/:siteId', 'routes/api.netlify.sites.$siteId.ts'),
-  route('api/netlify/sites/:siteId/cache', 'routes/api.netlify.sites.$siteId.cache.ts'),
-
-  // 项目相关
-  route('api/project', 'routes/api.project/route.tsx'),
-  route('api/project/:action', 'routes/api.project.$action/route.tsx'),
-
-  // 文件上传相关
-  route('api/upload/:action', 'routes/api.upload.$action/route.tsx'),
-
-  // 用户设置相关
-  route('api/user/settings', 'routes/api.user.settings.ts'),
-
-  // Vercel 部署相关
-  route('api/vercel/:action', 'routes/api.vercel.$action/route.tsx'),
-
-  // 资源文件访问 (splat 路由)
-  route('assets/:action/*', 'routes/assets.$action.$/route.tsx'),
+  // 用户资源文件访问
+  route('assets/users/*', 'routes/assets/users.ts'),
 ] satisfies RouteConfig;
