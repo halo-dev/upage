@@ -1,6 +1,6 @@
 import type { UserInfoResponse } from '@logto/node';
 import type { Deployment } from '@prisma/client';
-import { data, type LoaderFunctionArgs, redirect } from 'react-router';
+import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { Chat } from '~/.client/components/chat/Chat';
 import { getUser, requireAuth } from '~/.server/service/auth';
 import { getUserChatById } from '~/.server/service/chat';
@@ -8,6 +8,7 @@ import { getChatDeployments } from '~/.server/service/deployment';
 import { getAssetsByPageId } from '~/.server/service/page-asset';
 import { migratePageV1ToV2 } from '~/.server/service/page-v2';
 import type { ChatWithMessages } from '~/types/chat';
+import type { Route } from './+types/chat';
 
 export async function loader(args: LoaderFunctionArgs) {
   // 添加权限验证
@@ -42,7 +43,7 @@ export async function loader(args: LoaderFunctionArgs) {
   const chat = await getUserChatById(id, userId);
 
   if (!chat) {
-    return data(resultData);
+    return resultData;
   }
 
   // 处理 Page V1 到 PageV2 的迁移
@@ -86,9 +87,9 @@ export async function loader(args: LoaderFunctionArgs) {
     chat.messages = chat.messages.slice(0, chat.messages.findIndex((message) => message.id === rewindTo) + 1);
   }
 
-  return data(resultData);
+  return resultData;
 }
 
-export default function Templates() {
-  return <Chat />;
+export default function TemplateChat(componentProps: Route.ComponentProps) {
+  return <Chat {...componentProps} />;
 }

@@ -25,7 +25,7 @@ export async function loader(args: LoaderFunctionArgs) {
   return assetsUser(args);
 }
 
-export async function assetsUser({ request, params }: LoaderFunctionArgs) {
+async function assetsUser({ request, params }: LoaderFunctionArgs) {
   try {
     const { '*': filepath } = params;
 

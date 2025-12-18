@@ -24,7 +24,7 @@ export async function action({ request }: ActionFunctionArgs) {
   return toggleAccess({ request, userId });
 }
 
-export async function setNetlifySiteName(token: string, siteId: string, name: string): Promise<NetlifySite> {
+async function setNetlifySiteName(token: string, siteId: string, name: string): Promise<NetlifySite> {
   try {
     const response = await request(`https://api.netlify.com/api/v1/sites/${siteId}`, {
       method: 'PATCH',
@@ -51,7 +51,7 @@ export async function setNetlifySiteName(token: string, siteId: string, name: st
   }
 }
 
-export async function toggleAccess({ userId, request }: { userId: string; request: Request }) {
+async function toggleAccess({ userId, request }: { userId: string; request: Request }) {
   const { id } = await request.json();
 
   try {

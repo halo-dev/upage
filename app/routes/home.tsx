@@ -1,4 +1,4 @@
-import { data, type LoaderFunctionArgs, type MetaFunction } from 'react-router';
+import { type LoaderFunctionArgs, type MetaFunction } from 'react-router';
 import { Home } from '~/.client/components/Home';
 import { getUser } from '~/.server/service/auth';
 import { getUserUsageStats } from '~/.server/service/chat-usage';
@@ -11,13 +11,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const userContext = await getUser(request);
   const userChatUsage = await getUserUsageStats(userContext?.userInfo?.sub as string);
 
-  return data({
+  return {
     auth: {
       isAuthenticated: userContext?.isAuthenticated,
       userInfo: userContext?.isAuthenticated ? userContext.userInfo : null,
     },
     chatUsage: userChatUsage,
-  });
+  };
 }
 /**
  * Landing page component for UPage

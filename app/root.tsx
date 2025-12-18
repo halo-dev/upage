@@ -122,7 +122,7 @@ const inlineThemeCode = stripIndents`
   }
 `;
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout() {
   const data = useRouteLoaderData<{
     ENV: { OPERATING_ENV: string; MAX_UPLOAD_SIZE_MB: number };
   }>('root');
@@ -147,7 +147,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             __html: `window.ENV = ${JSON.stringify(data?.ENV || {})}`,
           }}
         />
-        <ClientOnly>{() => <DndProvider backend={HTML5Backend}>{children}</DndProvider>}</ClientOnly>
+        <ClientOnly>
+          {() => (
+            <DndProvider backend={HTML5Backend}>
+              <Outlet />
+            </DndProvider>
+          )}
+        </ClientOnly>
         <ClientOnly>{() => <LazyAuthErrorToast />}</ClientOnly>
         <ScrollRestoration />
         <Scripts />
