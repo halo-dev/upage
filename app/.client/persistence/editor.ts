@@ -1,4 +1,4 @@
-import { useSearchParams } from '@remix-run/react';
+import { useSearchParams } from 'react-router';
 import { getChatId } from '~/.client/stores/ai-state';
 import { createScopedLogger } from '~/.client/utils/logger';
 import type { Page, Section } from '~/types/actions';

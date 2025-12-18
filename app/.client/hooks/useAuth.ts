@@ -1,8 +1,8 @@
-import { useFetcher, useRouteLoaderData } from '@remix-run/react';
 /*
  * 用户认证Hook
  */
 import { useCallback, useEffect, useState } from 'react';
+import { useFetcher, useRouteLoaderData } from 'react-router';
 
 export interface UserInfo {
   sub?: string;

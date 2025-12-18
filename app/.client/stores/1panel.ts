@@ -72,8 +72,9 @@ export async function fetch1PanelStats() {
 
     return websites;
   } catch (error) {
-    console.error('1Panel API Error:', error);
-    toast.error(`获取 1Panel 站点信息失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    console.error('1Panel API Error:', errorMessage);
+    toast.error(errorMessage);
   } finally {
     isFetchingStats.set(false);
   }

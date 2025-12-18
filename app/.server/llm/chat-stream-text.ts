@@ -9,7 +9,7 @@ import {
 } from 'ai';
 import { getSystemPrompt } from '~/.server/prompts/prompts';
 import { approximatePromptTokenCount, encode } from '~/.server/utils/token';
-import type { ElementInfo } from '~/routes/api.chat/chat.server';
+import type { ElementInfo } from '~/routes/api/chat/chat';
 import type { UPageUIMessage } from '~/types/message';
 import { MAX_TOKENS } from './constants';
 import type { SelectContextResult } from './select-context';

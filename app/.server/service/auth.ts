@@ -1,7 +1,7 @@
 import type { IdTokenClaims } from '@logto/node';
-import { type LogtoContext, makeLogtoRemix } from '@logto/remix';
-import type { LoaderFunctionArgs } from '@remix-run/node';
-import { createCookieSessionStorage, redirect } from '@remix-run/node';
+import { type LogtoContext, makeLogtoReactRouter } from '@logto/react-router';
+import type { LoaderFunctionArgs } from 'react-router';
+import { createCookieSessionStorage, redirect } from 'react-router';
 import { createScopedLogger } from '~/.server/utils/logger';
 import type { LogtoUser } from '~/types/logto';
 
@@ -90,7 +90,7 @@ const config: LogtoConfig = {
 };
 
 // 创建原始 Logto 实例（私有，不直接导出）
-const originalLogto = makeLogtoRemix(config, { sessionStorage });
+const originalLogto = makeLogtoReactRouter(config, { sessionStorage });
 
 export function shouldEnforceAuth(): boolean {
   return process.env.LOGTO_ENABLE === 'true';
@@ -119,24 +119,6 @@ export async function setAuthError(errorMessage: string): Promise<string> {
   const session = await errorSessionStorage.getSession();
   session.set('authError', errorMessage);
   return errorSessionStorage.commitSession(session);
-}
-
-/**
- * 获取并清除认证错误信息
- */
-export async function getAuthError(
-  request: Request,
-): Promise<{ errorMessage?: string; headers: { 'Set-Cookie': string } }> {
-  const session = await errorSessionStorage.getSession(request.headers.get('Cookie'));
-  const errorMessage = session.get('authError') as string | undefined;
-
-  // 清除错误信息
-  return {
-    errorMessage,
-    headers: {
-      'Set-Cookie': await errorSessionStorage.destroySession(session),
-    },
-  };
 }
 
 /**

@@ -1,7 +1,11 @@
 import { useStore } from '@nanostores/react';
-import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
-import { data } from '@remix-run/node';
+import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
+import { useEffect } from 'react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import type { LinksFunction, LoaderFunctionArgs } from 'react-router';
 import {
+  data,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -10,11 +14,7 @@ import {
   ScrollRestoration,
   useRouteError,
   useRouteLoaderData,
-} from '@remix-run/react';
-import tailwindReset from '@unocss/reset/tailwind-compat.css?url';
-import { useEffect } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
+} from 'react-router';
 import { ClientOnly } from 'remix-utils/client-only';
 import { Toaster } from 'sonner';
 import { logStore } from '~/.client/stores/logs';
@@ -31,8 +31,6 @@ import { stripIndents } from '~/utils/strip-indent';
 import globalStyles from './styles/index.scss?url';
 
 import 'virtual:uno.css';
-import type { ComponentType } from 'react';
-import { useState } from 'react';
 
 // 定义连接设置类型
 export interface ConnectionSettings {
@@ -122,7 +120,7 @@ const inlineThemeCode = stripIndents`
   }
 `;
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout() {
   const data = useRouteLoaderData<{
     ENV: { OPERATING_ENV: string; MAX_UPLOAD_SIZE_MB: number };
   }>('root');
@@ -147,8 +145,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
             __html: `window.ENV = ${JSON.stringify(data?.ENV || {})}`,
           }}
         />
-        <ClientOnly>{() => <DndProvider backend={HTML5Backend}>{children}</DndProvider>}</ClientOnly>
-        <ClientOnly>{() => <LazyAuthErrorToast />}</ClientOnly>
+        <ClientOnly>
+          {() => (
+            <DndProvider backend={HTML5Backend}>
+              <Outlet />
+            </DndProvider>
+          )}
+        </ClientOnly>
         <ScrollRestoration />
         <Scripts />
         <Toaster
@@ -236,15 +239,3 @@ export default function App() {
 
   return <Outlet />;
 }
-
-const LazyAuthErrorToast = () => {
-  const [AuthErrorToast, setAuthErrorToast] = useState<ComponentType | null>(null);
-
-  useEffect(() => {
-    import('~/.client/components/AuthErrorToast.client').then((module) => {
-      setAuthErrorToast(() => module.AuthErrorToast);
-    });
-  }, []);
-
-  return AuthErrorToast ? <AuthErrorToast /> : null;
-};

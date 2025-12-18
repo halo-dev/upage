@@ -1,0 +1,58 @@
+import type { ActionFunctionArgs } from 'react-router';
+import { requireAuth } from '~/.server/service/auth';
+import { get1PanelConnectionSettings } from '~/.server/service/connection-settings';
+import { deleteDeploymentById, getDeploymentById } from '~/.server/service/deployment';
+import { errorResponse, successResponse } from '~/.server/utils/api-response';
+import { createScopedLogger } from '~/.server/utils/logger';
+import { deleteWebsite } from './1panel';
+
+const logger = createScopedLogger('api.1panel.delete');
+
+export async function action({ request }: ActionFunctionArgs) {
+  const authResult = await requireAuth(request, { isApi: true });
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
+  const userId = authResult.userInfo?.sub;
+  if (!userId) {
+    return errorResponse(401, '用户未登录');
+  }
+
+  return deletePage({ request, userId });
+}
+
+async function deletePage({ request, userId }: { request: Request; userId: string }) {
+  const { id } = await request.json();
+
+  try {
+    // 查找部署记录
+    const deployment = await getDeploymentById(id);
+
+    if (!deployment) {
+      return errorResponse(404, '未找到部署记录');
+    }
+
+    const connectionSettings = await get1PanelConnectionSettings(userId);
+    if (!connectionSettings) {
+      return errorResponse(401, '未配置1Panel连接信息');
+    }
+
+    const { deploymentId: siteId } = deployment;
+    const { serverUrl, apiKey } = connectionSettings;
+
+    const result = await deleteWebsite({ serverUrl, apiKey, siteId: Number(siteId) });
+    if (!result) {
+      return errorResponse(500, '删除1Panel网站失败');
+    }
+
+    await deleteDeploymentById(id);
+
+    logger.info(`用户 ${userId} 已删除 1Panel 部署 ${id}`);
+    return successResponse(true, '页面已删除');
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`删除 1Panel 部署 ${id} 失败: ${errorMessage}`);
+    return errorResponse(500, errorMessage);
+  }
+}

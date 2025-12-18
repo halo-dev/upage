@@ -2,7 +2,7 @@
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "types": [
-      "@remix-run/node",
+      "@react-router/node",
       "vite/client",
       "@types/express",
       "@types/compression"
@@ -23,9 +23,9 @@
     "paths": {
       "~/*": ["./app/*"]
     },
-
     // vite takes care of building everything, not tsc
-    "noEmit": true
+    "noEmit": true,
+    "rootDirs": [".", "./.react-router/types"]
   },
   "include": [
     "**/*.ts",
@@ -33,6 +33,7 @@
     "**/.server/**/*.ts",
     "**/.server/**/*.tsx",
     "**/.client/**/*.ts",
-    "**/.client/**/*.tsx"
+    "**/.client/**/*.tsx",
+    ".react-router/types/**/*"
   ]
 }

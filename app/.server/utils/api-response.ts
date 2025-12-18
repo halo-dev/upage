@@ -1,4 +1,4 @@
-import { data as remixData } from '@remix-run/node';
+import { data as remixData } from 'react-router';
 import type { ApiResponse } from '~/types/global';
 
 /**

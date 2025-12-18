@@ -1,8 +1,8 @@
 import { useStore } from '@nanostores/react';
-import { useFetcher } from '@remix-run/react';
 import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { useFetcher } from 'react-router';
 import { toast } from 'sonner';
 import { NetlifyDeploymentLink } from '~/.client/components/chat/NetlifyDeploymentLink.client';
 import useViewport from '~/.client/hooks';

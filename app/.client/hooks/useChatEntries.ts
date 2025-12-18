@@ -1,5 +1,5 @@
-import { useFetcher } from '@remix-run/react';
 import { useCallback, useEffect, useState } from 'react';
+import { useFetcher } from 'react-router';
 import { debounce } from '~/.client/utils/debounce';
 import type { ApiResponse } from '~/types/global';
 

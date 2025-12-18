@@ -1,15 +1,15 @@
+import type { Route } from '.react-router/types/app/routes/+types/chat';
 import { useStore } from '@nanostores/react';
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useLoaderData, useLocation, useNavigate } from '@remix-run/react';
 import classNames from 'classnames';
 import { useAnimate } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
 import { useSnapScroll } from '~/.client/hooks';
 import { useChatMessage } from '~/.client/hooks/useChatMessage';
 import { aiState, setChatId, setChatStarted } from '~/.client/stores/ai-state';
 import { webBuilderStore } from '~/.client/stores/web-builder';
-import { renderLogger } from '~/.client/utils/logger';
-import type { ChatMessage, ChatWithMessages } from '~/types/chat';
+import type { ChatMessage } from '~/types/chat';
 import { WebBuilder } from '../webbuilder/WebBuilder';
 import styles from './BaseChat.module.scss';
 import ChatAlert from './ChatAlert';
@@ -24,12 +24,11 @@ export type ImageData = {
   base64?: string;
 };
 
-export function Chat({ className }: { className?: string }) {
-  renderLogger.trace('Chat');
+export function Chat({ loaderData, className }: Route.ComponentProps & { className?: string }) {
+  const { id, chat } = loaderData;
+
   const location = useLocation();
   const locationState = location.state as { message?: string; files?: File[] };
-
-  const { id, chat } = useLoaderData<{ id: string; chat?: ChatWithMessages }>();
   const navigate = useNavigate();
   const { showChat } = useStore(aiState);
   const actionAlert = useStore(webBuilderStore.chatStore.alert);

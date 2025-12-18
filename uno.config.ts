@@ -105,7 +105,7 @@ export default defineConfig({
     'transition-base': 'duration-200 upage-ease-cubic-bezier',
     'transition-theme': 'transition-[opacity,transform,box-shadow] transition-base',
     'transition-text-color': 'transition-colors transition-base',
-    'transition-background': 'transition-[background] transition-base',
+    'transition-background': 'transition-[background-color] transition-base',
     'transition-border': 'transition-[border,box-shadow] transition-base',
     kdb: 'bg-upage-elements-code-background text-upage-elements-code-text py-1 px-1.5 rounded-md',
     'max-w-chat': 'max-w-[var(--chat-max-width)]',

@@ -1,7 +1,7 @@
 import { useChat } from '@ai-sdk/react';
-import { useSearchParams } from '@remix-run/react';
 import { DefaultChatTransport, type FileUIPart } from 'ai';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 import { createScopedLogger } from '~/.client/utils/logger';
 import { pagesToArtifacts } from '~/.client/utils/page';

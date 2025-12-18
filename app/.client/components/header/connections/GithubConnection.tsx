@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
-import { useRevalidator } from '@remix-run/react';
 import classNames from 'classnames';
 import { useEffect, useState } from 'react';
+import { useRevalidator } from 'react-router';
 import { toast } from 'sonner';
 import { Button } from '~/.client/components/ui/Button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '~/.client/components/ui/Collapsible';

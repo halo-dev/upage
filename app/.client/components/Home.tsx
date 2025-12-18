@@ -1,9 +1,9 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
-import { useNavigate } from '@remix-run/react';
 import { generateId } from 'ai';
 import classNames from 'classnames';
 import { AnimatePresence, motion, useAnimate } from 'framer-motion';
 import { startTransition, useState } from 'react';
+import { useNavigate, useNavigation } from 'react-router';
 import { ChatTextarea } from './chat/ChatTextarea';
 import { ExamplePrompts } from './chat/ExamplePrompts';
 import FilePreview from './chat/FilePreview';
@@ -11,17 +11,16 @@ import { ScreenshotStateManager } from './chat/ScreenshotStateManager';
 
 export function Home({ className }: { className?: string }) {
   const navigate = useNavigate();
+  const navigation = useNavigation();
+  const isNavigating = Boolean(navigation.location);
 
   const [animationScope] = useAnimate();
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
-  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleSendMessage = (message?: string) => {
     if (!message) {
       return;
     }
-
-    setIsNavigating(true);
 
     const id = generateId();
 
