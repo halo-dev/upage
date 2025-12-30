@@ -77,7 +77,7 @@ title: 使用 1Panel 部署
 
 ![](/img/deployment/1panel/create_website.png)
 
-1. 在已装应用中选择我们刚刚新建的 Halo 应用。
+1. 在已装应用中选择我们刚刚新建的 UPage 应用。
 2. 正确填写主域名，需要注意的是需要 **提前解析好域名到服务器 IP**。
 3. 点击确认按钮，等待网站创建完成即可访问 UPage。
 
