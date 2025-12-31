@@ -1,3 +1,4 @@
+import type { Route } from '.react-router/types/app/+types/root';
 import { useStore } from '@nanostores/react';
 import { useEffect, useMemo, useState } from 'react';
 import { useFetcher, useRouteLoaderData } from 'react-router';
@@ -6,7 +7,6 @@ import { aiState } from '~/.client/stores/ai-state';
 import { githubConnection, updateGitHubConnection } from '~/.client/stores/github';
 import { webBuilderStore } from '~/.client/stores/web-builder';
 import { logger } from '~/.client/utils/logger';
-import type { ConnectionSettings } from '~/root';
 import type { ApiResponse } from '~/types/global';
 import { DialogContainer } from './DialogContainer';
 import { GitHubConnectionView } from './GitHubConnectionView';
@@ -19,7 +19,7 @@ interface PushToGitHubDialogProps {
 }
 
 export function PushToGitHubDialog({ isOpen, onClose }: PushToGitHubDialogProps) {
-  const rootData = useRouteLoaderData<{ connectionSettings?: ConnectionSettings }>('root');
+  const rootData = useRouteLoaderData<Route.ComponentProps['loaderData']>('root');
   const isGitHubConfigured = rootData?.connectionSettings?.githubConnection || false;
   const connection = useStore(githubConnection);
   const { chatId } = useStore(aiState);

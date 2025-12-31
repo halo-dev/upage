@@ -11,7 +11,7 @@ export default [
     // 首页
     index('routes/home.tsx'),
     // 聊天详情页
-    route('chat/:id', 'routes/chat.tsx'),
+    route('chat/:id', 'routes/chat.tsx', { id: 'chat' }),
   ]),
 
   // ============================================

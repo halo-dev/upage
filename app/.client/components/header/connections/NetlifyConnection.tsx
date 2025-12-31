@@ -1,3 +1,4 @@
+import type { Route } from '.react-router/types/app/+types/root';
 import { useStore } from '@nanostores/react';
 import classNames from 'classnames';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,7 +16,6 @@ import {
   updateNetlifyConnection,
 } from '~/.client/stores/netlify';
 import { logger } from '~/.client/utils/logger';
-import type { ConnectionSettings } from '~/root';
 import type { ApiResponse } from '~/types/global';
 import type { NetlifyBuild, NetlifyDeploy, NetlifySite } from '~/types/netlify';
 import ConnectionBorder from './components/ConnectionBorder';
@@ -30,7 +30,7 @@ interface SiteAction {
 }
 
 export default function NetlifyConnection() {
-  const rootData = useRouteLoaderData<{ connectionSettings?: ConnectionSettings }>('root');
+  const rootData = useRouteLoaderData<Route.ComponentProps['loaderData']>('root');
   const connectFetcher = useFetcher<ApiResponse>();
   const settingsFetcher = useFetcher<ApiResponse>();
 

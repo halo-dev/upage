@@ -1,21 +1,11 @@
 /*
  * 用户认证Hook
  */
+import type { Route } from '.react-router/types/app/+types/root';
 import { useCallback, useEffect, useState } from 'react';
 import { useFetcher, useRouteLoaderData } from 'react-router';
 
-export interface UserInfo {
-  sub?: string;
-  name?: string;
-  // 用户登录名，如果未启用用户名登录则可能为空
-  username?: string;
-  picture?: string;
-  // 用户邮箱，可能为空
-  email?: string;
-  // 用户手机号，可能为空
-  phone_number?: string;
-  [key: string]: any;
-}
+type UserInfo = Route.ComponentProps['loaderData']['auth']['userInfo'];
 
 interface AuthUserResponse {
   isAuthenticated: boolean;
@@ -29,7 +19,7 @@ interface AuthUserResponse {
  */
 export function useAuth() {
   // 尝试从根加载器获取数据
-  const rootData = useRouteLoaderData<{ auth?: { isAuthenticated: boolean; userInfo: UserInfo | null } }>('root');
+  const rootData = useRouteLoaderData<Route.ComponentProps['loaderData']>('root');
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(rootData?.auth?.isAuthenticated || false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(rootData?.auth?.userInfo || null);

@@ -5,7 +5,6 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import type { LinksFunction, LoaderFunctionArgs } from 'react-router';
 import {
-  data,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -31,6 +30,7 @@ import { stripIndents } from '~/utils/strip-indent';
 import globalStyles from './styles/index.scss?url';
 
 import 'virtual:uno.css';
+import type { Route } from './+types/root';
 
 // 定义连接设置类型
 export interface ConnectionSettings {
@@ -69,7 +69,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     };
   }
 
-  return data({
+  return {
     auth: {
       isAuthenticated: userContext.isAuthenticated,
       userInfo: userContext.isAuthenticated ? userContext.userInfo : null,
@@ -80,7 +80,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       MAX_UPLOAD_SIZE_MB: parseInt(process.env.MAX_UPLOAD_SIZE_MB || '5'),
     },
     connectionSettings,
-  });
+  };
 }
 
 export const links: LinksFunction = () => [
@@ -121,9 +121,7 @@ const inlineThemeCode = stripIndents`
 `;
 
 export function Layout() {
-  const data = useRouteLoaderData<{
-    ENV: { OPERATING_ENV: string; MAX_UPLOAD_SIZE_MB: number };
-  }>('root');
+  const data = useRouteLoaderData<Route.ComponentProps['loaderData']>('root');
   const theme = useStore(themeStore);
 
   useEffect(() => {

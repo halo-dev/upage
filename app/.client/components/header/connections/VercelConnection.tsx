@@ -1,3 +1,4 @@
+import type { Route } from '.react-router/types/app/+types/root';
 import { useStore } from '@nanostores/react';
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -6,7 +7,6 @@ import { toast } from 'sonner';
 import { logStore } from '~/.client/stores/logs';
 import { fetchVercelStats, isFetchingStats, updateVercelConnection, vercelConnection } from '~/.client/stores/vercel';
 import { logger } from '~/.client/utils/logger';
-import type { ConnectionSettings } from '~/root';
 import ConnectionBorder from './components/ConnectionBorder';
 
 interface ApiResponse {
@@ -16,7 +16,7 @@ interface ApiResponse {
 }
 
 export default function VercelConnection() {
-  const rootData = useRouteLoaderData<{ connectionSettings?: ConnectionSettings }>('root');
+  const rootData = useRouteLoaderData<Route.ComponentProps['loaderData']>('root');
   const settingsFetcher = useFetcher<ApiResponse>();
   const connectFetcher = useFetcher<ApiResponse>();
 

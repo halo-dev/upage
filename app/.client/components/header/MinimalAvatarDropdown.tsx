@@ -29,7 +29,7 @@ export const MinimalAvatarDropdown = ({}: MinimalAvatarDropdownProps) => {
       return 'Guest User';
     }
 
-    return userInfo.name || userInfo.username;
+    return userInfo.name || userInfo.username || '';
   }, [userInfo]);
 
   const contactInfo = useMemo(() => {

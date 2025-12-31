@@ -1,3 +1,4 @@
+import type { Route } from '.react-router/types/app/+types/root';
 import { useState } from 'react';
 import { useRevalidator, useRouteLoaderData } from 'react-router';
 import { useAuth } from './useAuth';
@@ -40,7 +41,7 @@ export interface ChatUsageStats {
  * useChatUsage Hook - 获取用户聊天使用量统计
  */
 export function useChatUsage() {
-  const rootData = useRouteLoaderData<{ chatUsage?: ChatUsageStats }>('root');
+  const rootData = useRouteLoaderData<Route.ComponentProps['loaderData']>('root');
   const { isAuthenticated } = useAuth();
   const revalidator = useRevalidator();
 

@@ -1,7 +1,7 @@
+import type { Route } from '.react-router/types/app/routes/+types/chat';
 import { useCallback } from 'react';
 import { useRouteLoaderData, useSearchParams } from 'react-router';
 import type { Section } from '~/types/actions';
-import type { ChatWithMessages } from '~/types/chat';
 import type { PageAssetData, PageData } from '~/types/pages';
 import { useEditorStorage } from '../persistence/editor';
 
@@ -13,7 +13,7 @@ export interface ProjectData {
 }
 
 export function useChatHistory() {
-  const routeData = useRouteLoaderData<{ chat?: ChatWithMessages }>('routes/_layout.chat.$id');
+  const routeData = useRouteLoaderData<Route.ComponentProps['loaderData']>('chat');
   if (!routeData) {
     return;
   }
