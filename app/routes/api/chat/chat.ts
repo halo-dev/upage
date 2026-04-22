@@ -320,6 +320,21 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
             writer.write({
               type: 'finish',
             });
+          } else if (finishReason !== 'length') {
+            writer.write({
+              type: 'data-progress',
+              id: progressId,
+              data: {
+                label: 'response',
+                status: 'complete',
+                order: progressCounter++,
+                message: '响应生成完成',
+              },
+              transient: true,
+            });
+            writer.write({
+              type: 'finish',
+            });
           }
         },
         onAbort: async ({ totalUsage }) => {

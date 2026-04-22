@@ -200,7 +200,7 @@ export class ActionRunner {
       logger.error(`页面写入失败\n\n: ${errorMessage}`);
     }
 
-    this.#runPageSectionAction(action);
+    await this.#runPageSectionAction(action);
   }
 
   private updateSectionRootDomId(actionId: string, action: ActionState) {

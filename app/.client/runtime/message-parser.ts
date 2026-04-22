@@ -8,6 +8,11 @@ const ARTIFACT_TAG_CLOSE = '</uPageArtifact>';
 const ARTIFACT_ACTION_TAG_OPEN = '<uPageAction';
 const ARTIFACT_ACTION_TAG_CLOSE = '</uPageAction>';
 
+const ARTIFACT_TAG_OPEN_LOWER = ARTIFACT_TAG_OPEN.toLowerCase();
+const ARTIFACT_TAG_CLOSE_LOWER = ARTIFACT_TAG_CLOSE.toLowerCase();
+const ARTIFACT_ACTION_TAG_OPEN_LOWER = ARTIFACT_ACTION_TAG_OPEN.toLowerCase();
+const ARTIFACT_ACTION_TAG_CLOSE_LOWER = ARTIFACT_ACTION_TAG_CLOSE.toLowerCase();
+
 const logger = createScopedLogger('MessageParser');
 
 export interface ArtifactCallbackData extends UPageArtifactData {
@@ -77,6 +82,9 @@ export class StreamingMessageParser {
     let i = state.position;
     let earlyBreak = false;
 
+    // 生成一次小写版本，用于所有标签的大小写不敏感搜索
+    const inputLower = input.toLowerCase();
+
     while (i < input.length) {
       if (state.insideArtifact) {
         const currentArtifact = state.currentArtifact;
@@ -86,7 +94,7 @@ export class StreamingMessageParser {
         }
 
         if (state.insideAction) {
-          const closeIndex = input.indexOf(ARTIFACT_ACTION_TAG_CLOSE, i);
+          const closeIndex = inputLower.indexOf(ARTIFACT_ACTION_TAG_CLOSE_LOWER, i);
 
           const currentAction = state.currentAction;
 
@@ -128,8 +136,8 @@ export class StreamingMessageParser {
             break;
           }
         } else {
-          const actionOpenIndex = input.indexOf(ARTIFACT_ACTION_TAG_OPEN, i);
-          const artifactCloseIndex = input.indexOf(ARTIFACT_TAG_CLOSE, i);
+          const actionOpenIndex = inputLower.indexOf(ARTIFACT_ACTION_TAG_OPEN_LOWER, i);
+          const artifactCloseIndex = inputLower.indexOf(ARTIFACT_TAG_CLOSE_LOWER, i);
 
           if (actionOpenIndex !== -1 && (artifactCloseIndex === -1 || actionOpenIndex < artifactCloseIndex)) {
             const actionEndIndex = input.indexOf('>', actionOpenIndex);
@@ -137,7 +145,7 @@ export class StreamingMessageParser {
             if (actionEndIndex !== -1) {
               state.insideAction = true;
 
-              state.currentAction = this.#parseActionTag(input, actionOpenIndex, actionEndIndex);
+              state.currentAction = this.#parseActionTag(input, actionOpenIndex, actionEndIndex, state.actionId);
 
               this._options.callbacks?.onActionOpen?.({
                 artifactId: currentArtifact.id,
@@ -165,10 +173,10 @@ export class StreamingMessageParser {
         let j = i;
         let potentialTag = '';
 
-        while (j < input.length && potentialTag.length < ARTIFACT_TAG_OPEN.length) {
-          potentialTag += input[j];
+        while (j < input.length && potentialTag.length < ARTIFACT_TAG_OPEN_LOWER.length) {
+          potentialTag += inputLower[j];
 
-          if (potentialTag === ARTIFACT_TAG_OPEN) {
+          if (potentialTag === ARTIFACT_TAG_OPEN_LOWER) {
             const nextChar = input[j + 1];
 
             if (nextChar && nextChar !== '>' && nextChar !== ' ') {
@@ -216,7 +224,7 @@ export class StreamingMessageParser {
             }
 
             break;
-          } else if (!ARTIFACT_TAG_OPEN.startsWith(potentialTag)) {
+          } else if (!ARTIFACT_TAG_OPEN_LOWER.startsWith(potentialTag)) {
             output += input.slice(i, j + 1);
             i = j + 1;
             break;
@@ -225,7 +233,7 @@ export class StreamingMessageParser {
           j++;
         }
 
-        if (j === input.length && ARTIFACT_TAG_OPEN.startsWith(potentialTag)) {
+        if (j === input.length && ARTIFACT_TAG_OPEN_LOWER.startsWith(potentialTag)) {
           break;
         }
       } else {
@@ -247,7 +255,7 @@ export class StreamingMessageParser {
     this.#messages.clear();
   }
 
-  #parseActionTag(input: string, actionOpenIndex: number, actionEndIndex: number) {
+  #parseActionTag(input: string, actionOpenIndex: number, actionEndIndex: number, fallbackActionId: number = 0) {
     const actionTag = input.slice(actionOpenIndex, actionEndIndex + 1);
 
     const actionAttributes: UPageAction = {
@@ -260,10 +268,9 @@ export class StreamingMessageParser {
       validRootDomId: false,
     };
 
-    const id = this.#extractAttribute(actionTag, 'id') as string;
-    if (!id) {
-      logger.warn('页面 id 未指定');
-      throw new Error('Page id not specified');
+    const id = (this.#extractAttribute(actionTag, 'id') || `action-${fallbackActionId}`) as string;
+    if (!this.#extractAttribute(actionTag, 'id')) {
+      logger.warn('页面 id 未指定，使用自动生成 id');
     }
 
     const pageName = this.#extractAttribute(actionTag, 'pageName') as string;
@@ -271,14 +278,15 @@ export class StreamingMessageParser {
       logger.warn('页面名称未指定');
     }
 
-    const action = this.#extractAttribute(actionTag, 'action') as UPageAction['action'];
-    if (!action) {
-      logger.warn('Action 未指定');
+    const rawAction = this.#extractAttribute(actionTag, 'action');
+    if (!rawAction) {
+      logger.warn('Action 未指定，默认使用 add');
     }
 
-    if (!['add', 'remove', 'update'].includes(action)) {
-      logger.warn(`无效的 action: ${action}`);
-      throw new Error(`Invalid action: ${action}`);
+    const validActions = ['add', 'remove', 'update'] as const;
+    const action = (validActions.includes(rawAction as any) ? rawAction : 'add') as UPageAction['action'];
+    if (rawAction && !validActions.includes(rawAction as any)) {
+      logger.warn(`无效的 action: ${rawAction}，降级使用 add`);
     }
 
     const domId = this.#extractAttribute(actionTag, 'domId') as string;
@@ -305,8 +313,9 @@ export class StreamingMessageParser {
   }
 
   #extractAttribute(tag: string, attributeName: string): string | undefined {
-    const match = tag.match(new RegExp(`${attributeName}="([^"]*)"`, 'i'));
-    return match ? match[1] : undefined;
+    // 兼容不同模型的输出格式（如 id="foo" 或 id='foo'）
+    const match = tag.match(new RegExp(`${attributeName}=(["'])(.*?)\\1`, 'i'));
+    return match ? match[2] : undefined;
   }
 }
 

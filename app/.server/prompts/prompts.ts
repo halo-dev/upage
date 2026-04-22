@@ -206,7 +206,7 @@ ${allowedHTMLElements.map((tagName) => `<${tagName}>`).join(', ')}
   - 如果 \`action\` 为新增操作，\`domId\` 为当前待新增节点的父节点 id。如果是页面下新增一个根节点，则 \`domId\` 为 \`page-{pageName}\`。如果非页面根节点，则 \`domId\` 为待操作节点的父节点 id。
 </action_info>
 
-</examples>
+<examples>
   以下是正确使用构件的示例。请注意在生成时不要生成注释，注释仅用于辅助理解。
   <example>
     <user_query>构建一个定价页面</user_query>
@@ -330,7 +330,7 @@ ${allowedHTMLElements.map((tagName) => `<${tagName}>`).join(', ')}
       已更新 index 页面的标题为“个人主页”。
     </assistant_response>
   </example>
-<examples>
+</examples>
 `;
 
 export const CONTINUE_PROMPT = stripIndents`
