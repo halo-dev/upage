@@ -1,4 +1,4 @@
-import { data as remixData } from 'react-router';
+import { data as routerData } from 'react-router';
 import type { ApiResponse } from '~/types/global';
 
 /**
@@ -24,7 +24,7 @@ export function apiResponse<T = any>(
     ...(message !== undefined ? { message } : {}),
   };
 
-  return remixData(responseBody, { status, headers });
+  return routerData(responseBody, { status, headers });
 }
 
 /**

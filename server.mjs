@@ -15,7 +15,7 @@ const viteDevServer =
         }),
       );
 
-const remixHandler = createRequestHandler({
+const reactRouterHandler = createRequestHandler({
   build: viteDevServer
     ? () => viteDevServer.ssrLoadModule('virtual:react-router/server-build')
     : await import('./build/server/index.js'),
@@ -94,7 +94,7 @@ app.use('/uploads', express.static(storageDir, { maxAge: '1y' }));
 app.use(morgan('tiny'));
 
 // handle SSR requests
-app.use(remixHandler);
+app.use(reactRouterHandler);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

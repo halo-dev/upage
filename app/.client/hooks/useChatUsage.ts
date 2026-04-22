@@ -50,7 +50,7 @@ export function useChatUsage() {
 
   /**
    * 刷新聊天使用统计数据
-   * 通过 Remix 的 revalidator 重新验证根路由数据
+   * 通过 React Router 的 revalidator 重新验证根路由数据
    */
   const refreshUsageStats = () => {
     setIsLoading(true);
