@@ -11,6 +11,11 @@ import {
   parseLegacyArtifactTag,
 } from '~/utils/upage-legacy';
 
+const ARTIFACT_TAG_OPEN_LOWER = ARTIFACT_TAG_OPEN.toLowerCase();
+const ARTIFACT_TAG_CLOSE_LOWER = ARTIFACT_TAG_CLOSE.toLowerCase();
+const ARTIFACT_ACTION_TAG_OPEN_LOWER = ARTIFACT_ACTION_TAG_OPEN.toLowerCase();
+const ARTIFACT_ACTION_TAG_CLOSE_LOWER = ARTIFACT_ACTION_TAG_CLOSE.toLowerCase();
+
 const logger = createScopedLogger('MessageParser');
 
 export interface ArtifactCallbackData extends UPageArtifactData {
@@ -81,6 +86,9 @@ export class StreamingMessageParser {
     let i = state.position;
     let earlyBreak = false;
 
+    // 生成一次小写版本，用于所有标签的大小写不敏感搜索
+    const inputLower = input.toLowerCase();
+
     while (i < input.length) {
       if (state.insideArtifact) {
         const currentArtifact = state.currentArtifact;
@@ -90,7 +98,7 @@ export class StreamingMessageParser {
         }
 
         if (state.insideAction) {
-          const closeIndex = input.indexOf(ARTIFACT_ACTION_TAG_CLOSE, i);
+          const closeIndex = inputLower.indexOf(ARTIFACT_ACTION_TAG_CLOSE_LOWER, i);
 
           const currentAction = state.currentAction;
 
@@ -132,8 +140,8 @@ export class StreamingMessageParser {
             break;
           }
         } else {
-          const actionOpenIndex = input.indexOf(ARTIFACT_ACTION_TAG_OPEN, i);
-          const artifactCloseIndex = input.indexOf(ARTIFACT_TAG_CLOSE, i);
+          const actionOpenIndex = inputLower.indexOf(ARTIFACT_ACTION_TAG_OPEN_LOWER, i);
+          const artifactCloseIndex = inputLower.indexOf(ARTIFACT_TAG_CLOSE_LOWER, i);
 
           if (actionOpenIndex !== -1 && (artifactCloseIndex === -1 || actionOpenIndex < artifactCloseIndex)) {
             const actionEndIndex = input.indexOf('>', actionOpenIndex);
@@ -174,10 +182,10 @@ export class StreamingMessageParser {
         let j = i;
         let potentialTag = '';
 
-        while (j < input.length && potentialTag.length < ARTIFACT_TAG_OPEN.length) {
-          potentialTag += input[j];
+        while (j < input.length && potentialTag.length < ARTIFACT_TAG_OPEN_LOWER.length) {
+          potentialTag += inputLower[j];
 
-          if (potentialTag === ARTIFACT_TAG_OPEN) {
+          if (potentialTag === ARTIFACT_TAG_OPEN_LOWER) {
             const nextChar = input[j + 1];
 
             if (nextChar && nextChar !== '>' && nextChar !== ' ') {
@@ -215,7 +223,7 @@ export class StreamingMessageParser {
             }
 
             break;
-          } else if (!ARTIFACT_TAG_OPEN.startsWith(potentialTag)) {
+          } else if (!ARTIFACT_TAG_OPEN_LOWER.startsWith(potentialTag)) {
             output += input.slice(i, j + 1);
             i = j + 1;
             break;
@@ -224,7 +232,7 @@ export class StreamingMessageParser {
           j++;
         }
 
-        if (j === input.length && ARTIFACT_TAG_OPEN.startsWith(potentialTag)) {
+        if (j === input.length && ARTIFACT_TAG_OPEN_LOWER.startsWith(potentialTag)) {
           break;
         }
       } else {
@@ -246,7 +254,7 @@ export class StreamingMessageParser {
     this.#messages.clear();
   }
 
-  #parseActionTag(input: string, actionOpenIndex: number, actionEndIndex: number) {
+  #parseActionTag(input: string, actionOpenIndex: number, actionEndIndex: number, fallbackActionId: number = 0) {
     const actionTag = input.slice(actionOpenIndex, actionEndIndex + 1);
     const action = parseLegacyActionTag(actionTag, '');
     if (!action) {
