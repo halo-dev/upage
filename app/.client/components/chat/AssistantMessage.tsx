@@ -4,8 +4,8 @@ import Popover from '~/.client/components/ui/Popover';
 import Tooltip from '~/.client/components/ui/Tooltip';
 import {
   type ChatUIMessage,
-  type RenderableStructuredPageSource,
   type PreparationStageAnnotation,
+  type RenderableStructuredPageSource,
   type UPagePagePart,
 } from '~/types/message';
 import {
@@ -15,13 +15,6 @@ import {
   hasUpageBlockParts,
   isUpageToolPart,
 } from '~/utils/message-parts';
-import { DesignSystemPreview } from './DesignSystemPreview';
-import { Markdown } from './Markdown';
-import markdownStyles from './Markdown.module.scss';
-import { PreparationTimeline } from './PreparationTimeline';
-import { RunningStatus } from './RunningStatus';
-import ThoughtBox from './ThoughtBox';
-import { ToolInvocationCard } from './ToolInvocationCard';
 import {
   buildStepGroups,
   getPreparationToolTypeByStage,
@@ -33,12 +26,19 @@ import {
   isPreparationToolPart,
   isToolPart,
   mergeRelatedPageChangeSteps,
-  shouldHidePreparationToolPart,
-  shouldRenderDesignSystemPreviewFromToolPart,
   type PreparationToolPartType,
   type StepGroup,
   type StructuredPartItem,
+  shouldHidePreparationToolPart,
+  shouldRenderDesignSystemPreviewFromToolPart,
 } from './assistant-message-structure';
+import { DesignSystemPreview } from './DesignSystemPreview';
+import { Markdown } from './Markdown';
+import markdownStyles from './Markdown.module.scss';
+import { PreparationTimeline } from './PreparationTimeline';
+import { RunningStatus } from './RunningStatus';
+import ThoughtBox from './ThoughtBox';
+import { ToolInvocationCard } from './ToolInvocationCard';
 
 export const AssistantMessage = memo(
   ({
@@ -138,12 +138,10 @@ function StructuredMessageContent({
   const structuredPageSource = getStructuredPageSource(message);
   const renderedPageActionKeys = getRenderedPageActionKeys(messageParts, structuredPageSource);
   const blockArtifacts = getRenderableBlockArtifacts(messageParts, renderedPageActionKeys);
-  const hasPreparationToolParts = messageParts.some(
-    (part) => isToolPart(part) && isPreparationToolPart(part),
-  );
+  const hasPreparationToolParts = messageParts.some((part) => isToolPart(part) && isPreparationToolPart(part));
   const preparationParts = messageParts
     .filter(
-      (part): part is Extract<typeof messageParts[number], { type: 'data-preparation-stage' }> =>
+      (part): part is Extract<(typeof messageParts)[number], { type: 'data-preparation-stage' }> =>
         part.type === 'data-preparation-stage' && part.data.stage !== 'design-system',
     )
     .map((part) => part.data as PreparationStageAnnotation);
@@ -166,7 +164,7 @@ function StructuredMessageContent({
   const activeReasoningIndex = getActiveReasoningIndex(leadingParts, visibleSteps, isStreaming);
   const activeStep = isStreaming && visibleSteps.length > 0 ? visibleSteps[visibleSteps.length - 1] : null;
   const hasRunningActiveStep = activeStep ? hasRunningStepPart(activeStep, activeReasoningIndex) : false;
-  const activeStepIndex = hasRunningActiveStep ? activeStep?.startIndex ?? -1 : -1;
+  const activeStepIndex = hasRunningActiveStep ? (activeStep?.startIndex ?? -1) : -1;
 
   return (
     <>
@@ -378,9 +376,11 @@ function renderStructuredPart({
       return null;
     }
 
-    const pageParts = isUpageToolPart(part) && structuredPageSource === 'tool-upage-output' ? getCompletedUpageToolPartPages(part) : [];
+    const pageParts =
+      isUpageToolPart(part) && structuredPageSource === 'tool-upage-output' ? getCompletedUpageToolPartPages(part) : [];
     const designSystemPreview =
-      isEnsureDesignSystemOutputPart(part) && shouldRenderDesignSystemPreviewFromToolPart(part, hasStreamedDesignSystem) ? (
+      isEnsureDesignSystemOutputPart(part) &&
+      shouldRenderDesignSystemPreviewFromToolPart(part, hasStreamedDesignSystem) ? (
         <DesignSystemPreview content={part.output.content} />
       ) : null;
 
@@ -410,4 +410,3 @@ function renderPageArtifacts(pageParts: UPagePagePart[], messageId: string, inde
     </div>
   );
 }
-

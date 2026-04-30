@@ -791,7 +791,9 @@ describe('AssistantMessage', () => {
     render(<AssistantMessage message={message} isStreaming />);
 
     const stepContainer = screen.getByTestId('step-container-1');
-    const statusTitle = within(stepContainer).getAllByText('准备应用页面变更').find((element) => element.tagName === 'SPAN');
+    const statusTitle = within(stepContainer)
+      .getAllByText('准备应用页面变更')
+      .find((element) => element.tagName === 'SPAN');
     const statusCard = statusTitle?.closest('div[class*="rounded-md"]');
     const artifactCard = within(stepContainer).getByTestId('artifact-card');
 
@@ -799,7 +801,11 @@ describe('AssistantMessage', () => {
     expect(statusCard).toBeTruthy();
     expect(artifactCard).toBeTruthy();
     expect(
-      Boolean(statusCard && artifactCard && (statusCard.compareDocumentPosition(artifactCard) & Node.DOCUMENT_POSITION_FOLLOWING)),
+      Boolean(
+        statusCard &&
+          artifactCard &&
+          statusCard.compareDocumentPosition(artifactCard) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
     ).toBe(true);
   });
 
@@ -878,7 +884,9 @@ describe('AssistantMessage', () => {
     render(<AssistantMessage message={message} />);
 
     expect(screen.getAllByTestId('artifact-card')).toHaveLength(1);
-    expect(screen.getByText('assistant-message-final-output-replaces-progress:lumina-page:header-nav,hero-section')).toBeTruthy();
+    expect(
+      screen.getByText('assistant-message-final-output-replaces-progress:lumina-page:header-nav,hero-section'),
+    ).toBeTruthy();
     expect(screen.getByTestId('step-container-1')).toBeTruthy();
     expect(screen.queryByText('准备创建区块')).toBeNull();
   });
@@ -1005,7 +1013,11 @@ describe('AssistantMessage', () => {
     expect(statusCard).toBeTruthy();
     expect(artifactCard).toBeTruthy();
     expect(
-      Boolean(statusCard && artifactCard && (statusCard.compareDocumentPosition(artifactCard) & Node.DOCUMENT_POSITION_FOLLOWING)),
+      Boolean(
+        statusCard &&
+          artifactCard &&
+          statusCard.compareDocumentPosition(artifactCard) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
     ).toBe(true);
   });
 
@@ -1062,7 +1074,9 @@ describe('AssistantMessage', () => {
     const statusCard = within(mergedStep).getByText('应用页面变更').closest('div[class*="rounded-md"]');
 
     expect(statusCard).toBeTruthy();
-    expect(Boolean(statusCard && (prose.compareDocumentPosition(statusCard) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+    expect(Boolean(statusCard && prose.compareDocumentPosition(statusCard) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(
+      true,
+    );
   });
 
   it('should only keep the current reasoning card expanded while streaming', () => {

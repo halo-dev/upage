@@ -1,15 +1,20 @@
-import { type CallSettings, streamText, type LanguageModel } from 'ai';
+import { type CallSettings, type LanguageModel, streamText } from 'ai';
 import { createScopedLogger } from '~/.server/utils/logger';
 import {
-  createEmptyTokenUsage,
   accumulateUsageSnapshot,
+  createEmptyTokenUsage,
   estimateTextStreamAbortUsage,
   type TokenUsageSnapshot,
 } from '~/.server/utils/token';
-import { createAbortError, isAbortError } from './abort';
 import type { ChatUIMessage } from '~/types/message';
+import { createAbortError, isAbortError } from './abort';
 import { consumeStreamTextFullStream, type StreamTextUIEvent } from './ui-message-stream';
-import { extractCurrentContext, extractMessageTextForPrompt, getUserMessageContent, simplifyUPageActions } from './utils';
+import {
+  extractCurrentContext,
+  extractMessageTextForPrompt,
+  getUserMessageContent,
+  simplifyUPageActions,
+} from './utils';
 
 const logger = createScopedLogger('create-summary');
 

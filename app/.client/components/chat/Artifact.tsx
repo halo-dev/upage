@@ -227,7 +227,9 @@ const ActionList = memo(({ actions }: ActionListProps) => {
               }}
             >
               <div className="flex items-center gap-1.5 text-sm">
-                <div className={classNames('text-lg', getIconColor(action.status))}>{renderActionStatusIcon(status)}</div>
+                <div className={classNames('text-lg', getIconColor(action.status))}>
+                  {renderActionStatusIcon(status)}
+                </div>
                 <div>
                   {getActionVerb(action.action)}{' '}
                   <code

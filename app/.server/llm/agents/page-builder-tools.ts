@@ -1,7 +1,16 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { getUserMessageContent, hasUserImageParts } from '~/.server/llm/utils';
-import { DEFAULT_MODEL, DEFAULT_PROVIDER, getLanguageModelByProvider, getModel, getProviderByName, MINOR_MODEL, VISION_MODEL, VISION_PROVIDER_NAME } from '~/.server/modules/constants';
+import {
+  DEFAULT_MODEL,
+  DEFAULT_PROVIDER,
+  getLanguageModelByProvider,
+  getModel,
+  getProviderByName,
+  MINOR_MODEL,
+  VISION_MODEL,
+  VISION_PROVIDER_NAME,
+} from '~/.server/modules/constants';
 import { getModelCapabilities } from '~/.server/modules/llm/capabilities';
 import { updateChat } from '~/.server/service/chat';
 import { materializeMessageFileReferencesForModel } from '~/.server/service/chat-file-reference';
@@ -13,14 +22,14 @@ import type {
   UPageBlockAnnotation,
 } from '~/types/message';
 import type { PageData } from '~/types/pages';
+import { isAbortError, throwIfAborted } from '../abort';
 import { createSummary } from '../create-summary';
 import { generateDesignMd } from '../generate-design-md';
 import { buildContextFromPages, buildPageSelectionCandidates, resolveSelectedPages } from '../preparation';
 import { selectContext } from '../select-context';
 import { structuredPageSnapshot } from '../structured-page-snapshot';
-import { summarizeVisualReference } from '../visual-reference';
-import { isAbortError, throwIfAborted } from '../abort';
 import type { StreamTextUIEvent } from '../ui-message-stream';
+import { summarizeVisualReference } from '../visual-reference';
 import type { PageBuilderAgentState } from './page-builder';
 import { createPageBuilderMutationTools } from './page-builder-mutation-tools';
 import { createOptionalPageBuilderTools } from './page-builder-optional-tools';
@@ -365,7 +374,9 @@ export function createPageBuilderTools({
         emitPreparationStage({
           stage: 'candidate-pages',
           status: 'complete',
-          message: usedFallback ? '未命中特定页面，已回退到最近页面。' : `已筛选 ${state.selectedPages.length} 个相关页面。`,
+          message: usedFallback
+            ? '未命中特定页面，已回退到最近页面。'
+            : `已筛选 ${state.selectedPages.length} 个相关页面。`,
           selectedPages: state.candidatePages,
         });
         markEffectiveTool('selectRelevantPages');
@@ -674,9 +685,11 @@ export function createPageBuilderTools({
 
       for (let attempt = 1; attempt <= maxRetries; attempt += 1) {
         try {
-          const modelCandidates = [getVisionSidecarSelection(), getMinorModelSelection(), getDefaultModelSelection()].filter(
-            (item): item is NonNullable<typeof item> => Boolean(item),
-          );
+          const modelCandidates = [
+            getVisionSidecarSelection(),
+            getMinorModelSelection(),
+            getDefaultModelSelection(),
+          ].filter((item): item is NonNullable<typeof item> => Boolean(item));
           const modelSelection = modelCandidates.find((item) => item.supportsVision) || getMinorModelSelection();
           const generatedDesignResult = await generateDesignMd({
             userMessage: await materializeCurrentMessageForModel(modelSelection),

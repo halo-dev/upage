@@ -5,10 +5,7 @@ import { createVisionCapabilities } from '~/.server/modules/llm/capabilities';
 import type { ModelInfo } from '~/.server/modules/llm/types';
 import type { IProviderSetting } from '~/types/model';
 
-function shouldDisableThinking(body: {
-  tool_choice?: unknown;
-  tools?: unknown;
-}): boolean {
+function shouldDisableThinking(body: { tool_choice?: unknown; tools?: unknown }): boolean {
   if (Array.isArray(body.tools) && body.tools.length > 0) {
     return true;
   }

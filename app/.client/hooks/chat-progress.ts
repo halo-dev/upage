@@ -1,5 +1,5 @@
-import type { ChatUIMessage, ProgressAnnotation } from '~/types/message';
 import { formatToolError } from '~/.client/utils/tool-error';
+import type { ChatUIMessage, ProgressAnnotation } from '~/types/message';
 
 type ToolPart = Extract<ChatUIMessage['parts'][number], { type: `tool-${string}` }>;
 

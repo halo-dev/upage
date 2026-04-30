@@ -3,7 +3,7 @@ import type { EditorBridge } from '~/.client/bridge';
 import { isValidContent } from '~/.client/utils/html-parse';
 import { createScopedLogger } from '~/.client/utils/logger';
 import { unreachable } from '~/.client/utils/unreachable';
-import { isPatchAction, isRemovePageAction, type ActionAlert, type UPageAction } from '~/types/actions';
+import { type ActionAlert, isPatchAction, isRemovePageAction, type UPageAction } from '~/types/actions';
 import type { ActionCallbackData } from './message-parser';
 
 export type ActionPage = {

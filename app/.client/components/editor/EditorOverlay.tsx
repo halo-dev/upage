@@ -346,15 +346,7 @@ export const EditorOverlay: React.FC<EditorOverlayProps> = ({
       iframeDocument.body.removeEventListener('submit', handleSubmit);
       iframeDocument.removeEventListener('mouseout', handleMouseOut);
     };
-  }, [
-    iframeDocument,
-    iframeWindow,
-    shadowRoot,
-    setHoveredElement,
-    setSelectedElement,
-    setHoverRect,
-    setSelectRect,
-  ]);
+  }, [iframeDocument, iframeWindow, shadowRoot, setHoveredElement, setSelectedElement, setHoverRect, setSelectRect]);
 
   if (!iframeDocument || !shadowRoot) {
     return null;

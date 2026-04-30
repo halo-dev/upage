@@ -1,8 +1,8 @@
 import type { FileUIPart } from 'ai';
-import { pagesToSnapshot } from '~/.client/utils/page';
-import type { ProgressAnnotation, PreparationStageAnnotation, UserPageSnapshot } from '~/types/message';
-import type { PageData, SectionMap } from '~/types/pages';
 import type { MapStore } from 'nanostores';
+import { pagesToSnapshot } from '~/.client/utils/page';
+import type { PreparationStageAnnotation, ProgressAnnotation, UserPageSnapshot } from '~/types/message';
+import type { PageData, SectionMap } from '~/types/pages';
 
 export function isAbortLikeError(error: unknown) {
   return error instanceof Error && error.name === 'AbortError';

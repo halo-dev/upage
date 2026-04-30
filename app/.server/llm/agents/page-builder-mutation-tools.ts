@@ -130,7 +130,11 @@ export function createPageBuilderMutationTools({
     description: '当你确认本轮页面生成任务已经完成，或者因 guardrail 需要结束循环时，调用此工具结束工具阶段。',
     inputSchema: z.object({
       reason: z.string().optional(),
-      requiresMutation: z.boolean().describe('你对当前这轮请求的内部判断：true 表示这轮任务必须产生实际页面变更才算完成；false 表示本轮只需说明、分析、解释或明确无法修改。'),
+      requiresMutation: z
+        .boolean()
+        .describe(
+          '你对当前这轮请求的内部判断：true 表示这轮任务必须产生实际页面变更才算完成；false 表示本轮只需说明、分析、解释或明确无法修改。',
+        ),
     }),
     execute: async ({ reason, requiresMutation }) => {
       if (shouldBlockPrematureFinishRun(state, requiresMutation)) {

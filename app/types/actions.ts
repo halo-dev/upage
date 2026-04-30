@@ -125,7 +125,9 @@ export function isRemovePageAction(
   contentKind: 'patch';
   patches: PatchOp[];
 } {
-  return action.action === 'remove' && isPatchAction(action) && action.patches.some((patch) => patch.type === 'remove-page');
+  return (
+    action.action === 'remove' && isPatchAction(action) && action.patches.some((patch) => patch.type === 'remove-page')
+  );
 }
 
 export interface ActionAlert {

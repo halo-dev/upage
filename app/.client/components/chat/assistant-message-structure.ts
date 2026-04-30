@@ -1,7 +1,3 @@
-import {
-  getCompletedUpageToolPartPages,
-  isUpageToolPart,
-} from '~/utils/message-parts';
 import type {
   ChatUIMessage,
   PreparationStageAnnotation,
@@ -9,6 +5,7 @@ import type {
   UPageBlockAnnotation,
   UPagePagePart,
 } from '~/types/message';
+import { getCompletedUpageToolPartPages, isUpageToolPart } from '~/utils/message-parts';
 
 export type StructuredPartItem = {
   part: ChatUIMessage['parts'][number];
@@ -120,7 +117,9 @@ export function getRenderableSteps(
   });
 }
 
-export function getPreparationToolTypeByStage(stage: PreparationStageAnnotation['stage']): PreparationToolPartType | null {
+export function getPreparationToolTypeByStage(
+  stage: PreparationStageAnnotation['stage'],
+): PreparationToolPartType | null {
   switch (stage) {
     case 'history-summary':
       return 'tool-historySummary';
@@ -322,9 +321,11 @@ function dedupeRepeatedStepText(steps: StepGroup[]) {
 
     const currentTextSignatures = new Set(
       nextParts
-        .filter((item): item is StructuredPartItem & { part: Extract<StructuredPartItem['part'], { type: 'text' }> } => {
-          return item.part.type === 'text';
-        })
+        .filter(
+          (item): item is StructuredPartItem & { part: Extract<StructuredPartItem['part'], { type: 'text' }> } => {
+            return item.part.type === 'text';
+          },
+        )
         .map((item) => createTextSignature(item.part.text))
         .filter((signature): signature is string => Boolean(signature)),
     );
@@ -341,7 +342,10 @@ function dedupeRepeatedStepText(steps: StepGroup[]) {
 }
 
 function createTextSignature(text: string) {
-  return text.replace(/\s+/g, ' ').replace(/\s+([,.!?;:，。！？；：])/g, '$1').trim();
+  return text
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([,.!?;:，。！？；：])/g, '$1')
+    .trim();
 }
 
 function isVisibleStructuredPart(
@@ -354,7 +358,11 @@ function isVisibleStructuredPart(
 ) {
   const { part } = item;
 
-  if (part.type === 'data-summary' || part.type === 'data-preparation-stage' || part.type === 'data-upage-block-complete') {
+  if (
+    part.type === 'data-summary' ||
+    part.type === 'data-preparation-stage' ||
+    part.type === 'data-upage-block-complete'
+  ) {
     return false;
   }
 

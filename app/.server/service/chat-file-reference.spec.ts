@@ -16,10 +16,7 @@ vi.mock('~/.server/storage/index.server', () => {
   };
 });
 
-import {
-  materializeMessagesFileReferencesForModel,
-  normalizeMessageFileReferences,
-} from './chat-file-reference';
+import { materializeMessagesFileReferencesForModel, normalizeMessageFileReferences } from './chat-file-reference';
 
 describe('chat-file-reference', () => {
   beforeEach(() => {

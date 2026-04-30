@@ -1,5 +1,5 @@
-import type { SelectContextResult } from './select-context';
 import type { PageData } from '~/types/pages';
+import type { SelectContextResult } from './select-context';
 
 const MAX_PAGE_PREVIEW_CHARS = 640;
 const MAX_CONTEXT_SECTION_CHARS = 1800;
@@ -92,12 +92,7 @@ export function buildSnapshotDetailedContent(page: Pick<PageData, 'name' | 'titl
   const sanitized = stripPageScriptsAndStyles(page.content);
   const sections = extractContextSections(sanitized, MAX_SNAPSHOT_DETAIL_CHARS);
 
-  return [
-    `页面标题：${page.title}`,
-    `页面名称：${page.name}`,
-    '页面内容片段：',
-    ...sections,
-  ].join('\n');
+  return [`页面标题：${page.title}`, `页面名称：${page.name}`, '页面内容片段：', ...sections].join('\n');
 }
 
 export function extractContextSections(content: string, maxChars = MAX_CONTEXT_SECTION_CHARS) {
@@ -117,7 +112,10 @@ export function extractContextSections(content: string, maxChars = MAX_CONTEXT_S
 }
 
 function stripPageScriptsAndStyles(content: string) {
-  return content.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').trim();
+  return content
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .trim();
 }
 
 function extractStructuralBlocks(content: string) {
@@ -142,7 +140,10 @@ function extractHeadingTexts(content: string) {
   let match: RegExpExecArray | null;
 
   while ((match = regex.exec(content)) !== null && headings.length < 6) {
-    const text = match[1]?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const text = match[1]
+      ?.replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
     if (text) {
       headings.push(text);
     }

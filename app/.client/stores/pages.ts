@@ -5,7 +5,7 @@ import type { PageChangeSource } from '~/.client/runtime/protocol/types';
 import { computePageModifications, diffPages } from '~/.client/utils/diff';
 import { isValidContent } from '~/.client/utils/html-parse';
 import { createScopedLogger } from '~/.client/utils/logger';
-import { isPatchAction, type ChangeSource, type PageHistory } from '~/types/actions';
+import { type ChangeSource, isPatchAction, type PageHistory } from '~/types/actions';
 import type { PageData, PageMap, PageSection, SectionMap } from '~/types/pages';
 import { normalizeContent } from '~/utils/prettier';
 import { generateUUID } from '~/utils/uuid';

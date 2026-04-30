@@ -3,22 +3,14 @@ import type { JsonArray } from '@prisma/client/runtime/library';
 import type { TextUIPart, UIMessagePart } from 'ai';
 import { prisma } from '~/.server/service/prisma';
 import { createScopedLogger } from '~/.server/utils/logger';
-import type {
-  ChatUIMessage,
-  PageBuilderUITools,
-  SummaryAnnotation,
-  UPageDataParts,
-} from '~/types/message';
-import {
-  createSummaryPart,
-  ensureProtocolVersion,
-} from '~/utils/message-protocol';
-import { getMessagePlainTextContent } from '~/utils/message-protocol';
+import type { ChatUIMessage, PageBuilderUITools, SummaryAnnotation, UPageDataParts } from '~/types/message';
+import { createSummaryPart, ensureProtocolVersion, getMessagePlainTextContent } from '~/utils/message-protocol';
+
 export {
   getMessagePlainTextContent,
   isLegacyXmlMessage,
-  upgradeLegacyMessageToStructuredParts,
   upgradeLegacyMessagesForContinuation,
+  upgradeLegacyMessageToStructuredParts,
 } from '~/utils/message-protocol';
 
 const logger = createScopedLogger('message.server');
@@ -48,7 +40,10 @@ function partitionOrderedMessageIds(messageIds: string[], targetId: string) {
   };
 }
 
-async function getOrderedActiveMessageIds(chatId: string, db: Pick<typeof prisma, 'message'> = prisma): Promise<string[]> {
+async function getOrderedActiveMessageIds(
+  chatId: string,
+  db: Pick<typeof prisma, 'message'> = prisma,
+): Promise<string[]> {
   const messages = await db.message.findMany({
     where: {
       chatId,
@@ -147,7 +142,11 @@ export async function upsertMessage(params: MessageUpsertParams) {
  * @param startMessageId 开始消息ID
  * @param endMessageId 结束消息ID
  */
-export async function updateDiscardedMessage(chatId: string, startMessageId: string, db: MessagePersistenceClient = prisma) {
+export async function updateDiscardedMessage(
+  chatId: string,
+  startMessageId: string,
+  db: MessagePersistenceClient = prisma,
+) {
   try {
     const orderedMessageIds = await getOrderedActiveMessageIds(chatId, db);
     const { after: discardedMessageIds, found } = partitionOrderedMessageIds(orderedMessageIds, startMessageId);

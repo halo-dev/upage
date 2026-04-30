@@ -70,7 +70,13 @@ describe('ActionRunner', () => {
     await runner.runAction(draftData, true);
     await runner.runAction(finalData);
 
-    expect(editorBridge.upsertPageAction).toHaveBeenNthCalledWith(1, 'ui-test-page-draft', '首页', 'hero', 'ui-test-page-draft');
+    expect(editorBridge.upsertPageAction).toHaveBeenNthCalledWith(
+      1,
+      'ui-test-page-draft',
+      '首页',
+      'hero',
+      'ui-test-page-draft',
+    );
     expect(editorBridge.upsertPageAction).toHaveBeenNthCalledWith(2, 'index', '首页', 'hero', 'ui-test-page-draft');
   });
 

@@ -193,10 +193,7 @@ function removeNode(container: HTMLDivElement, target: PatchTarget) {
   targetElement?.remove();
 }
 
-function moveNode(
-  container: HTMLDivElement,
-  patch: Extract<PatchOp, { type: 'move-node' }>,
-) {
+function moveNode(container: HTMLDivElement, patch: Extract<PatchOp, { type: 'move-node' }>) {
   const target = findTarget(container, patch.target);
   if (!target) {
     return;

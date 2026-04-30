@@ -1,6 +1,4 @@
 import type { UIMessagePart } from 'ai';
-import type { PageBuilderUITools } from '~/types/page-builder-tools';
-import { parseLegacyAssistantMessage } from '~/utils/upage-legacy';
 import type {
   ChatUIMessage,
   SummaryAnnotation,
@@ -8,6 +6,8 @@ import type {
   UPageMessageMetadata,
   UPageProtocolVersion,
 } from '~/types/message-protocol';
+import type { PageBuilderUITools } from '~/types/page-builder-tools';
+import { parseLegacyAssistantMessage } from '~/utils/upage-legacy';
 
 export function normalizeMessageMetadata(metadata: unknown): UPageMessageMetadata {
   if (metadata && typeof metadata === 'object' && !Array.isArray(metadata)) {
@@ -17,10 +17,7 @@ export function normalizeMessageMetadata(metadata: unknown): UPageMessageMetadat
   return {};
 }
 
-export function ensureProtocolVersion(
-  metadata: unknown,
-  protocolVersion: UPageProtocolVersion,
-): UPageMessageMetadata {
+export function ensureProtocolVersion(metadata: unknown, protocolVersion: UPageProtocolVersion): UPageMessageMetadata {
   return {
     ...normalizeMessageMetadata(metadata),
     protocolVersion,
@@ -32,14 +29,16 @@ export function shouldUpgradeLegacyXmlTextMessage(message: Pick<ChatUIMessage, '
     return false;
   }
 
-  const hasStructuredPageParts = (message.parts || []).some((part) => part.type === 'data-upage-page' || part.type === 'tool-upage');
+  const hasStructuredPageParts = (message.parts || []).some(
+    (part) => part.type === 'data-upage-page' || part.type === 'tool-upage',
+  );
   if (hasStructuredPageParts) {
     return false;
   }
 
   const parsed = parseLegacyAssistantMessage(
     message.parts
-      .filter((part): part is Extract<typeof message.parts[number], { type: 'text' }> => part.type === 'text')
+      .filter((part): part is Extract<(typeof message.parts)[number], { type: 'text' }> => part.type === 'text')
       .map((part) => part.text)
       .join('\n'),
   );
@@ -66,7 +65,9 @@ export function upgradeLegacyMessageToStructuredParts(message: ChatUIMessage): C
     };
   }
 
-  const textParts = message.parts.filter((part): part is Extract<typeof message.parts[number], { type: 'text' }> => part.type === 'text');
+  const textParts = message.parts.filter(
+    (part): part is Extract<(typeof message.parts)[number], { type: 'text' }> => part.type === 'text',
+  );
   const nonTextParts = message.parts.filter((part) => part.type !== 'text');
   const parsed = parseLegacyAssistantMessage(textParts.map((part) => part.text).join('\n'));
   const nextParts: UIMessagePart<UPageDataParts, PageBuilderUITools>[] = [];

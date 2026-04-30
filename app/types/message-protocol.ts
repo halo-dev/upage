@@ -91,7 +91,17 @@ export type UPageBlockAnnotation = {
 
 export type UserPageSnapshotPage = Pick<
   PageData,
-  'id' | 'name' | 'title' | 'content' | 'actionIds' | 'headMeta' | 'headLinks' | 'headScripts' | 'headStyles' | 'headRaw' | 'sort'
+  | 'id'
+  | 'name'
+  | 'title'
+  | 'content'
+  | 'actionIds'
+  | 'headMeta'
+  | 'headLinks'
+  | 'headScripts'
+  | 'headStyles'
+  | 'headRaw'
+  | 'sort'
 >;
 
 export type UserPageSnapshot = {

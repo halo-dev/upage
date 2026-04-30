@@ -16,7 +16,9 @@ export function ToolInvocationCard({ part, runStatus }: { part: ToolPart; runSta
               <div className={presentation.statusIconClass}></div>
             )}
           </div>
-          <span className="text-[12px] font-medium leading-5 text-upage-elements-textPrimary">{presentation.title}</span>
+          <span className="text-[12px] font-medium leading-5 text-upage-elements-textPrimary">
+            {presentation.title}
+          </span>
         </div>
         {presentation.isRunning ? (
           <RunningStatus

@@ -1,6 +1,5 @@
 import type { UPageAction, UPageActionType } from '~/types/actions';
 import type { UPageArtifactData } from '~/types/artifact';
-import type { UPagePagePart } from '~/types/page-builder-tools';
 import type {
   ChatUIMessage,
   PartialPatchOp,
@@ -8,6 +7,7 @@ import type {
   PatchOp,
   RenderableStructuredPageSource,
 } from '~/types/message-protocol';
+import type { UPagePagePart } from '~/types/page-builder-tools';
 
 export function isUpageToolPart(
   part: ChatUIMessage['parts'][number],
@@ -116,7 +116,9 @@ export function extractRenderableStructuredPageParts(message: Pick<ChatUIMessage
   return dataPages;
 }
 
-export function getStructuredPageSource(message: Pick<ChatUIMessage, 'parts'>): RenderableStructuredPageSource | undefined {
+export function getStructuredPageSource(
+  message: Pick<ChatUIMessage, 'parts'>,
+): RenderableStructuredPageSource | undefined {
   for (const part of message.parts || []) {
     if (isUpageToolPart(part) && getCompletedUpageToolPartPages(part).length > 0) {
       return 'tool-upage-output';
@@ -137,7 +139,9 @@ export function hasStructuredPageParts(message: Pick<ChatUIMessage, 'parts'>): b
 }
 
 export function hasUpageBlockParts(message: Pick<ChatUIMessage, 'parts'>): boolean {
-  return (message.parts || []).some((part) => part.type === 'data-upage-block-start' || part.type === 'data-upage-block-complete');
+  return (message.parts || []).some(
+    (part) => part.type === 'data-upage-block-start' || part.type === 'data-upage-block-complete',
+  );
 }
 
 function extractUpageInputPages(input: unknown): UPagePagePart[] {
@@ -202,7 +206,11 @@ function normalizeActions(actions: unknown): UPageAction[] {
     }
 
     const candidate = action as Partial<UPageAction>;
-    if (typeof candidate.id !== 'string' || !isValidActionType(candidate.action) || typeof candidate.pageName !== 'string') {
+    if (
+      typeof candidate.id !== 'string' ||
+      !isValidActionType(candidate.action) ||
+      typeof candidate.pageName !== 'string'
+    ) {
       continue;
     }
 
@@ -329,7 +337,8 @@ function normalizePatchOps(patches: unknown): PatchOp[] {
           reason,
           target,
           parentDomId: typeof candidate.parentDomId === 'string' ? candidate.parentDomId : undefined,
-          position: candidate.position === 'append' || candidate.position === 'prepend' ? candidate.position : undefined,
+          position:
+            candidate.position === 'append' || candidate.position === 'prepend' ? candidate.position : undefined,
           sort: typeof candidate.sort === 'number' ? candidate.sort : undefined,
         });
         continue;

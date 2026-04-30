@@ -80,8 +80,16 @@ const actionSchema = z
     rootDomId: nonEmptyString.describe('当前区块根节点的 domId。删除操作时与 domId 相同；更新时必须与 domId 一致。'),
     sort: z.number().optional().describe('当前元素在同级中的排序位置。'),
     validRootDomId: z.boolean().optional().default(false).describe('根节点 domId 是否已经确认有效。'),
-    contentKind: z.enum(['html', 'patch']).optional().default('html').describe('当前 action 的载荷类型。html 为完整节点内容，patch 为原始 patch ops。'),
-    content: z.string().optional().default('').describe('当前区块的完整 HTML、style 或 script 内容。删除操作时传空字符串。'),
+    contentKind: z
+      .enum(['html', 'patch'])
+      .optional()
+      .default('html')
+      .describe('当前 action 的载荷类型。html 为完整节点内容，patch 为原始 patch ops。'),
+    content: z
+      .string()
+      .optional()
+      .default('')
+      .describe('当前区块的完整 HTML、style 或 script 内容。删除操作时传空字符串。'),
     patches: z.array(patchOpSchema).optional().describe('当 contentKind 为 patch 时使用的原始 patch ops。'),
   })
   .superRefine((action, ctx) => {
@@ -247,7 +255,9 @@ export function createUPageTool(onPage: (page: UPagePagePart) => void) {
       '当你需要创建、更新或删除页面内容时，必须调用此工具输出结构化页面数据。请使用小批次提交：每次只处理少量区块，优先单页提交，单页单次最多 3 个区块。使用 artifact/actions 组织页面与区块变更。优先用 contentKind=patch + patches 表达局部修改；只有新增大块结构或无法安全 patch 时才回退到 html。该工具输出是最终页面结果的唯一结构化真相，不要重复提交已经发过的 actionId。调用完成后，不要立即在当前工具步骤里重复总结；最终只在 finishRun 之后输出一次简短自然语言说明。面向普通用户描述结果，不要重复任何页面内部标识、工具参数或技术实现细节。',
     inputSchema: upageInputSchema,
     execute: async ({ pages }) => {
-      const normalizedPages = pages.map((page) => normalizePageInput(page as z.infer<typeof pageSchema> | z.infer<typeof legacyPageSchema>));
+      const normalizedPages = pages.map((page) =>
+        normalizePageInput(page as z.infer<typeof pageSchema> | z.infer<typeof legacyPageSchema>),
+      );
 
       for (const page of normalizedPages) {
         onPage(page);
@@ -268,7 +278,13 @@ export function extractRootElementId(content: string): string | undefined {
 }
 
 function normalizeStructuredPageInput(page: unknown) {
-  if (!page || typeof page !== 'object' || !('artifact' in page) || !('actions' in page) || !Array.isArray(page.actions)) {
+  if (
+    !page ||
+    typeof page !== 'object' ||
+    !('artifact' in page) ||
+    !('actions' in page) ||
+    !Array.isArray(page.actions)
+  ) {
     return page;
   }
 

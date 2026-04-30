@@ -20,7 +20,6 @@ import {
 } from '../stores/ai-state';
 import { clearSendChatMessage, type SendChatMessageParams, setSendChatMessage } from '../stores/chat-message';
 import { webBuilderStore } from '../stores/web-builder';
-import { mergeStreamingProgressAnnotations } from './chat-progress';
 import {
   buildNextRewindSearchParams,
   buildPageSnapshotForRequest,
@@ -32,9 +31,12 @@ import {
   isAbortLikeError,
   mapPreparationStageToProgress,
 } from './chat-message-utils';
+import { mergeStreamingProgressAnnotations } from './chat-progress';
+
 export { getActiveRewindTo } from './chat-message-utils';
-import { useChatUsage } from './useChatUsage';
+
 import { useChatHistory } from './useChatHistory';
+import { useChatUsage } from './useChatUsage';
 import { useMessageParser } from './useMessageParser';
 import { useProject } from './useProject';
 
@@ -315,4 +317,3 @@ export function useChatMessage({
     sendChatMessage,
   };
 }
-

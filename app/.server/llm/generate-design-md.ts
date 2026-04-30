@@ -1,15 +1,15 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { convertToModelMessages, type LanguageModel, type LanguageModelUsage, streamText } from 'ai';
-import type { ChatUIMessage } from '~/types/message';
-import { createScopedLogger } from '~/.server/utils/logger';
 import type { ModelCapabilities } from '~/.server/modules/llm/capabilities';
+import { createScopedLogger } from '~/.server/utils/logger';
 import {
-  createEmptyTokenUsage,
   accumulateUsageSnapshot,
+  createEmptyTokenUsage,
   estimateTextStreamAbortUsage,
   type TokenUsageSnapshot,
 } from '~/.server/utils/token';
+import type { ChatUIMessage } from '~/types/message';
 import { createAbortError, isAbortError, throwIfAborted } from './abort';
 import { consumeStreamTextFullStream, type StreamTextUIEvent } from './ui-message-stream';
 import { createVisionAnalysisMessage, getUserMessageContent, hasUserImageParts } from './utils';
@@ -71,9 +71,9 @@ ${spec}
   const prompt = `根据以下网站描述，生成一份完整的 DESIGN.md 设计系统文档：
 
 ${getUserMessageContent(userMessage, {
-    includeVisualHint: true,
-    visualSummary,
-  })}
+  includeVisualHint: true,
+  visualSummary,
+})}
 
 直接输出符合规范的完整文件，从 YAML frontmatter 的 --- 开始。`;
   const completedUsage = createEmptyTokenUsage();

@@ -1,3 +1,16 @@
+export {
+  extractRenderableStructuredPageParts,
+  extractStructuredPageParts,
+  getCompletedUpageToolPartPages,
+  getStructuredPageSource,
+  getUpageToolPartInputPages,
+  getUpageToolPartOutputPages,
+  getUpageToolPartPages,
+  hasStructuredPageParts,
+  hasUpageBlockParts,
+  isUpageToolPart,
+} from '../utils/message-parts';
+export type * from './message-protocol';
 export type {
   AnnounceUpageBlockToolOutput,
   BuildPageDetailedSnapshotToolOutput,
@@ -15,16 +28,3 @@ export type {
   UPagePagePart,
   UPageToolOutput,
 } from './page-builder-tools';
-export type * from './message-protocol';
-export {
-  extractRenderableStructuredPageParts,
-  extractStructuredPageParts,
-  getCompletedUpageToolPartPages,
-  getStructuredPageSource,
-  getUpageToolPartInputPages,
-  getUpageToolPartOutputPages,
-  getUpageToolPartPages,
-  hasStructuredPageParts,
-  hasUpageBlockParts,
-  isUpageToolPart,
-} from '../utils/message-parts';

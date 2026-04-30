@@ -63,7 +63,10 @@ function LivePreview({ content, description }: { content: string; description: s
         <div className="text-[11px] font-semibold text-upage-elements-textTertiary uppercase tracking-wider mb-2">
           组件预览
         </div>
-        <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: borderHex, backgroundColor: canvasHex }}>
+        <div
+          className="rounded-xl border p-4 flex flex-col gap-3"
+          style={{ borderColor: borderHex, backgroundColor: canvasHex }}
+        >
           <div className="flex flex-wrap gap-2">
             <button
               className="px-4 py-1.5 text-sm font-semibold rounded-lg"
@@ -87,10 +90,7 @@ function LivePreview({ content, description }: { content: string; description: s
           <div className="rounded-lg border p-3" style={{ borderColor: borderHex, backgroundColor: surfaceHex }}>
             <div className="flex items-center gap-2 mb-1.5">
               <div className="w-5 h-5 rounded-full flex-shrink-0" style={{ background: accentHex }} />
-              <div
-                className="text-sm font-semibold"
-                style={{ color: inkHex, fontFamily: fontFamily ?? undefined }}
-              >
+              <div className="text-sm font-semibold" style={{ color: inkHex, fontFamily: fontFamily ?? undefined }}>
                 {brandName} 卡片
               </div>
             </div>
@@ -137,10 +137,7 @@ function LivePreview({ content, description }: { content: string; description: s
             <div className="mt-1 text-sm" style={{ color: bodyHex, fontFamily }}>
               正文字体清晰易读，并兼顾可访问性。
             </div>
-            <div
-              className="mt-1 text-[10px] uppercase tracking-widest"
-              style={{ color: bodyHex, fontFamily }}
-            >
+            <div className="mt-1 text-[10px] uppercase tracking-widest" style={{ color: bodyHex, fontFamily }}>
               标签 · 说明 · 元信息
             </div>
           </div>
@@ -271,9 +268,7 @@ export function DesignSystemPicker({ isOpen, onClose, onSelect }: DesignSystemPi
             ))}
           </div>
           {displayName && (
-            <span className="ml-auto text-xs text-upage-elements-textTertiary pb-2 pr-1">
-              {displayName}
-            </span>
+            <span className="ml-auto text-xs text-upage-elements-textTertiary pb-2 pr-1">{displayName}</span>
           )}
         </div>
 

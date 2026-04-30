@@ -2,10 +2,8 @@ import { atom, type WritableAtom } from 'nanostores';
 import { toast } from 'sonner';
 import { replaceUrlsWithRelativePaths } from '~/.client/utils/asset-path-converter';
 import { createScopedLogger } from '~/.client/utils/logger';
-import type { Section } from '~/types/actions';
-import type { ChangeSource } from '~/types/actions';
-import type { PageMap } from '~/types/pages';
-import type { PageData, SectionMap } from '~/types/pages';
+import type { ChangeSource, Section } from '~/types/actions';
+import type { PageData, PageMap, SectionMap } from '~/types/pages';
 import { ChatStore } from './chat';
 import { EditorStore } from './editor';
 import { PagesStore } from './pages';
@@ -86,11 +84,11 @@ export class WebBuilderStore {
       sections
         .filter((section) => typeof section.pageName === 'string' && section.pageName.trim().length > 0)
         .map((section) => [
-        section.id,
-        {
-          ...section,
-        },
-      ]),
+          section.id,
+          {
+            ...section,
+          },
+        ]),
     ) as SectionMap;
 
     this.pagesStore.replaceSnapshot(pageMap, sectionMap);

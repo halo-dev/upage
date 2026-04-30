@@ -62,7 +62,9 @@ export function PreparationTimeline({
                   </span>
                 ) : null}
                 {typeof stage.durationMs === 'number' ? (
-                  <span className="rounded-full bg-upage-elements-background/80 px-2 py-1">耗时：{Math.round(stage.durationMs)}ms</span>
+                  <span className="rounded-full bg-upage-elements-background/80 px-2 py-1">
+                    耗时：{Math.round(stage.durationMs)}ms
+                  </span>
                 ) : null}
                 {stage.warning ? (
                   <span className="rounded-full bg-upage-elements-background/80 px-2 py-1">降级：{stage.warning}</span>

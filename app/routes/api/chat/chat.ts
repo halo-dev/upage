@@ -5,6 +5,7 @@ import { PAGE_GENERATION_STEP_LIMIT } from '~/.server/llm/agents/page-generation
 import type { StreamTextUIEvent } from '~/.server/llm/ui-message-stream';
 import { createUserPageSnapshotContext, getUserMessageContent } from '~/.server/llm/utils';
 import { DEFAULT_MODEL, DEFAULT_PROVIDER, MINOR_MODEL } from '~/.server/modules/constants';
+import { getModelCapabilities } from '~/.server/modules/llm/capabilities';
 import { updateChat, upsertChat } from '~/.server/service/chat';
 import {
   materializeMessagesFileReferencesForModel,
@@ -20,7 +21,6 @@ import {
 import { prisma } from '~/.server/service/prisma';
 import { createScopedLogger } from '~/.server/utils/logger';
 import { accumulateUsageSnapshot, createEmptyTokenUsage, estimateAgentStepAbortUsage } from '~/.server/utils/token';
-import { getModelCapabilities } from '~/.server/modules/llm/capabilities';
 import type { ChatMetadata } from '~/types/chat';
 import type {
   ChatUIMessage,

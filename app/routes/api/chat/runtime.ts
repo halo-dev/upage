@@ -1,7 +1,6 @@
 import { createStreamTextUIMessageWriter } from '~/.server/llm/ui-message-stream';
 import { createVisualHintText, hasUserImageParts } from '~/.server/llm/utils';
 import { ChatUsageStatus } from '~/.server/service/chat-usage';
-import { extractRenderableStructuredPageParts } from '~/utils/message-parts';
 import type {
   AgentErrorPhase,
   AgentRunStatus,
@@ -10,6 +9,7 @@ import type {
   PreparationStageAnnotation,
   UPageBlockAnnotation,
 } from '~/types/message';
+import { extractRenderableStructuredPageParts } from '~/utils/message-parts';
 
 type ChatStreamWriter = Parameters<typeof createStreamTextUIMessageWriter>[0]['writer'];
 

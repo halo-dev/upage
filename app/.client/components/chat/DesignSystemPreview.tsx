@@ -92,7 +92,9 @@ export function DesignSystemPreview({ content, isStreaming = false }: { content:
             {designSystem.name}
           </h3>
           {designSystem.description ? (
-            <p className="mt-1 text-[12px] leading-[1.45] text-upage-elements-textSecondary">{designSystem.description}</p>
+            <p className="mt-1 text-[12px] leading-[1.45] text-upage-elements-textSecondary">
+              {designSystem.description}
+            </p>
           ) : null}
           <p className="mt-1 text-[11px] leading-[1.45] text-upage-elements-textSecondary">
             {isStreaming ? streamingDetail : expanded ? '点击收起' : readyDetail}

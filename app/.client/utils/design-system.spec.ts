@@ -40,7 +40,8 @@ colors:
   });
 
   it('should build preview model from parsed tokens', () => {
-    const preview = buildDesignSystemPreviewModel(`---
+    const preview = buildDesignSystemPreviewModel(
+      `---
 name: Aurora
 description: Calm and modern.
 colors:
@@ -54,7 +55,9 @@ typography:
   body-md:
     fontFamily: Inter
 ---
-# Aurora Design System`, 'fallback');
+# Aurora Design System`,
+      'fallback',
+    );
 
     expect(preview.brandName).toBe('Aurora');
     expect(preview.resolvedDescription).toBe('Calm and modern.');

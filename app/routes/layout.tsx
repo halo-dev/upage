@@ -24,12 +24,7 @@ export default function AppLayout() {
       <Header isScrolled={isScrolled} className="sticky top-0 h-[var(--header-height)] z-50" />
       <Menu className="absolute left-0 bottom-0 top-[var(--header-height)] h-[calc(100vh - var(--header-height))]" />
 
-      <main
-        className={classNames(
-          'relative flex flex-col flex-1',
-          isChatRoute && 'min-h-0 overflow-hidden',
-        )}
-      >
+      <main className={classNames('relative flex flex-col flex-1', isChatRoute && 'min-h-0 overflow-hidden')}>
         <Outlet />
       </main>
     </div>

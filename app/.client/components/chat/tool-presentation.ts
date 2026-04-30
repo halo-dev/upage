@@ -183,7 +183,11 @@ function getToolSummary(part: ToolPart, isAborted: boolean) {
   if (part.type === 'tool-buildPageDetailedSnapshot') {
     const output = part.output as BuildPageDetailedSnapshotToolOutput;
     return [
-      output.reused ? '已复用页面精定位结果' : output.hasPages ? '页面精定位结果已生成' : '当前无候选页面，已跳过精确定位',
+      output.reused
+        ? '已复用页面精定位结果'
+        : output.hasPages
+          ? '页面精定位结果已生成'
+          : '当前无候选页面，已跳过精确定位',
       output.selectedPages.length > 0 ? `页面：${output.selectedPages.join('、')}` : undefined,
       output.usedFallback ? '精确定位使用了默认候选页面' : undefined,
       typeof output.durationMs === 'number' ? `耗时：${Math.round(output.durationMs)}ms` : undefined,
@@ -218,7 +222,9 @@ function getToolSummary(part: ToolPart, isAborted: boolean) {
 
   if (part.type === 'tool-finishRun') {
     const { effectiveMutationCount, invalidStepCount, reason } = part.output;
-    return [`页面变更数：${effectiveMutationCount}`, `无效步骤：${invalidStepCount}`, reason].filter(Boolean).join('\n');
+    return [`页面变更数：${effectiveMutationCount}`, `无效步骤：${invalidStepCount}`, reason]
+      .filter(Boolean)
+      .join('\n');
   }
 
   return undefined;

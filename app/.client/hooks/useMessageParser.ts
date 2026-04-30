@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { PageChangeCoordinator } from '~/.client/runtime/page-change-coordinator';
 import { StreamingMessageParser } from '~/.client/runtime/message-parser';
+import { PageChangeCoordinator } from '~/.client/runtime/page-change-coordinator';
 import { normalizeStructuredPageEvents } from '~/.client/runtime/protocol/normalize-page-events';
 import { webBuilderStore } from '~/.client/stores/web-builder';
 import { createScopedLogger } from '~/.client/utils/logger';
@@ -57,56 +57,61 @@ export function useMessageParser() {
     setRenderedTexts({});
   }, [coordinator, messageParser]);
 
-  const parseMessages = useCallback((messages: ChatUIMessage[], isLoading: boolean) => {
-    const nextMessages = messages.filter((message) => message.role === 'assistant' || message.role === 'user');
-    const nextMessageIds = nextMessages.map((message) => message.id);
-    const previousMessageIds = previousMessageIdsRef.current;
-    const shouldReset =
-      !isLoading ||
-      nextMessageIds.length < previousMessageIds.length ||
-      nextMessageIds.some((messageId, index) => previousMessageIds[index] !== undefined && previousMessageIds[index] !== messageId);
+  const parseMessages = useCallback(
+    (messages: ChatUIMessage[], isLoading: boolean) => {
+      const nextMessages = messages.filter((message) => message.role === 'assistant' || message.role === 'user');
+      const nextMessageIds = nextMessages.map((message) => message.id);
+      const previousMessageIds = previousMessageIdsRef.current;
+      const shouldReset =
+        !isLoading ||
+        nextMessageIds.length < previousMessageIds.length ||
+        nextMessageIds.some(
+          (messageId, index) => previousMessageIds[index] !== undefined && previousMessageIds[index] !== messageId,
+        );
 
-    if (shouldReset) {
-      coordinator.reset();
-      messageParser.reset();
-    }
-
-    const nextRenderedTexts: Record<string, string> = shouldReset ? {} : { ...renderedTextsRef.current };
-
-    for (const message of nextMessages) {
-      const structuredEvents = normalizeStructuredPageEvents(message);
-      if (structuredEvents.length > 0) {
-        coordinator.handleEvents(structuredEvents);
-        delete nextRenderedTexts[message.id];
-        continue;
+      if (shouldReset) {
+        coordinator.reset();
+        messageParser.reset();
       }
 
-      try {
-        const textContent = extractTextContent(message);
-        if (textContent === undefined || textContent === null) {
-          logger.warn(`消息 ${message.id} 没有文本内容`);
+      const nextRenderedTexts: Record<string, string> = shouldReset ? {} : { ...renderedTextsRef.current };
+
+      for (const message of nextMessages) {
+        const structuredEvents = normalizeStructuredPageEvents(message);
+        if (structuredEvents.length > 0) {
+          coordinator.handleEvents(structuredEvents);
+          delete nextRenderedTexts[message.id];
           continue;
         }
 
-        const newParsedContent = messageParser.parse(message.id, textContent);
-        if (!newParsedContent && nextRenderedTexts[message.id] !== undefined) {
-          continue;
+        try {
+          const textContent = extractTextContent(message);
+          if (textContent === undefined || textContent === null) {
+            logger.warn(`消息 ${message.id} 没有文本内容`);
+            continue;
+          }
+
+          const newParsedContent = messageParser.parse(message.id, textContent);
+          if (!newParsedContent && nextRenderedTexts[message.id] !== undefined) {
+            continue;
+          }
+
+          nextRenderedTexts[message.id] = shouldReset
+            ? newParsedContent || textContent
+            : (nextRenderedTexts[message.id] || '') + (newParsedContent || '');
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '未知错误';
+          logger.error(`解析消息 ${message.id} 失败: ${errorMessage}`);
+          nextRenderedTexts[message.id] = extractTextContent(message);
         }
-
-        nextRenderedTexts[message.id] = shouldReset
-          ? newParsedContent || textContent
-          : (nextRenderedTexts[message.id] || '') + (newParsedContent || '');
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '未知错误';
-        logger.error(`解析消息 ${message.id} 失败: ${errorMessage}`);
-        nextRenderedTexts[message.id] = extractTextContent(message);
       }
-    }
 
-    previousMessageIdsRef.current = nextMessageIds;
-    renderedTextsRef.current = nextRenderedTexts;
-    setRenderedTexts(nextRenderedTexts);
-  }, [coordinator, messageParser]);
+      previousMessageIdsRef.current = nextMessageIds;
+      renderedTextsRef.current = nextRenderedTexts;
+      setRenderedTexts(nextRenderedTexts);
+    },
+    [coordinator, messageParser],
+  );
 
   return { renderedTexts, parseMessages, resetParser };
 }

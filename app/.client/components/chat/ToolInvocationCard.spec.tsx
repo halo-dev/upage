@@ -40,8 +40,7 @@ describe('ToolInvocationCard', () => {
             type: 'tool-buildPageOutlineSnapshot',
             toolCallId: 'tool-page-outline-1',
             state: 'output-available',
-            input: {
-            },
+            input: {},
             output: {
               hasPages: true,
               selectedPages: ['index'],

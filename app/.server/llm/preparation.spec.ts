@@ -66,7 +66,8 @@ describe('preparation helpers', () => {
   it('should build lightweight outline snapshot content', () => {
     const outline = buildSnapshotOutlineContent({
       ...pages[0],
-      content: '<main><section id="hero"><h1>首页</h1><button>立即开始</button></section><script>console.log(1)</script></main>',
+      content:
+        '<main><section id="hero"><h1>首页</h1><button>立即开始</button></section><script>console.log(1)</script></main>',
     });
 
     expect(outline).toContain('页面标题：首页');

@@ -5,8 +5,8 @@ import {
   getMessagePlainTextContent,
   isLegacyXmlMessage,
   saveChatMessages,
-  upgradeLegacyMessageToStructuredParts,
   upgradeLegacyMessagesForContinuation,
+  upgradeLegacyMessageToStructuredParts,
 } from './message';
 
 describe('message service helpers', () => {

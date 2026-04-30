@@ -176,7 +176,10 @@ export class EditorController implements Editor {
       }
 
       const nextScrollTop =
-        scrollContainer.scrollTop + (targetRect.top - containerRect.top) - containerRect.height / 2 + targetRect.height / 2;
+        scrollContainer.scrollTop +
+        (targetRect.top - containerRect.top) -
+        containerRect.height / 2 +
+        targetRect.height / 2;
 
       scrollContainer.scrollTo({
         top: Math.max(0, nextScrollTop),

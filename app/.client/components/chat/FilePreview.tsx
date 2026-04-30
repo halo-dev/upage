@@ -19,11 +19,7 @@ const FilePreview: React.FC<FilePreviewProps> = memo(
             className="relative shrink-0 rounded-xl border border-upage-elements-borderColor/60 bg-upage-elements-background-depth-2/45 p-2 shadow-sm"
           >
             <div className="relative">
-              <img
-                src={URL.createObjectURL(file)}
-                alt={file.name}
-                className="h-20 w-auto rounded-lg object-cover"
-              />
+              <img src={URL.createObjectURL(file)} alt={file.name} className="h-20 w-auto rounded-lg object-cover" />
               <button
                 onClick={() => onRemove(index)}
                 className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded-lg bg-black/75 shadow-md transition-colors hover:bg-black"

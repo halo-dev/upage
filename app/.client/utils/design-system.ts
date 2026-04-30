@@ -29,7 +29,9 @@ export type DesignSystemPreviewModel = {
 };
 
 export function extractBrandNameFromDesignMd(content: string): string {
-  const yamlName = extractFrontmatter(content).match(/^name:\s*(.+)$/m)?.[1]?.trim();
+  const yamlName = extractFrontmatter(content)
+    .match(/^name:\s*(.+)$/m)?.[1]
+    ?.trim();
   if (yamlName) {
     return stripWrappingQuotes(yamlName);
   }
@@ -92,7 +94,9 @@ export function buildDesignSystemPreviewModel(content: string, description: stri
   const bodyHex = designSystem.colors.body || designSystem.colors.muted || '#4b5563';
   const borderHex = designSystem.colors.hairline || designSystem.colors.border || '#e5e7eb';
   const accent =
-    allColors.find((color) => color.name === 'primary') || allColors.find((color) => !isNeutralColor(color.hex)) || allColors[0];
+    allColors.find((color) => color.name === 'primary') ||
+    allColors.find((color) => !isNeutralColor(color.hex)) ||
+    allColors[0];
   const accentHex = accent?.hex ?? '#6366f1';
   const secondAccentHex =
     designSystem.colors['primary-active'] ||
@@ -185,7 +189,9 @@ function extractDesignSystemFontFamily(content: string): string | null {
 }
 
 function getReadableTextColor(backgroundHex: string): string {
-  return getContrastRatio(backgroundHex, '#ffffff') >= getContrastRatio(backgroundHex, '#111111') ? '#ffffff' : '#111111';
+  return getContrastRatio(backgroundHex, '#ffffff') >= getContrastRatio(backgroundHex, '#111111')
+    ? '#ffffff'
+    : '#111111';
 }
 
 function getContrastRatio(colorA: string, colorB: string): number {

@@ -106,7 +106,10 @@ const MessageItem = memo(
                     aria-label="恢复到此消息"
                     onClick={() => onRewind(messageId)}
                     key="rewind-message"
-                    className={classNames(styles.actionButton, 'text-upage-elements-textSecondary hover:text-upage-elements-textPrimary')}
+                    className={classNames(
+                      styles.actionButton,
+                      'text-upage-elements-textSecondary hover:text-upage-elements-textPrimary',
+                    )}
                   >
                     <span className="i-ph:arrow-u-up-left text-base" aria-hidden="true" />
                     <span className={styles.actionLabel}>恢复</span>
@@ -120,7 +123,10 @@ const MessageItem = memo(
                   aria-label="从此消息分叉聊天"
                   onClick={() => onFork(messageId)}
                   key="fork-message"
-                  className={classNames(styles.actionButton, 'text-upage-elements-textSecondary hover:text-upage-elements-textPrimary')}
+                  className={classNames(
+                    styles.actionButton,
+                    'text-upage-elements-textSecondary hover:text-upage-elements-textPrimary',
+                  )}
                 >
                   <span className="i-ph:git-fork text-base" aria-hidden="true" />
                   <span className={styles.actionLabel}>分叉</span>

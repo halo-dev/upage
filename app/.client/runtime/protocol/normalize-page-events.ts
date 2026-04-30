@@ -48,13 +48,19 @@ export function normalizeStructuredPageEvents(message: Pick<ChatUIMessage, 'id' 
 
     if (part.state === 'input-streaming' || part.state === 'input-available') {
       events.push(
-        ...getUpageToolPartInputPages(part).flatMap((pagePart) => pagePartToEvents(message.id, pagePart, 'tool-upage-input', true)),
+        ...getUpageToolPartInputPages(part).flatMap((pagePart) =>
+          pagePartToEvents(message.id, pagePart, 'tool-upage-input', true),
+        ),
       );
       continue;
     }
 
     if (part.state === 'output-available') {
-      events.push(...getCompletedUpageToolPartPages(part).flatMap((pagePart) => pagePartToEvents(message.id, pagePart, 'tool-upage-output', false)));
+      events.push(
+        ...getCompletedUpageToolPartPages(part).flatMap((pagePart) =>
+          pagePartToEvents(message.id, pagePart, 'tool-upage-output', false),
+        ),
+      );
     }
   }
 
@@ -108,7 +114,9 @@ function pagePartToEvents(
   ];
 }
 
-function isValidArtifact(artifact: ChatUIMessage['parts'][number] extends never ? never : { id?: string; name?: string; title?: string }) {
+function isValidArtifact(
+  artifact: ChatUIMessage['parts'][number] extends never ? never : { id?: string; name?: string; title?: string },
+) {
   return (
     typeof artifact?.id === 'string' &&
     artifact.id.trim().length > 0 &&
