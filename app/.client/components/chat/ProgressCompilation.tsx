@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import { cubicEasingFn } from '~/.client/utils/easings';
 import type { ProgressAnnotation } from '~/types/message';
+import { RunningStatus } from './RunningStatus';
 
 export default function ProgressCompilation({ data }: { data?: ProgressAnnotation[] }) {
   const [expanded, setExpanded] = useState(false);
@@ -35,14 +36,14 @@ export default function ProgressCompilation({ data }: { data?: ProgressAnnotatio
         className={classNames(
           'bg-upage-elements-background-depth-2',
           'border border-upage-elements-borderColor',
-          'shadow-lg rounded-lg  relative w-full max-w-chat mx-auto z-prompt',
+          'shadow-lg rounded-xl relative w-full max-w-chat mx-auto z-prompt',
           'p-1',
         )}
       >
         <div
           className={classNames(
             'bg-upage-elements-item-backgroundAccent',
-            'py-1 px-1.5 rounded-md text-upage-elements-item-contentAccent',
+            'py-1 px-1.5 rounded-lg text-upage-elements-item-contentAccent',
             'flex items-center',
           )}
         >
@@ -71,7 +72,7 @@ export default function ProgressCompilation({ data }: { data?: ProgressAnnotatio
               animate={{ width: 'auto' }}
               exit={{ width: 0 }}
               transition={{ duration: 0.15, ease: cubicEasingFn }}
-              className="p-1 rounded-lg bg-upage-elements-item-backgroundAccent hover:bg-upage-elements-artifacts-backgroundHover"
+              className="p-1 rounded-md bg-upage-elements-item-backgroundAccent hover:bg-upage-elements-artifacts-backgroundHover"
               onClick={() => setExpanded((v) => !v)}
             >
               <div className={expanded ? 'i-ph:caret-up-bold' : 'i-ph:caret-down-bold'}></div>
@@ -87,6 +88,21 @@ interface ProgressItemProps {
   progress: ProgressAnnotation;
 }
 
+function renderProgressStatusIcon(progress: ProgressAnnotation) {
+  switch (progress.status) {
+    case 'in-progress':
+      return <RunningStatus label={progress.message} />;
+    case 'complete':
+      return <div className="i-ph:check"></div>;
+    case 'stopped':
+      return <div className="i-ph:x"></div>;
+    case 'warning':
+      return <div className="i-ph:warning"></div>;
+    default:
+      return null;
+  }
+}
+
 const ProgressItem = ({ progress }: ProgressItemProps) => {
   return (
     <motion.div
@@ -100,17 +116,7 @@ const ProgressItem = ({ progress }: ProgressItemProps) => {
       transition={{ duration: 0.15 }}
     >
       <div className="flex items-center gap-1.5">
-        <div>
-          {progress.status === 'in-progress' ? (
-            <div className="i-svg-spinners:90-ring-with-bg"></div>
-          ) : progress.status === 'complete' ? (
-            <div className="i-ph:check"></div>
-          ) : progress.status === 'stopped' ? (
-            <div className="i-ph:x"></div>
-          ) : progress.status === 'warning' ? (
-            <div className="i-ph:warning"></div>
-          ) : null}
-        </div>
+        <div>{renderProgressStatusIcon(progress)}</div>
         {progress.message}
       </div>
     </motion.div>

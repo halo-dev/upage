@@ -1,5 +1,7 @@
 import { type ActionFunctionArgs } from 'react-router';
+import { requireAuth } from '~/.server/service/auth';
 import type { PageV2CreateParams } from '~/.server/service/page-v2';
+import { prisma } from '~/.server/service/prisma';
 import { saveOrUpdateProject } from '~/.server/service/project-service';
 import type { SectionCreateParams } from '~/.server/service/section';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
@@ -8,6 +10,16 @@ import { createScopedLogger } from '~/.server/utils/logger';
 const logger = createScopedLogger('api.project');
 
 export async function action({ request }: ActionFunctionArgs) {
+  const authResult = await requireAuth(request, { isApi: true });
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
+  const userId = authResult.userInfo?.sub;
+  if (!userId) {
+    return errorResponse(401, '用户未登录');
+  }
+
   try {
     if (request.method !== 'POST') {
       return errorResponse(405, '不支持的请求方法');
@@ -26,6 +38,26 @@ export async function action({ request }: ActionFunctionArgs) {
     }
     if (!sectionsStr) {
       return errorResponse(400, 'sections 不能为空');
+    }
+
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+      select: {
+        id: true,
+        chat: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+    if (!message) {
+      logger.warn(`项目保存失败: 消息 ${messageId} 不存在，可能是响应已中止或消息尚未持久化`);
+      return errorResponse(400, '当前消息尚未保存，无法保存项目，请等待响应完成后重试');
+    }
+    if (message.chat.userId !== userId) {
+      logger.warn(`项目保存失败: 用户 ${userId} 无权保存消息 ${messageId} 的项目数据`);
+      return errorResponse(403, '无权保存当前项目');
     }
 
     let pages: PageV2CreateParams[];

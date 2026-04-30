@@ -1,6 +1,6 @@
 import { executeScript } from '~/.client/utils/execute-scripts';
 import { isScriptContent } from '~/.client/utils/html-parse';
-import type { Editor, EditorControllerProps } from '~/types/editor';
+import type { Editor, EditorControllerProps, ScrollToElementOptions } from '~/types/editor';
 
 export class EditorController implements Editor {
   private props: EditorControllerProps;
@@ -150,14 +150,38 @@ export class EditorController implements Editor {
     return pageElement.innerHTML;
   }
 
-  scrollToElement(query: string) {
+  scrollToElement(query: string, options?: ScrollToElementOptions) {
     const pageElement = this.props.getContentElement();
     if (!pageElement) {
       return;
     }
+
+    const autoScrollEnabled = this.props.getAutoScrollEnabled?.() ?? true;
+    if (!options?.force && !autoScrollEnabled) {
+      return;
+    }
+
     const targetElement = pageElement.querySelector(query);
-    if (targetElement) {
-      targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const scrollContainer = pageElement.parentElement;
+    if (targetElement instanceof HTMLElement && scrollContainer instanceof HTMLElement) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const targetRect = targetElement.getBoundingClientRect();
+      const verticalPadding = Math.min(containerRect.height * 0.2, 120);
+      const alreadyInComfortZone =
+        targetRect.top >= containerRect.top + verticalPadding &&
+        targetRect.bottom <= containerRect.bottom - verticalPadding;
+
+      if (!options?.force && alreadyInComfortZone) {
+        return;
+      }
+
+      const nextScrollTop =
+        scrollContainer.scrollTop + (targetRect.top - containerRect.top) - containerRect.height / 2 + targetRect.height / 2;
+
+      scrollContainer.scrollTo({
+        top: Math.max(0, nextScrollTop),
+        behavior: options?.force ? 'smooth' : 'auto',
+      });
     }
   }
 

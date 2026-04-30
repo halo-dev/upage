@@ -2,11 +2,14 @@ import { createScopedLogger } from '~/.client/utils/logger';
 import { unreachable } from '~/.client/utils/unreachable';
 import type { UPageAction, UPageActionData } from '~/types/actions';
 import type { UPageArtifactData } from '~/types/artifact';
-
-const ARTIFACT_TAG_OPEN = '<uPageArtifact';
-const ARTIFACT_TAG_CLOSE = '</uPageArtifact>';
-const ARTIFACT_ACTION_TAG_OPEN = '<uPageAction';
-const ARTIFACT_ACTION_TAG_CLOSE = '</uPageAction>';
+import {
+  LEGACY_ACTION_TAG_CLOSE as ARTIFACT_ACTION_TAG_CLOSE,
+  LEGACY_ACTION_TAG_OPEN as ARTIFACT_ACTION_TAG_OPEN,
+  LEGACY_ARTIFACT_TAG_CLOSE as ARTIFACT_TAG_CLOSE,
+  LEGACY_ARTIFACT_TAG_OPEN as ARTIFACT_TAG_OPEN,
+  parseLegacyActionTag,
+  parseLegacyArtifactTag,
+} from '~/utils/upage-legacy';
 
 const logger = createScopedLogger('MessageParser');
 
@@ -33,6 +36,7 @@ export interface ParserCallbacks {
 }
 
 interface ElementFactoryProps {
+  artifactId: string;
   messageId: string;
   pageName: string;
 }
@@ -135,9 +139,14 @@ export class StreamingMessageParser {
             const actionEndIndex = input.indexOf('>', actionOpenIndex);
 
             if (actionEndIndex !== -1) {
-              state.insideAction = true;
+              const parsedAction = this.#parseActionTag(input, actionOpenIndex, actionEndIndex);
+              if (!parsedAction) {
+                i = actionEndIndex + 1;
+                continue;
+              }
 
-              state.currentAction = this.#parseActionTag(input, actionOpenIndex, actionEndIndex);
+              state.insideAction = true;
+              state.currentAction = parsedAction;
 
               this._options.callbacks?.onActionOpen?.({
                 artifactId: currentArtifact.id,
@@ -181,34 +190,24 @@ export class StreamingMessageParser {
 
             if (openTagEnd !== -1) {
               const artifactTag = input.slice(i, openTagEnd + 1);
+              const artifact = parseLegacyArtifactTag(artifactTag);
 
-              const artifactId = this.#extractAttribute(artifactTag, 'id') as string;
-              const artifactName = this.#extractAttribute(artifactTag, 'name') as string;
-              const artifactTitle = this.#extractAttribute(artifactTag, 'title') as string;
-
-              if (!artifactId || !artifactName) {
+              if (!artifact.id || !artifact.name) {
                 logger.warn('Artifact id 或者 name 未指定');
               }
 
-              if (!artifactTitle) {
+              if (!artifact.title) {
                 logger.warn('Artifact title 未指定');
               }
 
               state.insideArtifact = true;
+              state.currentArtifact = artifact;
 
-              const currentArtifact = {
-                id: artifactId,
-                name: artifactName,
-                title: artifactTitle,
-              } satisfies UPageArtifactData;
-
-              state.currentArtifact = currentArtifact;
-
-              this._options.callbacks?.onArtifactOpen?.({ messageId, ...currentArtifact });
+              this._options.callbacks?.onArtifactOpen?.({ messageId, ...artifact });
 
               const artifactFactory = this._options.artifactElement ?? createArtifactElement;
 
-              output += artifactFactory({ messageId, pageName: artifactName });
+              output += artifactFactory({ artifactId: artifact.id, messageId, pageName: artifact.name });
 
               i = openTagEnd + 1;
             } else {
@@ -249,64 +248,25 @@ export class StreamingMessageParser {
 
   #parseActionTag(input: string, actionOpenIndex: number, actionEndIndex: number) {
     const actionTag = input.slice(actionOpenIndex, actionEndIndex + 1);
-
-    const actionAttributes: UPageAction = {
-      id: '',
-      pageName: '',
-      action: 'add',
-      domId: '',
-      content: '',
-      rootDomId: '',
-      validRootDomId: false,
-    };
-
-    const id = this.#extractAttribute(actionTag, 'id') as string;
-    if (!id) {
+    const action = parseLegacyActionTag(actionTag, '');
+    if (!action) {
       logger.warn('页面 id 未指定');
-      throw new Error('Page id not specified');
+      return undefined;
     }
 
-    const pageName = this.#extractAttribute(actionTag, 'pageName') as string;
-    if (!pageName) {
+    if (!action.pageName) {
       logger.warn('页面名称未指定');
     }
 
-    const action = this.#extractAttribute(actionTag, 'action') as UPageAction['action'];
-    if (!action) {
-      logger.warn('Action 未指定');
-    }
-
-    if (!['add', 'remove', 'update'].includes(action)) {
-      logger.warn(`无效的 action: ${action}`);
-      throw new Error(`Invalid action: ${action}`);
-    }
-
-    const domId = this.#extractAttribute(actionTag, 'domId') as string;
-    if (!domId) {
+    if (!action.domId) {
       logger.warn('domId 未指定');
     }
 
-    const rootDomId = this.#extractAttribute(actionTag, 'rootDomId') as string;
-    if (!rootDomId) {
+    if (!action.rootDomId) {
       logger.warn('rootDomId 未指定');
-    } else {
-      actionAttributes.validRootDomId = true;
     }
 
-    const sort = this.#extractAttribute(actionTag, 'sort');
-
-    actionAttributes.id = id;
-    actionAttributes.pageName = pageName;
-    actionAttributes.action = action;
-    actionAttributes.domId = domId;
-    actionAttributes.rootDomId = rootDomId;
-    actionAttributes.sort = sort ? parseInt(sort) : undefined;
-    return actionAttributes;
-  }
-
-  #extractAttribute(tag: string, attributeName: string): string | undefined {
-    const match = tag.match(new RegExp(`${attributeName}="([^"]*)"`, 'i'));
-    return match ? match[1] : undefined;
+    return action;
   }
 }
 

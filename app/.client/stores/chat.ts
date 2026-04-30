@@ -18,13 +18,14 @@ export interface ArtifactState {
 }
 
 export type ArtifactUpdateState = Pick<ArtifactState, 'title' | 'closed'>;
-type ArtifactsByPageName = Map<string, ArtifactState>;
-// messageId -> ArtifactsByPageName
-type ArtifactsByMessageId = Map<string, ArtifactsByPageName>;
+type ArtifactsById = Map<string, ArtifactState>;
+// messageId -> ArtifactsById
+type ArtifactsByMessageId = Map<string, ArtifactsById>;
 type Artifacts = MapStore<ArtifactsByMessageId>;
 
 export class ChatStore {
   private globalExecutionQueue = Promise.resolve();
+  private executionQueueVersion = 0;
   private reloadedMessages = new Set<string>();
 
   // 当前消息 id
@@ -34,7 +35,7 @@ export class ChatStore {
     import.meta.hot?.data?.currentDescription ?? atom<string | undefined>(undefined);
 
   artifacts: Artifacts = import.meta.hot?.data?.artifacts ?? map(new Map());
-  artifactIdList: { messageId: string; pageName: string }[] = [];
+  artifactIdList: { messageId: string; artifactId: string }[] = [];
   actionAlert: WritableAtom<ActionAlert | undefined> =
     import.meta.hot?.data?.actionAlert ?? atom<ActionAlert | undefined>(undefined);
 
@@ -66,8 +67,8 @@ export class ChatStore {
       return undefined;
     }
 
-    const { messageId, pageName } = this.artifactIdList[0];
-    return this.getArtifact(messageId, pageName);
+    const { messageId, artifactId } = this.artifactIdList[0];
+    return this.getArtifact(messageId, artifactId);
   }
 
   get description() {
@@ -83,6 +84,7 @@ export class ChatStore {
   }
 
   abortAllActions() {
+    this.executionQueueVersion += 1;
     const artifacts = this.artifacts.get();
 
     artifacts.values().forEach((artifactByPageNames) => {
@@ -98,13 +100,13 @@ export class ChatStore {
   }
 
   async addArtifact({ messageId, name, title, id }: ArtifactCallbackData) {
-    const artifact = this.getArtifact(messageId, name);
+    const artifact = this.getArtifact(messageId, id);
     if (artifact) {
       return;
     }
 
-    if (!this.artifactIdList.includes({ messageId, pageName: name })) {
-      this.artifactIdList.push({ messageId, pageName: name });
+    if (!this.artifactIdList.some((item) => item.messageId === messageId && item.artifactId === id)) {
+      this.artifactIdList.push({ messageId, artifactId: id });
     }
     const newArtifact = {
       id,
@@ -121,65 +123,75 @@ export class ChatStore {
     };
 
     const artifactsByMessageId = this.artifacts.get();
-    const existingArtifactsByPageName = artifactsByMessageId.get(messageId);
-    const artifactsByPageName = existingArtifactsByPageName ? new Map(existingArtifactsByPageName) : new Map();
+    const existingArtifactsById = artifactsByMessageId.get(messageId);
+    const artifactsById = existingArtifactsById ? new Map(existingArtifactsById) : new Map();
 
-    artifactsByPageName.set(name, newArtifact);
+    artifactsById.set(id, newArtifact);
 
     // create new outer Map instance to trigger nanostores listener
     const newArtifactsByMessageId = new Map(artifactsByMessageId);
-    newArtifactsByMessageId.set(messageId, artifactsByPageName);
+    newArtifactsByMessageId.set(messageId, artifactsById);
 
     this.artifacts.set(newArtifactsByMessageId);
     const bridge = await editorBridge;
     bridge.updatePageAttributes(name, { title });
   }
 
-  updateArtifact({ messageId, name }: ArtifactCallbackData, state: Partial<ArtifactUpdateState>) {
-    const artifact = this.getArtifact(messageId, name);
+  updateArtifact({ messageId, id }: ArtifactCallbackData, state: Partial<ArtifactUpdateState>) {
+    const artifact = this.getArtifact(messageId, id);
     if (!artifact) {
       return;
     }
 
     const artifactsByMessageId = this.artifacts.get();
-    const existingArtifactsByPageName = artifactsByMessageId.get(messageId);
-    if (!existingArtifactsByPageName) {
+    const existingArtifactsById = artifactsByMessageId.get(messageId);
+    if (!existingArtifactsById) {
       return;
     }
 
-    const artifactsByPageName = new Map(existingArtifactsByPageName);
-    artifactsByPageName.set(name, { ...artifact, ...state });
+    const artifactsById = new Map(existingArtifactsById);
+    artifactsById.set(id, { ...artifact, ...state });
 
     // create new outer Map instance to trigger nanostores listener
     const newArtifactsByMessageId = new Map(artifactsByMessageId);
-    newArtifactsByMessageId.set(messageId, artifactsByPageName);
+    newArtifactsByMessageId.set(messageId, artifactsById);
 
     this.artifacts.set(newArtifactsByMessageId);
   }
 
-  private getArtifact(messageId: string, pageName: string) {
+  private getArtifact(messageId: string, artifactId: string) {
     const artifacts = this.artifacts.get();
-    const artifactsByPageName = artifacts.get(messageId);
-    if (!artifactsByPageName) {
+    const artifactsById = artifacts.get(messageId);
+    if (!artifactsById) {
       return undefined;
     }
 
-    return artifactsByPageName.get(pageName);
+    return artifactsById.get(artifactId);
   }
 
   private getArtifactByArtifactId(messageId: string, artifactId: string) {
-    const artifacts = this.artifacts.get();
-
-    const artifactsByPageName = artifacts.get(messageId);
-    if (!artifactsByPageName) {
-      return undefined;
-    }
-
-    return artifactsByPageName.values().find((artifact) => artifact.id === artifactId);
+    return this.getArtifact(messageId, artifactId);
   }
 
   setReloadedMessages(messages: string[]) {
     this.reloadedMessages = new Set(messages);
+  }
+
+  pruneArtifacts(messageIds: string[]) {
+    const validMessageIds = new Set(messageIds);
+    const currentArtifacts = this.artifacts.get();
+    const nextArtifacts = new Map(
+      [...currentArtifacts.entries()].filter(([messageId]) => {
+        return validMessageIds.has(messageId);
+      }),
+    );
+
+    this.artifactIdList = this.artifactIdList.filter((item) => validMessageIds.has(item.messageId));
+    this.artifacts.set(nextArtifacts);
+
+    if (this.currentMessageId.get() && !validMessageIds.has(this.currentMessageId.get()!)) {
+      this.currentMessageId.set(undefined);
+    }
   }
 
   addAction(data: ActionCallbackData) {
@@ -218,32 +230,13 @@ export class ChatStore {
       return;
     }
 
-    const { pageName, id } = data.action;
-
-    if (this.pagesStore.activeSection.get() !== id) {
-      this.pagesStore.setActiveSection(id);
-    }
-
-    if (this.pagesStore.activePage.get() !== pageName) {
-      this.pagesStore.setActivePage(pageName);
-    }
-
-    if (this.webBuilderStore.currentView.get() !== 'code') {
-      this.webBuilderStore.currentView.set('code');
-    }
-
-    const actionId = data.action.id;
-    const section = this.pagesStore.sections.get()[actionId];
-    if (!section) {
-      await artifact.runner.runAction(data, isRunning);
-    }
-
-    this.pagesStore.updateSection(actionId, data.action.content);
-
     if (!isRunning) {
       await artifact.runner.runAction(data);
       this.pagesStore.resetPageModifications();
+      return;
     }
+
+    await artifact.runner.runAction(data, true);
   }
 
   actionStreamSampler = createSampler(async (data: ActionCallbackData, isStreaming: boolean = false) => {
@@ -251,10 +244,25 @@ export class ChatStore {
   }, 100); // TODO: remove this magic number to have it configurable
 
   addToExecutionQueue(callback: () => Promise<void>) {
-    this.globalExecutionQueue = this.globalExecutionQueue.then(() => callback());
+    const queueVersion = this.executionQueueVersion;
+    this.globalExecutionQueue = this.globalExecutionQueue.then(() => {
+      if (queueVersion !== this.executionQueueVersion) {
+        return;
+      }
+
+      return callback();
+    });
   }
 
   setCurrentMessageId(id: string | undefined) {
     this.currentMessageId.set(id);
+  }
+
+  async waitForAllActionsSettled() {
+    const runners = Array.from(this.artifacts.get().values()).flatMap((artifactsById) => {
+      return Array.from(artifactsById.values()).map((artifact) => artifact.runner);
+    });
+
+    await Promise.all(runners.map((runner) => runner.waitForIdle()));
   }
 }

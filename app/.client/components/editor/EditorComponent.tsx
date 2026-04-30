@@ -22,6 +22,7 @@ export function EditorComponent(props: EditorComponentProps) {
   const lastContentRef = useRef<Record<string, string>>({});
   const pageRefsRef = useRef<Record<string, RefObject<PageRenderRef | null>>>({});
   const currentPageRef = useRef<string | undefined>(currentPage);
+  const autoScrollEnabledRef = useRef<Record<string, boolean>>({});
 
   useEditorCommands(controllerRef);
 
@@ -29,6 +30,10 @@ export function EditorComponent(props: EditorComponentProps) {
     Object.keys(documents).forEach((docName) => {
       if (!pageRefsRef.current[docName]) {
         pageRefsRef.current[docName] = createRef<PageRenderRef>();
+      }
+
+      if (autoScrollEnabledRef.current[docName] === undefined) {
+        autoScrollEnabledRef.current[docName] = true;
       }
     });
   }, [documents]);
@@ -38,6 +43,7 @@ export function EditorComponent(props: EditorComponentProps) {
       controllerRef.current = new EditorController({
         getContentElement,
         getIframeElement,
+        getAutoScrollEnabled,
       });
 
       setTimeout(() => {
@@ -50,6 +56,9 @@ export function EditorComponent(props: EditorComponentProps) {
 
   useEffect(() => {
     currentPageRef.current = currentPage;
+    if (currentPage) {
+      autoScrollEnabledRef.current[currentPage] = true;
+    }
   }, [currentPage]);
 
   const getContentElement = useCallback((): HTMLElement | null => {
@@ -61,6 +70,19 @@ export function EditorComponent(props: EditorComponentProps) {
     const currentPageName = currentPageRef.current ?? 'index';
     return pageRefsRef.current[currentPageName]?.current?.iframe ?? null;
   }, [pageRefsRef]);
+
+  const getAutoScrollEnabled = useCallback((): boolean => {
+    const currentPageName = currentPageRef.current;
+    if (!currentPageName) {
+      return true;
+    }
+
+    return autoScrollEnabledRef.current[currentPageName] ?? true;
+  }, []);
+
+  const handleAutoScrollChange = useCallback((pageName: string, enabled: boolean) => {
+    autoScrollEnabledRef.current[pageName] = enabled;
+  }, []);
 
   /**
    * 执行保存
@@ -109,6 +131,7 @@ export function EditorComponent(props: EditorComponentProps) {
           document={document}
           onUpdate={handleContentUpdate}
           onSave={handleSave}
+          onAutoScrollChange={handleAutoScrollChange}
         />
       ))}
     </EditorRender>

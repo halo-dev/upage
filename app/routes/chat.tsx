@@ -84,7 +84,10 @@ export async function loader(args: LoaderFunctionArgs) {
   const url = new URL(args.request.url);
   const rewindTo = url.searchParams.get('rewindTo') || '';
   if (rewindTo) {
-    chat.messages = chat.messages.slice(0, chat.messages.findIndex((message) => message.id === rewindTo) + 1);
+    const rewindIndex = chat.messages.findIndex((message) => message.id === rewindTo);
+    if (rewindIndex >= 0) {
+      chat.messages = chat.messages.slice(0, rewindIndex + 1);
+    }
   }
 
   return resultData;

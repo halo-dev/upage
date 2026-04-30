@@ -1,5 +1,16 @@
+.messagesRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+}
+
 .messageItem {
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
   transition: transform 0.2s ease, opacity 0.2s ease;
 
   &:hover {
@@ -7,51 +18,139 @@
   }
 }
 
-.userMessage {
-  background-color: var(--upage-elements-background-depth-1);
-  border-radius: 1.25rem 1.25rem 0.25rem 1.25rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.assistantRow {
+  justify-content: flex-start;
 }
 
-.assistantMessage {
-  background-color: var(--upage-elements-background-depth-2);
-  border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.userRow {
+  justify-content: flex-end;
 }
 
-.avatar {
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--upage-elements-icon-success);
-    border: 2px solid var(--upage-elements-background);
-  }
+.messageMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
-.actionButton {
-  opacity: 0.7;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.assistantMain {
+  width: min(100%, 52rem);
+}
 
-  &:hover {
-    opacity: 1;
-    transform: scale(1.1);
-  }
+.userMain {
+  align-items: flex-end;
+  max-width: min(calc(82% - 2.75rem), 40rem);
+}
+
+.messageBubble {
+  overflow: hidden;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.assistantBubble {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.userBubble {
+  border: 1px solid color-mix(in srgb, var(--upage-elements-borderColor) 72%, transparent);
+  border-radius: 0.75rem 0.75rem 0.3rem 0.75rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--upage-elements-focus) 7%, transparent), transparent 48%),
+    color-mix(in srgb, var(--upage-elements-background) 96%, white 4%);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.streamingBubble {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
 
 .messageContent {
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
-.streamingLastMessage {
-  background-image: linear-gradient(to bottom, var(--upage-elements-messages-background) 30%, transparent 100%);
-  border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.assistantContent {
+  padding: 0;
+}
+
+.userContent {
+  padding: 0.875rem 1rem 0.95rem;
+}
+
+.avatar {
+  position: sticky;
+  top: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-top: 0.15rem;
+  border: 1px solid color-mix(in srgb, var(--upage-elements-borderColor) 74%, transparent);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.assistantAvatar {
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--upage-elements-focus) 16%, white), transparent 65%),
+    color-mix(in srgb, var(--upage-elements-background) 96%, white 4%);
+  color: var(--upage-elements-textPrimary);
+}
+
+.userAvatar {
+  background: color-mix(in srgb, var(--upage-elements-background) 96%, white 4%);
+  color: var(--upage-elements-textSecondary);
+}
+
+.assistantActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--upage-elements-borderColor) 72%, transparent);
+  background: color-mix(in srgb, var(--upage-elements-background-depth-1) 82%, transparent);
+  opacity: 0.82;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    background: var(--upage-elements-background);
+    border-color: color-mix(in srgb, var(--upage-elements-focus) 30%, var(--upage-elements-borderColor));
+  }
+}
+
+.actionLabel {
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .messageItem {
+    gap: 0.625rem;
+  }
+
+  .avatar {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .userMain {
+    max-width: min(calc(88% - 2.5rem), 36rem);
+  }
 }

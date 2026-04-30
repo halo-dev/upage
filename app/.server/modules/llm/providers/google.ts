@@ -1,12 +1,14 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import type { LanguageModel } from 'ai';
 import { BaseProvider } from '~/.server/modules/llm/base-provider';
+import { createVisionCapabilities } from '~/.server/modules/llm/capabilities';
 import type { ModelInfo } from '~/.server/modules/llm/types';
 import type { IProviderSetting } from '~/types/model';
 
 export default class GoogleProvider extends BaseProvider {
   name = 'Google';
   getApiKeyLink = 'https://aistudio.google.com/app/apikey';
+  resolveModelCapabilities = () => createVisionCapabilities('declared');
 
   staticModels: ModelInfo[] = [
     { name: 'gemini-1.5-flash-latest', label: 'Gemini 1.5 Flash', provider: 'Google', maxTokenAllowed: 8192 },

@@ -3,8 +3,9 @@ import classNames from 'classnames';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { useAuth, usePromptEnhancer } from '~/.client/hooks';
-import { aiState } from '~/.client/stores/ai-state';
+import { aiState, removeDesignSystem, setDesignSystem } from '~/.client/stores/ai-state';
 import { IconButton } from '../ui/IconButton';
+import { DesignSystemPicker } from './DesignSystemPicker';
 import { SendButton } from './SendButton';
 
 interface ChatTextareaProps {
@@ -14,14 +15,16 @@ interface ChatTextareaProps {
   onStopMessage?: () => void;
 }
 
-const TEXTAREA_MIN_HEIGHT = 76;
+const TEXTAREA_MIN_HEIGHT = 84;
 
 export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onStopMessage }: ChatTextareaProps) => {
   const { isAuthenticated, signIn } = useAuth();
-  const { chatStarted, isStreaming } = useStore(aiState);
+  const { chatStarted, isStreaming, requestPhase, designMd, designBrand } = useStore(aiState);
   const { enhancedInput, isLoading, enhancePrompt, resetEnhancer } = usePromptEnhancer();
+  const isRequestActive = requestPhase === 'submitted' || requestPhase === 'streaming';
 
   const [input, setInput] = useState('');
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // 检测当前 URL 是否包含登录回调参数
@@ -95,7 +98,7 @@ export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onSto
       textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
       textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
     }
-  }, [input, textareaRef]);
+  }, [input, textareaRef, TEXTAREA_MAX_HEIGHT]);
 
   const handleSendMessage = () => {
     if (!isAuthenticated) {
@@ -155,14 +158,19 @@ export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onSto
     });
   };
 
+  const placeholder = getTextareaPlaceholder({
+    requestPhase,
+    isStreaming,
+    chatStarted,
+  });
+
   return (
-    <div className={classNames('relative shadow-xs backdrop-blur rounded-lg')}>
+    <div className={classNames('relative rounded-[18px] bg-transparent')}>
       <textarea
         ref={textareaRef}
         className={classNames(
-          'w-full pl-3 pt-3 pr-16 outline-none resize-none text-upage-elements-textPrimary placeholder-upage-elements-textTertiary bg-transparent text-sm',
+          'w-full resize-none bg-transparent pl-4 pr-18 pt-4 text-sm leading-6 text-upage-elements-textPrimary outline-none placeholder-upage-elements-textTertiary',
           'transition-[opacity,border,width,padding] duration-200',
-          'hover:border-upage-elements-focus',
         )}
         onDragEnter={(e) => {
           e.preventDefault();
@@ -208,16 +216,16 @@ export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onSto
           minHeight: TEXTAREA_MIN_HEIGHT,
           maxHeight: TEXTAREA_MAX_HEIGHT,
         }}
-        placeholder={isStreaming ? '正在构建中...' : !chatStarted ? '今天我能帮你做什么？' : '需要我优化哪些地方？'}
+        placeholder={placeholder}
         translate="no"
       />
       <ClientOnly>
         {() => (
           <SendButton
-            show={input.trim().length > 0 || isStreaming}
-            isStreaming={isStreaming}
+            show={input.trim().length > 0 || isRequestActive}
+            isRunning={isRequestActive}
             onClick={() => {
-              if (isStreaming) {
+              if (isRequestActive) {
                 onStopMessage?.();
                 return;
               }
@@ -229,15 +237,22 @@ export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onSto
           />
         )}
       </ClientOnly>
-      <div className="flex justify-between items-center text-sm p-3 pt-2">
-        <div className="flex gap-1 items-center">
-          <IconButton title="上传文件" className="transition-all" onClick={() => handleFileUpload()}>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2 border-upage-elements-borderColor/50 px-3.5 pb-3 pt-2.5 text-sm">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <IconButton
+            title="上传文件"
+            className="rounded-lg bg-upage-elements-background-depth-2/55 px-2 py-1.5 transition-all hover:bg-upage-elements-background-depth-2"
+            onClick={() => handleFileUpload()}
+          >
             <div className="i-mingcute-attachment-2-line text-xl"></div>
           </IconButton>
           <IconButton
             title="优化提示词"
             disabled={input.length === 0 || isLoading}
-            className={classNames('transition-all', isLoading ? 'opacity-100' : '')}
+            className={classNames(
+              'rounded-lg bg-upage-elements-background-depth-2/55 px-2 py-1.5 transition-all hover:bg-upage-elements-background-depth-2',
+              isLoading ? 'opacity-100' : '',
+            )}
             onClick={handleEnhancePrompt}
           >
             {isLoading ? (
@@ -246,15 +261,88 @@ export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onSto
               <div className="i-mingcute:quill-pen-ai-line text-xl"></div>
             )}
           </IconButton>
+          <IconButton
+            title="选择设计风格"
+            className={classNames(
+              'rounded-lg bg-upage-elements-background-depth-2/55 px-2 py-1.5 transition-all hover:bg-upage-elements-background-depth-2',
+              designMd ? 'text-blue-500' : '',
+            )}
+            onClick={() => setIsPickerOpen(true)}
+          >
+            <div className="i-ph:paint-brush text-xl"></div>
+          </IconButton>
+          {designMd && (
+            <div className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full border border-blue-200/80 bg-blue-50/85 px-2 py-1 text-xs font-medium text-blue-600 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400">
+              <span className="i-ph:paint-brush w-3 h-3 flex-shrink-0" />
+              <span className="min-w-0 max-w-[96px] truncate sm:max-w-[140px]" title={designBrand || '已选设计风格'}>
+                {designBrand || '已选风格'}
+              </span>
+              <button
+                className="ml-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-md transition-colors hover:bg-blue-200 dark:hover:bg-blue-500/30"
+                onClick={() => removeDesignSystem()}
+                title="移除设计风格"
+              >
+                <div className="i-ph:x w-3 h-3" />
+              </button>
+            </div>
+          )}
         </div>
-        {input.length > 3 ? (
-          <div className="text-xs text-upage-elements-textTertiary">
-            使用 <kbd className="kdb px-1.5 py-0.5 rounded bg-upage-elements-background-depth-2">Shift</kbd> +{' '}
-            <kbd className="kdb px-1.5 py-0.5 rounded bg-upage-elements-background-depth-2">Return</kbd>
-            换行
-          </div>
-        ) : null}
+        <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1.5 pb-0.5 text-xs text-upage-elements-textTertiary">
+          {uploadFiles.length > 0 ? (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-upage-elements-background-depth-2 px-2 py-1"
+              title={`已添加 ${uploadFiles.length} 个附件`}
+            >
+              <span className="i-mingcute:attachment-2-line h-3.5 w-3.5 flex-shrink-0" />
+              <span>{uploadFiles.length}</span>
+            </span>
+          ) : null}
+          <span
+            className={classNames(
+              'inline-flex items-center gap-1 rounded-full bg-upage-elements-background-depth-2 px-2 py-1 transition-opacity',
+              input.length > 3 || uploadFiles.length > 0 ? 'opacity-100' : 'pointer-events-none opacity-0',
+            )}
+            aria-hidden={input.length > 3 || uploadFiles.length > 0 ? undefined : true}
+            title="Shift + Return 换行"
+          >
+            <span className="i-ph:key-return h-3.5 w-3.5 flex-shrink-0" />
+            <kbd className="kdb rounded-md bg-upage-elements-background px-1.5 py-0.5">Shift</kbd>
+            <span>+</span>
+            <kbd className="kdb rounded-md bg-upage-elements-background px-1.5 py-0.5">Enter</kbd>
+          </span>
+        </div>
       </div>
+      <DesignSystemPicker
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={(brand, content) => {
+          setDesignSystem(content, brand);
+        }}
+      />
     </div>
   );
 };
+
+function getTextareaPlaceholder({
+  requestPhase,
+  isStreaming,
+  chatStarted,
+}: {
+  requestPhase: string;
+  isStreaming: boolean;
+  chatStarted: boolean;
+}) {
+  if (requestPhase === 'submitted') {
+    return '正在分析上下文...';
+  }
+
+  if (isStreaming) {
+    return '正在构建中...';
+  }
+
+  if (!chatStarted) {
+    return '描述你想生成的页面、风格和目标用户';
+  }
+
+  return '继续补充需求，或告诉我下一步要优化什么';
+}

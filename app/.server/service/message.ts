@@ -1,11 +1,67 @@
-import type { Message } from '@prisma/client';
+import type { Message, Prisma } from '@prisma/client';
 import type { JsonArray } from '@prisma/client/runtime/library';
 import type { TextUIPart, UIMessagePart } from 'ai';
 import { prisma } from '~/.server/service/prisma';
 import { createScopedLogger } from '~/.server/utils/logger';
-import type { SummaryAnnotation, UPageDataParts, UPageUIMessage } from '~/types/message';
+import type {
+  ChatUIMessage,
+  PageBuilderUITools,
+  SummaryAnnotation,
+  UPageDataParts,
+} from '~/types/message';
+import {
+  createSummaryPart,
+  ensureProtocolVersion,
+} from '~/utils/message-protocol';
+import { getMessagePlainTextContent } from '~/utils/message-protocol';
+export {
+  getMessagePlainTextContent,
+  isLegacyXmlMessage,
+  upgradeLegacyMessageToStructuredParts,
+  upgradeLegacyMessagesForContinuation,
+} from '~/utils/message-protocol';
 
 const logger = createScopedLogger('message.server');
+type MessagePersistenceClient = Pick<typeof prisma, 'chat' | 'message'>;
+export const MESSAGE_ORDER_ASC: Prisma.MessageOrderByWithRelationInput[] = [{ createdAt: 'asc' }, { id: 'asc' }];
+export const MESSAGE_ORDER_DESC: Prisma.MessageOrderByWithRelationInput[] = [{ createdAt: 'desc' }, { id: 'desc' }];
+
+function hasPersistedParts(parts: Message['parts']): parts is NonNullable<Message['parts']> {
+  return Array.isArray(parts) && parts.length > 0;
+}
+
+function partitionOrderedMessageIds(messageIds: string[], targetId: string) {
+  const targetIndex = messageIds.indexOf(targetId);
+
+  if (targetIndex === -1) {
+    return {
+      beforeOrEqual: [] as string[],
+      after: [] as string[],
+      found: false,
+    };
+  }
+
+  return {
+    beforeOrEqual: messageIds.slice(0, targetIndex + 1),
+    after: messageIds.slice(targetIndex + 1),
+    found: true,
+  };
+}
+
+async function getOrderedActiveMessageIds(chatId: string, db: Pick<typeof prisma, 'message'> = prisma): Promise<string[]> {
+  const messages = await db.message.findMany({
+    where: {
+      chatId,
+      isDiscarded: false,
+    },
+    select: {
+      id: true,
+    },
+    orderBy: MESSAGE_ORDER_ASC,
+  });
+
+  return messages.map((message) => message.id);
+}
 
 /**
  * 消息创建参数接口
@@ -91,24 +147,26 @@ export async function upsertMessage(params: MessageUpsertParams) {
  * @param startMessageId 开始消息ID
  * @param endMessageId 结束消息ID
  */
-export async function updateDiscardedMessage(chatId: string, startMessageId: string) {
+export async function updateDiscardedMessage(chatId: string, startMessageId: string, db: MessagePersistenceClient = prisma) {
   try {
-    const startMessage = await prisma.message.findUnique({
-      where: { id: startMessageId },
-      select: { createdAt: true },
-    });
+    const orderedMessageIds = await getOrderedActiveMessageIds(chatId, db);
+    const { after: discardedMessageIds, found } = partitionOrderedMessageIds(orderedMessageIds, startMessageId);
 
-    if (!startMessage) {
+    if (!found) {
       logger.error(`找不到开始消息 ${startMessageId}`);
       return false;
     }
 
-    // 更新 startMessageId 之后的所有消息为遗弃消息
-    const result = await prisma.message.updateMany({
+    if (discardedMessageIds.length === 0) {
+      logger.info(`聊天 ${chatId} 中消息 ${startMessageId} 之后没有需要遗弃的消息`);
+      return true;
+    }
+
+    const result = await db.message.updateMany({
       where: {
         chatId,
-        createdAt: {
-          gt: startMessage?.createdAt,
+        id: {
+          in: discardedMessageIds,
         },
       },
       data: {
@@ -138,35 +196,26 @@ export interface GetHistoryChatMessagesParams {
  * @param params 包含 chatId 和可选的 rewindTo 参数
  * @returns 消息记录列表
  */
-export async function getHistoryChatMessages(params: GetHistoryChatMessagesParams): Promise<UPageUIMessage[]> {
+export async function getHistoryChatMessages(params: GetHistoryChatMessagesParams): Promise<ChatUIMessage[]> {
   const { chatId, rewindTo } = params;
 
   try {
-    // 如果指定了 rewindTo，则获取该消息的创建时间
     if (rewindTo) {
-      const rewindToMessage = await prisma.message.findUnique({
-        where: { id: rewindTo },
-        select: { createdAt: true },
-      });
+      const orderedMessageIds = await getOrderedActiveMessageIds(chatId);
+      const { beforeOrEqual: selectedMessageIds, found } = partitionOrderedMessageIds(orderedMessageIds, rewindTo);
 
-      if (!rewindToMessage) {
+      if (!found) {
         logger.warn(`获取历史消息: 找不到指定的 rewindTo 消息 ${rewindTo}`);
-        // 如果找不到指定消息，则返回所有消息
         return await getAllChatMessages(chatId);
       }
 
-      // 获取所有在 rewindTo 消息创建时间之前（包括该消息）的消息
       const messages = await prisma.message.findMany({
         where: {
-          chatId,
-          isDiscarded: false,
-          createdAt: {
-            lte: rewindToMessage.createdAt,
+          id: {
+            in: selectedMessageIds,
           },
         },
-        orderBy: {
-          createdAt: 'asc',
-        },
+        orderBy: MESSAGE_ORDER_ASC,
       });
 
       logger.info(`获取了聊天 ${chatId} 中直到消息 ${rewindTo} 的 ${messages.length} 条历史消息`);
@@ -182,17 +231,22 @@ export async function getHistoryChatMessages(params: GetHistoryChatMessagesParam
   }
 }
 
-function convertToUIMessage(message: Message): UPageUIMessage {
-  if (message.version === 2) {
+export function createStructuredPageSummary(message: Pick<ChatUIMessage, 'parts'>): string {
+  void message;
+  return '';
+}
+
+export function convertToUIMessage(message: Message): ChatUIMessage {
+  if (message.version === 2 || hasPersistedParts(message.parts)) {
     return {
       id: message.id,
       role: message.role as 'user' | 'assistant',
-      parts: message.parts as any[],
-      metadata: message.metadata as any,
+      parts: (message.parts as any[]) || [],
+      metadata: ensureProtocolVersion(message.metadata, 'structured-parts-v2'),
     };
   }
 
-  const parts: UIMessagePart<UPageDataParts, never>[] = [];
+  const parts: UIMessagePart<UPageDataParts, PageBuilderUITools>[] = [];
   if (message.role === 'user') {
     const content = JSON.parse(message.content) as TextUIPart;
     parts.push({
@@ -211,10 +265,7 @@ function convertToUIMessage(message: Message): UPageUIMessage {
     messageAnnotations.forEach((annotation) => {
       const { type } = annotation as { type: string };
       if (type === 'chatSummary') {
-        parts.push({
-          type: 'data-summary',
-          data: annotation as unknown as SummaryAnnotation,
-        });
+        parts.push(createSummaryPart(annotation as SummaryAnnotation));
       }
     });
   }
@@ -222,7 +273,7 @@ function convertToUIMessage(message: Message): UPageUIMessage {
     id: message.id,
     role: message.role as 'user' | 'assistant',
     parts,
-    metadata: message.metadata as any,
+    metadata: ensureProtocolVersion(message.metadata, 'legacy-xml'),
   };
 }
 
@@ -231,15 +282,13 @@ function convertToUIMessage(message: Message): UPageUIMessage {
  * @param chatId 聊天ID
  * @returns 消息记录列表
  */
-async function getAllChatMessages(chatId: string): Promise<UPageUIMessage[]> {
+async function getAllChatMessages(chatId: string): Promise<ChatUIMessage[]> {
   const messages = await prisma.message.findMany({
     where: {
       chatId,
       isDiscarded: false,
     },
-    orderBy: {
-      createdAt: 'asc',
-    },
+    orderBy: MESSAGE_ORDER_ASC,
   });
 
   logger.info(`获取了聊天 ${chatId} 的所有 ${messages.length} 条历史消息`);
@@ -249,10 +298,14 @@ async function getAllChatMessages(chatId: string): Promise<UPageUIMessage[]> {
 /**
  * 保存聊天消息列表到数据库
  * @param chatId 聊天ID
- * @param messages 消息列表（UPageUIMessage[]）
+ * @param messages 消息列表（ChatUIMessage[]）
  * @returns 保存结果
  */
-export async function saveChatMessages(chatId: string, messages: UPageUIMessage[]): Promise<number> {
+export async function saveChatMessages(
+  chatId: string,
+  messages: ChatUIMessage[],
+  db: MessagePersistenceClient = prisma,
+): Promise<number> {
   if (!messages || messages.length === 0) {
     logger.warn('保存聊天消息: 没有提供消息数据');
     return 0;
@@ -260,7 +313,7 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
 
   try {
     // 获取聊天的用户ID
-    const chat = await prisma.chat.findUnique({
+    const chat = await db.chat.findUnique({
       where: { id: chatId },
       select: { userId: true },
     });
@@ -282,14 +335,14 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
       }
 
       // 提取消息的文本内容
-      const textPart = (message.parts || []).find((part) => part.type === 'text');
-      const content = textPart?.text || '';
+      const content = getMessagePlainTextContent(message);
 
       // 创建或更新消息
       const updateData: any = {
         content,
         parts: message.parts || [],
-        metadata: message.metadata,
+        metadata: ensureProtocolVersion(message.metadata, 'structured-parts-v2'),
+        isDiscarded: false,
         version: 2,
       };
 
@@ -300,11 +353,12 @@ export async function saveChatMessages(chatId: string, messages: UPageUIMessage[
         role: message.role,
         content,
         parts: message.parts || [],
-        metadata: message.metadata,
+        metadata: ensureProtocolVersion(message.metadata, 'structured-parts-v2'),
+        isDiscarded: false,
         version: 2,
       };
 
-      await prisma.message.upsert({
+      await db.message.upsert({
         where: { id: message.id },
         update: updateData,
         create: createData,

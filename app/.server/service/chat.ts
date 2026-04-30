@@ -1,5 +1,6 @@
 import { prisma } from '~/.server/service/prisma';
 import { createScopedLogger } from '~/.server/utils/logger';
+import { convertToUIMessage, MESSAGE_ORDER_ASC, MESSAGE_ORDER_DESC } from './message';
 
 const logger = createScopedLogger('chat.server');
 
@@ -78,9 +79,7 @@ export async function getChatById(id: string) {
           where: {
             isDiscarded: false,
           },
-          orderBy: {
-            createdAt: 'asc',
-          },
+          orderBy: MESSAGE_ORDER_ASC,
           include: {
             sections: true,
             page: true,
@@ -116,9 +115,7 @@ export async function getChatByUrlId(urlId: string) {
           where: {
             isDiscarded: false,
           },
-          orderBy: {
-            createdAt: 'asc',
-          },
+          orderBy: MESSAGE_ORDER_ASC,
         },
       },
     });
@@ -148,9 +145,7 @@ export async function getUserChats(userId: string, limit = 20, offset = 0) {
             isDiscarded: false,
           },
           take: 1,
-          orderBy: {
-            createdAt: 'asc',
-          },
+          orderBy: MESSAGE_ORDER_DESC,
         },
       },
       orderBy: {
@@ -287,9 +282,7 @@ export async function getUserChatById(id: string, userId?: string) {
           where: {
             isDiscarded: false,
           },
-          orderBy: {
-            createdAt: 'asc',
-          },
+          orderBy: MESSAGE_ORDER_ASC,
           include: {
             sections: true,
             page: true,
@@ -301,6 +294,19 @@ export async function getUserChatById(id: string, userId?: string) {
           },
         },
       },
+    });
+
+    if (!chat) {
+      return chat;
+    }
+
+    chat.messages = chat.messages.map((message) => {
+      const normalizedMessage = convertToUIMessage(message);
+      return {
+        ...message,
+        parts: normalizedMessage.parts as typeof message.parts,
+        metadata: normalizedMessage.metadata as typeof message.metadata,
+      };
     });
 
     return chat;

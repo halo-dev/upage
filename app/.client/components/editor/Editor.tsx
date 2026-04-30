@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { useChatHistory } from '~/.client/persistence';
+import type { EditorPatch } from '~/.client/stores/pages';
 import { isValidContent } from '~/.client/utils/html-parse';
 import { logger } from '~/.client/utils/logger';
 import { throttleWithTrailing } from '~/.client/utils/throttle';
@@ -25,6 +26,7 @@ interface Props {
   documents?: Record<string, DocumentProperties>;
   currentPage?: string;
   currentSection?: Section;
+  currentPatch?: EditorPatch;
   editable?: boolean;
   debounceChange?: number;
   debounceScroll?: number;
@@ -33,19 +35,36 @@ interface Props {
   onSave?: OnSaveCallback;
   onLoad?: OnLoadCallback;
   onReady?: OnReadyCallback;
+  onPatchApplied?: (patchId: string) => void;
   className?: string;
   settings?: any;
 }
 
 export const EditorStudio = memo(
-  ({ documents, currentPage, currentSection, onChange, onSave, onLoad, onReady }: Props) => {
+  ({
+    documents,
+    currentPage,
+    currentSection,
+    currentPatch,
+    onChange,
+    onSave,
+    onLoad,
+    onReady,
+    onPatchApplied,
+  }: Props) => {
     const editorRef = useRef<Editor | null>(null);
 
-    const pendingSectionRef = useRef<Section | null>(null);
+    const pendingPatchRef = useRef<EditorPatch | null>(null);
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const chatHistory = useChatHistory();
+    const onPatchAppliedRef = useRef(onPatchApplied);
 
-    const updateComponents = useCallback((editor: Editor, section: Section) => {
+    useEffect(() => {
+      onPatchAppliedRef.current = onPatchApplied;
+    }, [onPatchApplied]);
+
+    const updateComponents = useCallback((editor: Editor, patch: EditorPatch) => {
+      const section = patch.action;
       if (!editor) {
         logger.warn('编辑器实例不存在，无法更新组件');
         return;
@@ -84,33 +103,38 @@ export const EditorStudio = memo(
         const errorMessage = error instanceof Error ? error.message : '未知错误';
         logger.error(`执行组件操作时出错: `, JSON.stringify({ errorMessage, action, domId }));
       }
+      if (lastPatchRef.current?.id === patch.id) {
+        lastPatchRef.current = undefined;
+      }
+      if (pendingPatchRef.current?.id === patch.id) {
+        pendingPatchRef.current = null;
+      }
+      onPatchAppliedRef.current?.(patch.id);
     }, []);
 
     const throttledSetComponents = useCallback(updateComponents, []);
 
-    const lastSectionRef = useRef<Section | undefined>(undefined);
+    const lastPatchRef = useRef<EditorPatch | undefined>(undefined);
     const throttledSetComponentsRef = useRef(throttleWithTrailing(throttledSetComponents, 150));
 
     function flushPendingUpdate(editor: Editor) {
-      const lastSection = lastSectionRef.current;
-      if (lastSection && lastSection.content) {
-        updateComponents(editor, lastSection);
-        lastSectionRef.current = undefined;
+      const lastPatch = lastPatchRef.current;
+      if (lastPatch) {
+        updateComponents(editor, lastPatch);
+        lastPatchRef.current = undefined;
       }
     }
 
-    function setEditorDocument(editor: Editor, section?: Section) {
-      if (!section) {
+    function setEditorDocument(editor: Editor, patch?: EditorPatch) {
+      if (!patch) {
         return;
       }
       /*
        * 使用节流函数来更新组件内容
        * 这样可以避免频繁的更新导致编辑器卡顿
        */
-      if (section) {
-        lastSectionRef.current = section;
-        throttledSetComponentsRef.current(editor, section);
-      }
+      lastPatchRef.current = patch;
+      throttledSetComponentsRef.current(editor, patch);
     }
 
     useEffect(() => {
@@ -120,11 +144,13 @@ export const EditorStudio = memo(
         return;
       }
 
-      if (!currentSection) {
+      const patch = currentPatch;
+      const section = patch?.action;
+      if (!section) {
         return;
       }
 
-      if (!currentSection.pageName) {
+      if (!section.pageName) {
         logger.warn('页面名称不能为空');
       }
 
@@ -132,15 +158,15 @@ export const EditorStudio = memo(
       flushPendingUpdate(editor);
 
       // 保存最新的页面属性，确保在节流期间如果有新的更新进来，会使用最新的数据
-      pendingSectionRef.current = currentSection;
-      setEditorDocument(editor, currentSection);
-    }, [currentSection]);
+      pendingPatchRef.current = patch;
+      setEditorDocument(editor, patch);
+    }, [currentPatch]);
 
     // 确保在组件卸载前应用最后一次更新
     useEffect(() => {
       return () => {
         const editor = editorRef.current;
-        const pendingSection = pendingSectionRef.current;
+        const pendingPatch = pendingPatchRef.current ?? lastPatchRef.current;
 
         // 清除保存定时器
         if (saveTimerRef.current) {
@@ -148,9 +174,9 @@ export const EditorStudio = memo(
           saveTimerRef.current = null;
         }
 
-        if (editor && pendingSection && pendingSection) {
+        if (editor && pendingPatch) {
           // 直接应用最后的更新，不通过节流
-          updateComponents(editor, pendingSection);
+          updateComponents(editor, pendingPatch);
         }
       };
     }, []);

@@ -8,7 +8,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useFrame } from 'react-frame-component';
 import { EditDialog } from './EditDialog';
@@ -18,6 +18,39 @@ export interface EditorOverlayProps {
   hoveredElement: HTMLElement | null;
   setHoveredElement: (element: HTMLElement | null) => void;
   setSelectedElement: (element: HTMLElement | null) => void;
+}
+
+function getTargetElement(target: EventTarget | null): HTMLElement | null {
+  if (!target || typeof target !== 'object') {
+    return null;
+  }
+
+  const targetNode = target as Node;
+  if (targetNode.nodeType === Node.ELEMENT_NODE) {
+    return targetNode as HTMLElement;
+  }
+
+  if (targetNode.nodeType === Node.TEXT_NODE) {
+    return targetNode.parentElement;
+  }
+
+  return null;
+}
+
+function isOverlayTarget(target: HTMLElement | null, shadowRoot: ShadowRoot | null) {
+  if (!target) {
+    return false;
+  }
+
+  if (target.id === 'editor-overlay' || target.closest('#editor-overlay')) {
+    return true;
+  }
+
+  if (!shadowRoot) {
+    return false;
+  }
+
+  return target.getRootNode() === shadowRoot;
 }
 
 const shadowDomStyles = `
@@ -85,6 +118,8 @@ export const EditorOverlay: React.FC<EditorOverlayProps> = ({
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
   const [selectRect, setSelectRect] = useState<DOMRect | null>(null);
   const [shadowRoot, setShadowRoot] = useState<ShadowRoot | null>(null);
+  const hoveredElementRef = useRef<HTMLElement | null>(null);
+  const selectedElementRef = useRef<HTMLElement | null>(null);
 
   const { refs: hoverRefs, floatingStyles: hoverFloatingStyles } = useFloating({
     elements: {
@@ -144,6 +179,14 @@ export const EditorOverlay: React.FC<EditorOverlayProps> = ({
   const { getFloatingProps } = useInteractions([useClick(context), useDismiss(context)]);
 
   useEffect(() => {
+    hoveredElementRef.current = hoveredElement;
+  }, [hoveredElement]);
+
+  useEffect(() => {
+    selectedElementRef.current = selectedElement;
+  }, [selectedElement]);
+
+  useEffect(() => {
     if (hoveredElement && hoverRefs.reference.current !== hoveredElement) {
       hoverRefs.reference.current = hoveredElement;
     }
@@ -194,48 +237,76 @@ export const EditorOverlay: React.FC<EditorOverlayProps> = ({
       return;
     }
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-
-      if (
-        target === iframeDocument.body ||
-        target === iframeDocument.documentElement ||
-        target.closest('#editor-overlay')
-      ) {
-        if (hoveredElement) {
+    const updateHoveredElement = (target: HTMLElement | null) => {
+      if (!target || target === iframeDocument.body || target === iframeDocument.documentElement) {
+        if (hoveredElementRef.current) {
+          hoveredElementRef.current = null;
           setHoveredElement(null);
           setHoverRect(null);
         }
         return;
       }
 
-      if (hoveredElement !== target) {
-        setHoveredElement(target);
-
-        const rect = target.getBoundingClientRect();
-        setHoverRect({
-          left: rect.left,
-          top: rect.top,
-          right: rect.right,
-          bottom: rect.bottom,
-          width: rect.width,
-          height: rect.height,
-          x: rect.x,
-          y: rect.y,
-          toJSON: rect.toJSON,
-        });
-      }
-    };
-
-    const handleClick = (e: MouseEvent) => {
-      e.preventDefault();
-
-      const target = e.target as HTMLElement;
-
-      if (target === iframeDocument.body || target === iframeDocument.documentElement) {
+      if (hoveredElementRef.current === target) {
         return;
       }
 
+      hoveredElementRef.current = target;
+      setHoveredElement(target);
+
+      const rect = target.getBoundingClientRect();
+      setHoverRect({
+        left: rect.left,
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height,
+        x: rect.x,
+        y: rect.y,
+        toJSON: rect.toJSON,
+      });
+    };
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = getTargetElement(e.target);
+      if (isOverlayTarget(target, shadowRoot)) {
+        return;
+      }
+
+      e.stopPropagation();
+      updateHoveredElement(target);
+    };
+
+    const handleClick = (e: MouseEvent) => {
+      const target = getTargetElement(e.target);
+      if (isOverlayTarget(target, shadowRoot)) {
+        return;
+      }
+
+      const selectedTarget = selectedElementRef.current;
+      const allowNativeEditingClick = Boolean(
+        target &&
+          selectedTarget &&
+          selectedTarget.isContentEditable &&
+          (target === selectedTarget || selectedTarget.contains(target)),
+      );
+
+      if (!allowNativeEditingClick) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      }
+
+      if (!target || target === iframeDocument.body || target === iframeDocument.documentElement) {
+        return;
+      }
+
+      if (selectedElementRef.current === target) {
+        return;
+      }
+
+      selectedElementRef.current = target;
       setSelectedElement(target);
 
       const rect = target.getBoundingClientRect();
@@ -258,27 +329,27 @@ export const EditorOverlay: React.FC<EditorOverlayProps> = ({
 
     const handleMouseOut = (e: MouseEvent) => {
       if (!e.relatedTarget || !iframeDocument.contains(e.relatedTarget as Node)) {
+        hoveredElementRef.current = null;
         setHoveredElement(null);
         setHoverRect(null);
       }
     };
 
-    iframeDocument.body.addEventListener('mousemove', handleMouseMove);
-    iframeDocument.body.addEventListener('click', handleClick);
+    iframeDocument.body.addEventListener('mouseover', handleMouseOver, true);
+    iframeDocument.body.addEventListener('click', handleClick, true);
     iframeDocument.body.addEventListener('submit', handleSubmit);
     iframeDocument.addEventListener('mouseout', handleMouseOut);
 
     return () => {
-      iframeDocument.body.removeEventListener('mousemove', handleMouseMove);
-      iframeDocument.body.removeEventListener('click', handleClick);
+      iframeDocument.body.removeEventListener('mouseover', handleMouseOver, true);
+      iframeDocument.body.removeEventListener('click', handleClick, true);
       iframeDocument.body.removeEventListener('submit', handleSubmit);
       iframeDocument.removeEventListener('mouseout', handleMouseOut);
     };
   }, [
     iframeDocument,
     iframeWindow,
-    selectedElement,
-    hoveredElement,
+    shadowRoot,
     setHoveredElement,
     setSelectedElement,
     setHoverRect,

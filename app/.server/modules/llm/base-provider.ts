@@ -1,6 +1,7 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import type { LanguageModel } from 'ai';
 import type { IProviderSetting } from '~/types/model';
+import type { ModelCapabilities } from './capabilities';
 import type { ModelInfo, ProviderInfo } from './types';
 
 export abstract class BaseProvider implements ProviderInfo {
@@ -14,6 +15,7 @@ export abstract class BaseProvider implements ProviderInfo {
   getApiKeyLink?: string;
   labelForGetApiKey?: string;
   icon?: string;
+  resolveModelCapabilities?(model: string): ModelCapabilities | Partial<ModelCapabilities> | null | undefined;
 
   getProviderBaseUrlAndKey(providerSettings?: IProviderSetting) {
     let baseUrl = providerSettings?.baseUrl;

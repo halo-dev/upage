@@ -202,4 +202,10 @@ export class EditorStore {
       payload: { domId },
     });
   }
+
+  resetSnapshot(pages: PageMap) {
+    this.setDocuments(pages, true);
+    this.unsavedDocuments.set(new Set());
+    this.documentLastSaved.set({});
+  }
 }

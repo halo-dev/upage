@@ -4,6 +4,7 @@ import { getUserChatById } from '~/.server/service/chat';
 import { prisma } from '~/.server/service/prisma';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';
+import { generateUUID } from '~/utils/uuid';
 
 const logger = createScopedLogger('api.chat.fork');
 
@@ -45,7 +46,7 @@ async function handleFork({ request, userId }: { request: Request; userId: strin
         typeof sourceChat.metadata === 'object' &&
         !Array.isArray(sourceChat.metadata) &&
         sourceChat.metadata !== null
-          ? (sourceChat.metadata as Record<string, any>)
+          ? { ...(sourceChat.metadata as Record<string, any>) }
           : {};
 
       metadata.forkedFrom = sourceChatId;
@@ -54,7 +55,6 @@ async function handleFork({ request, userId }: { request: Request; userId: strin
         data: {
           userId,
           description: `${sourceChat.description || 'Chat'} (Copy)`,
-          urlId: sourceChat.urlId || undefined,
           metadata,
         },
       });
@@ -86,37 +86,37 @@ async function handleFork({ request, userId }: { request: Request; userId: strin
 
         // 准备批量创建消息的数据
         // 由于 prisma 中 output 与 input 类型不一致，需要手动复制 https://github.com/prisma/prisma/issues/9247
-        const messageCreateData = messagesToCopy.map((msg) => ({
-          chatId: newChat.id,
-          userId,
-          role: msg.role,
-          content: msg.content,
-          annotations: msg.annotations || undefined,
-          metadata: msg.metadata || undefined,
-          parts: msg.parts || undefined,
-          revisionId: msg.revisionId || undefined,
-          isDiscarded: msg.isDiscarded || false,
-          version: msg.version || 2,
-        }));
+        const messageCreateData = messagesToCopy.map((msg) => {
+          const newMessageId = generateUUID();
+          return {
+            id: newMessageId,
+            sourceMessageId: msg.id,
+            chatId: newChat.id,
+            userId,
+            role: msg.role,
+            content: msg.content,
+            annotations: msg.annotations || undefined,
+            metadata: msg.metadata || undefined,
+            parts: msg.parts || undefined,
+            revisionId: msg.revisionId || undefined,
+            isDiscarded: msg.isDiscarded || false,
+            version: msg.version || 2,
+          };
+        });
 
         logger.debug('批量创建消息数据', JSON.stringify(messageCreateData));
 
         // 使用批量创建消息函数创建消息
         await tx.message.createMany({
-          data: messageCreateData,
+          data: messageCreateData.map(({ sourceMessageId: _sourceMessageId, ...data }) => data),
         });
 
         logger.debug(`为聊天 ${newChat.id} 批量创建了 ${messageCreateData.length} 条消息`);
 
-        const newMessages = await tx.message.findMany({
-          where: { chatId: newChat.id },
-          orderBy: { createdAt: 'asc' },
-        });
-
         // 创建映射：原消息ID -> 新消息对象
-        const messageMapping = messagesToCopy.reduce(
-          (map, oldMsg, index) => {
-            map[oldMsg.id] = newMessages[index];
+        const messageMapping = messageCreateData.reduce(
+          (map, newMessage) => {
+            map[newMessage.sourceMessageId] = { id: newMessage.id };
             return map;
           },
           {} as Record<string, any>,

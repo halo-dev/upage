@@ -60,9 +60,23 @@ PROVIDER_BASE_URL=your-openai-api-base-url
 PROVIDER_API_KEY=your-openai-api-key
 LLM_DEFAULT_MODEL=your-default-model
 LLM_MINOR_MODEL=your-minor-model
+
+# 可选：视觉模型。默认模型不支持读图时可单独配置。
+LLM_VISION_PROVIDER=your-vision-provider
+LLM_VISION_MODEL=your-vision-model
+VISION_PROVIDER_BASE_URL=your-vision-provider-base-url
+VISION_PROVIDER_API_KEY=your-vision-provider-api-key
 ```
 
 您可以根据需要配置不同的 AI 提供商，详细配置请参考[配置参考](../configuration)。
+
+:::tip
+如果默认模型本身支持视觉输入，可以不配置 `LLM_VISION_PROVIDER` 和 `LLM_VISION_MODEL`。如果默认模型是文本模型，但您仍希望上传截图、参考站点图片来生成页面，则建议额外配置视觉模型。
+:::
+
+:::caution
+请保留并持久化 `STORAGE_DIR` 对应目录。参考图片在首次发送后会被写入存储，并在后续多轮对话中以文件引用方式复用，以减少重复传输 base64 图片。
+:::
 
 ### 生成 Prisma 客户端
 
@@ -140,6 +154,10 @@ module.exports = {
       PROVIDER_API_KEY: 'your-openai-api-key',
       LLM_DEFAULT_MODEL: 'your-default-model',
       LLM_MINOR_MODEL: 'your-minor-model',
+      LLM_VISION_PROVIDER: 'your-vision-provider',
+      LLM_VISION_MODEL: 'your-vision-model',
+      VISION_PROVIDER_BASE_URL: 'your-vision-provider-base-url',
+      VISION_PROVIDER_API_KEY: 'your-vision-provider-api-key',
     }
   }]
 };

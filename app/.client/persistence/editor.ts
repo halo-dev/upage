@@ -601,13 +601,26 @@ export function useEditorStorage() {
       }
     | undefined
   > => {
+    return loadEditorProjectByMessageId(currentMessageId || undefined);
+  };
+
+  const loadEditorProjectByMessageId = async (
+    messageId?: string,
+  ): Promise<
+    | {
+        pages?: PageData[];
+        sections?: Section[];
+        assets?: PageAssetData[];
+        project?: IProject;
+      }
+    | undefined
+  > => {
     const db = await openEditorDatabase();
 
     if (!db) {
       return undefined;
     }
 
-    const messageId = currentMessageId || undefined;
     try {
       const result = await getEditorProject(db, messageId);
       if (!result) {
@@ -632,5 +645,6 @@ export function useEditorStorage() {
   return {
     saveEditorProject,
     loadEditorProject,
+    loadEditorProjectByMessageId,
   };
 }

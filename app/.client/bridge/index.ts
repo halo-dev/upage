@@ -134,7 +134,11 @@ export class EditorBridge {
     this.#emit('update_section', { pageName: action.pageName, id: action.id, section: action });
   }
 
-  async upsertPageAction(pageName: string, pageTitle: string, actionId: string) {
+  async upsertPageAction(pageName: string, pageTitle: string, actionId: string, previousPageName?: string) {
+    if (previousPageName && previousPageName !== pageName) {
+      this.#detachActionFromPage(previousPageName, actionId);
+    }
+
     const page = this.#pages.get(pageName);
     const pageProps = page
       ? {
@@ -153,6 +157,31 @@ export class EditorBridge {
     this.#emit('upsert_page', {
       pageName,
       ...pageProps,
+    });
+  }
+
+  #detachActionFromPage(pageName: string, actionId: string) {
+    const page = this.#pages.get(pageName);
+    if (!page) {
+      return;
+    }
+
+    const nextActionIds = (page.actionIds ?? []).filter((id) => id !== actionId);
+    if (nextActionIds.length === 0) {
+      this.#pages.delete(pageName);
+      this.#emit('remove_page', { pageName });
+      return;
+    }
+
+    const nextPage = {
+      ...page,
+      actionIds: nextActionIds,
+    };
+
+    this.#pages.set(pageName, nextPage);
+    this.#emit('upsert_page', {
+      pageName,
+      ...nextPage,
     });
   }
 

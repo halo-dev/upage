@@ -1,149 +1,165 @@
-import { type CallSettings, generateText, type LanguageModel } from 'ai';
+import { type CallSettings, type LanguageModel, streamText } from 'ai';
+import {
+  createEmptyTokenUsage,
+  accumulateUsageSnapshot,
+  estimateTextStreamAbortUsage,
+  type TokenUsageSnapshot,
+} from '~/.server/utils/token';
 import type { PageData } from '~/types/pages';
+import { createAbortError, isAbortError } from './abort';
+import { buildSnapshotDetailedContent, buildSnapshotOutlineContent } from './preparation';
+import { consumeStreamTextFullStream, type StreamTextUIEvent } from './ui-message-stream';
+
+export type StructuredPageSnapshotMode = 'outline' | 'detailed';
 
 export async function structuredPageSnapshot({
   pages,
   model,
+  mode = 'detailed',
+  userTask,
   abortSignal,
+  onStreamEvent,
+  onAbortUsage,
 }: {
   pages: PageData[];
   model: LanguageModel;
+  mode?: StructuredPageSnapshotMode;
+  userTask?: string;
+  onStreamEvent?: (event: StreamTextUIEvent) => void;
+  onAbortUsage?: (usage: TokenUsageSnapshot) => void;
 } & CallSettings) {
-  return await generateText({
-    system: `
-你是一名严谨的前端页面审阅与摘要助手。你将收到多个页面的 Body 片段，可能包含 script 与 style。你的任务是：
-1) 从这些页面内容中提取结构化信息；
-2) 以严格的 XML 风格（非 JSON、非 Markdown、无额外说明文本）输出一个“现有页面摘要快照”；
-3) 仅基于给定内容进行总结，不得臆测未出现的信息；不回显原始全文；
-4) 若某项信息无法确定，请输出空元素，不要编造。
+  const pagePrompt = pages
+    .map((page) => {
+      const pageContent = mode === 'outline' ? buildSnapshotOutlineContent(page) : buildSnapshotDetailedContent(page);
+      return `<page_name>${page.name}</page_name><page_title>${page.title}</page_title><page_content>${pageContent}</page_content>`;
+    })
+    .join('\n --- \n');
 
-输出必须严格遵循以下 XML 模板（标签名与层级必须一致；可重复的节点可按需要重复；所有一级大纲必须保留）：
-<snapshot>
-  <generated_at></generated_at>
+  const system =
+    mode === 'outline'
+      ? `
+你是一名高效的页面结构分析助手。你将收到多个页面的轻量结构信息，而不是完整 HTML。
+你的目标是快速理解每个页面的大致布局、主要内容、互动元素，以及哪些位置后续可能值得深入分析。
+
+输出必须严格遵循以下 XML 模板：
+<snapshot_outline>
   <pages_count></pages_count>
-  <global_overview>
-    <shared_components></shared_components>
-    <shared_styles></shared_styles>
-    <shared_scripts></shared_scripts>
-    <navigation_overview></navigation_overview>
-    <notable_assets></notable_assets>
-  </global_overview>
   <pages>
     <page>
       <name></name>
-      <summary></summary>
-      <layout>
-        <structure></structure>
-        <sections></sections>
-        <components>
-          <component>
-            <name></name>
-            <role></role>
-            <props></props>
-            <events></events>
-          </component>
-        </components>
-      </layout>
-      <content>
-        <headings>
-          <h1></h1>
-          <h2_list>
-            <h2></h2>
-          </h2_list>
-        </headings>
-        <text_stats>
-          <char_count></char_count>
-          <word_count></word_count>
-          <language_guess></language_guess>
-        </text_stats>
-        <links>
-          <a href="" text=""></a>
-        </links>
-        <forms>
-          <form id="" action="" method="">
-            <fields>
-              <field name="" type="" required=""></field>
-            </fields>
-            <validation></validation>
-            <submit_targets></submit_targets>
-          </form>
-        </forms>
-        <media>
-          <img src="" alt=""></img>
-          <video src="" title=""></video>
-        </media>
-        <tables>
-          <table summary=""></table>
-        </tables>
-      </content>
-      <interactions>
-        <events>
-          <event type="" target="" handler_summary=""></event>
-        </events>
-        <state>
-          <variables>
-            <variable name="" initial=""></variable>
-          </variables>
-          <persistence></persistence>
-        </state>
-      </interactions>
-      <data_flow>
-        <inputs></inputs>
-        <outputs></outputs>
-        <api_calls>
-          <api url="" method="" when=""></api>
-        </api_calls>
-      </data_flow>
-      <style_summary>
-        <inline_styles></inline_styles>
-        <classes></classes>
-        <themes></themes>
-      </style_summary>
-      <script_summary>
-        <libraries></libraries>
-        <modules></modules>
-        <security_notes></security_notes>
-      </script_summary>
-      <seo>
-        <title></title>
-        <meta_description></meta_description>
-        <canonical></canonical>
-        <h_tags></h_tags>
-      </seo>
-      <i18n>
-        <locales_detected></locales_detected>
-        <hardcoded_texts></hardcoded_texts>
-      </i18n>
-      <issues>
-        <problem severity="">
-          <desc></desc>
-          <evidence></evidence>
-          <suggestion></suggestion>
-        </problem>
-      </issues>
-      <complexity score=""></complexity>
-      <confidence score=""></confidence>
+      <title></title>
+      <purpose></purpose>
+      <main_blocks></main_blocks>
+      <key_content></key_content>
+      <interactive_elements></interactive_elements>
+      <potential_targets></potential_targets>
     </page>
   </pages>
-</snapshot>
+</snapshot_outline>
 
 严格输出规则：
 - 仅输出上述 XML，不要输出任何解释性文字、代码块符号或 Markdown；
-- 标签名、层级和顺序必须与模板保持一致；
-- 允许重复的子节点按需要重复；
-- 内容以中文撰写；
-- 不得包含未在输入中出现的臆测信息；
-- 无法确定的信息保留为空元素。
-    `,
-    prompt: `
-以下是页面内容：
+- 标签名、层级和顺序必须保持一致；
+- 所有可读文本内容应尽量跟随页面内容的主要语言；若无法判断，则使用与输入内容最接近的自然语言；
+- 只做快速概览，不要臆测未出现的信息。`
+      : `
+你是一名页面编辑定位助手。你将收到与当前任务相关的页面内容片段。
+你的目标是结合用户任务，快速定位最可能需要修改的位置、相关区块以及判断依据。
+
+输出必须严格遵循以下 XML 模板：
+<snapshot_detailed>
+  <task_summary></task_summary>
+  <likely_pages></likely_pages>
+  <pages>
+    <page>
+      <name></name>
+      <title></title>
+      <focus></focus>
+      <relevant_sections></relevant_sections>
+      <edit_hints></edit_hints>
+      <evidence></evidence>
+    </page>
+  </pages>
+</snapshot_detailed>
+
+严格输出规则：
+- 仅输出上述 XML，不要输出任何解释性文字、代码块符号或 Markdown；
+- 标签名、层级和顺序必须保持一致；
+- 所有可读文本内容应尽量跟随页面内容的主要语言；若无法判断，则使用与输入内容最接近的自然语言；
+- 重点分析与当前任务直接相关的位置，不要泛泛复述全部内容；
+- 不得包含未在输入中出现的臆测信息。`;
+
+  const prompt =
+    mode === 'outline'
+      ? `
+以下是页面的轻量结构信息：
 ---
 <pages>
-${pages.map((page) => `<page_name>${page.name}</page_name><page_content>${page.content}</page_content>`).join('\n --- \n')}
+${pagePrompt}
 </pages>
 ---
-`,
+`
+      : `
+当前任务：
+---
+${userTask || '未提供明确任务，请根据页面内容提炼最可能需要深入分析的位置。'}
+---
+
+以下是页面的相关内容片段：
+---
+<pages>
+${pagePrompt}
+</pages>
+---
+`;
+
+  const completedUsage = createEmptyTokenUsage();
+  let stepCompleted = false;
+  let streamedText = '';
+  const result = streamText({
+    system,
+    prompt,
     model,
     abortSignal,
+    onStepFinish: ({ usage }) => {
+      stepCompleted = true;
+      accumulateUsageSnapshot(completedUsage, usage);
+    },
   });
+
+  try {
+    const text = await consumeStreamTextFullStream({
+      fullStream: result.fullStream,
+      abortSignal,
+      onEvent: (event) => {
+        streamedText = event.text;
+        onStreamEvent?.(event);
+      },
+    });
+
+    const totalUsage = await result.totalUsage;
+    const content = await result.content;
+
+    return {
+      text,
+      totalUsage,
+      content,
+    };
+  } catch (error) {
+    if (isAbortError(error, abortSignal)) {
+      if (!stepCompleted) {
+        const abortedUsage = estimateTextStreamAbortUsage({
+          system,
+          prompt,
+          streamedText,
+        });
+        onAbortUsage?.(abortedUsage);
+      } else {
+        onAbortUsage?.(completedUsage);
+      }
+      throw createAbortError();
+    }
+
+    throw error;
+  }
 }

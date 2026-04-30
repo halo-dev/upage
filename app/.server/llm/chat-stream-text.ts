@@ -5,24 +5,30 @@ import {
   type LanguageModel,
   type LanguageModelUsage,
   type StreamTextOnFinishCallback,
+  type UIMessageStreamWriter,
   stepCountIs,
 } from 'ai';
 import { getSystemPrompt } from '~/.server/prompts/prompts';
 import { approximatePromptTokenCount, encode } from '~/.server/utils/token';
 import type { ElementInfo } from '~/routes/api/chat/chat';
-import type { UPageUIMessage } from '~/types/message';
+import type { ChatUIMessage } from '~/types/message';
 import { MAX_TOKENS } from './constants';
+import { appendPageSummaryContext, createElementEditPrompt } from './agents/page-generation';
 import type { SelectContextResult } from './select-context';
 import { tools } from './tools';
 
 export type ChatStreamTextProps = CallSettings & {
-  messages: UPageUIMessage[];
+  messages: ChatUIMessage[];
   summary: string;
-  pageSummary: string;
+  pageSummaryOutline: string;
+  pageSummaryDetailed: string;
   context?: Record<string, SelectContextResult>;
   model: LanguageModel;
   maxTokens?: number;
   elementInfo?: ElementInfo;
+  designMd: string;
+  userPageContext?: string;
+  writer?: UIMessageStreamWriter<ChatUIMessage>;
   onFinish?: StreamTextOnFinishCallback<any>;
   onAbort?: (params: { event: any; totalUsage: LanguageModelUsage }) => void;
 };
@@ -30,26 +36,25 @@ export type ChatStreamTextProps = CallSettings & {
 export async function chatStreamText({
   messages,
   summary,
-  pageSummary,
+  pageSummaryOutline,
+  pageSummaryDetailed,
   context,
   model,
   maxTokens,
   elementInfo,
+  designMd,
+  userPageContext,
+  writer,
   abortSignal,
   onFinish,
   onAbort,
 }: ChatStreamTextProps) {
+  const modelMessages = await convertToModelMessages(messages);
   let systemPrompt = getSystemPrompt();
-
-  if (pageSummary) {
-    systemPrompt = `${systemPrompt}
-以下是截止目前为止的页面摘要：
-PAGE SUMMARY:
----
-${pageSummary}
----
-    `;
-  }
+  systemPrompt = appendPageSummaryContext(systemPrompt, {
+    pageSummaryOutline,
+    pageSummaryDetailed,
+  });
 
   if (summary) {
     systemPrompt = `${systemPrompt}
@@ -79,6 +84,30 @@ ${Object.entries(context)
     `;
   }
 
+  if (userPageContext) {
+    systemPrompt = `${systemPrompt}
+以下是用户当前本地尚未保存、但与你这次任务直接相关的页面快照。你必须在理解这些内容后再决定如何修改页面：
+LOCAL PAGE SNAPSHOT:
+---
+${userPageContext}
+---
+    `;
+  }
+
+  systemPrompt = `${systemPrompt}
+<design_system>
+以下设计系统规范对所有视觉决策具有最高优先级：
+
+- 颜色：必须严格使用 colors 中定义的色值，禁止自行引入其他颜色
+- 字体：必须遵循 typography 中定义的字族、字号、字重和行高
+- 圆角：使用 rounded 中定义的圆角值，保持一致的形状语言
+- 间距：使用 spacing 中定义的间距标尺
+- 组件：遵循 components 中定义的按钮、输入框等组件样式
+
+${designMd}
+</design_system>
+  `;
+
   if (elementInfo) {
     systemPrompt = `${systemPrompt}
     ${createElementEditPrompt(elementInfo)}
@@ -87,10 +116,17 @@ ${Object.entries(context)
 
   return _streamText({
     model,
-    tools: tools(),
+    tools: tools({
+      onPage: (page) => {
+        writer?.write({
+          type: 'data-upage-page',
+          data: page,
+        });
+      },
+    }),
     system: systemPrompt,
     maxOutputTokens: maxTokens || MAX_TOKENS,
-    messages: convertToModelMessages(messages),
+    messages: modelMessages,
     stopWhen: stepCountIs(3),
     prepareStep: async ({ messages }) => {
       if (messages.length > 20) {
@@ -111,7 +147,16 @@ ${Object.entries(context)
         event,
         totalUsage: {
           inputTokens: inoutTokens,
+          inputTokenDetails: {
+            noCacheTokens: inoutTokens,
+            cacheReadTokens: 0,
+            cacheWriteTokens: 0,
+          },
           outputTokens: 0,
+          outputTokenDetails: {
+            textTokens: 0,
+            reasoningTokens: 0,
+          },
           totalTokens: inoutTokens,
           reasoningTokens: 0,
           cachedInputTokens: 0,
@@ -121,36 +166,3 @@ ${Object.entries(context)
   });
 }
 
-/**
- * 根据元素编辑信息创建相应的系统提示
- * @param elementEdit 元素编辑信息
- * @returns 系统提示字符串
- */
-function createElementEditPrompt({ tagName, className, id }: ElementInfo): string {
-  // 构建元素选择器描述
-  const elementSelector = [tagName.toLowerCase(), id ? `#${id}` : '', className ? `.${className.split(' ')[0]}` : '']
-    .filter(Boolean)
-    .join('');
-
-  return `
-<element_edit_context>
-  用户当前正在编辑特定元素。请将您的响应限制在此元素的范围内。
-
-  当前编辑的元素: ${elementSelector}
-
-  请严格遵循以下规则：
-  1. 仅修改用户当前选中的元素或其子元素
-  2. 不要修改页面上的其他元素
-  3. 如果是添加操作，仅在当前选中元素内添加内容
-  4. 如果是更新操作，确保使用最小化更新，并保留元素的 domId
-  5. 如果是删除操作，仅删除当前选中元素或其子元素
-  6. 保持页面的整体风格和一致性
-  7. 确保所有生成的 HTML 元素都有唯一的 domId，不要使用相同的 domId
-
-  元素详细信息：
-  - 标签名: ${tagName.toLowerCase()}
-  ${id ? `- ID: ${id}` : ''}
-  ${className ? `- 类名: ${className}` : ''}
-</element_edit_context>
-`;
-}

@@ -3,7 +3,7 @@ import type { EditorBridge } from '~/.client/bridge';
 import { isValidContent } from '~/.client/utils/html-parse';
 import { createScopedLogger } from '~/.client/utils/logger';
 import { unreachable } from '~/.client/utils/unreachable';
-import type { ActionAlert, UPageAction } from '~/types/actions';
+import { isPatchAction, isRemovePageAction, type ActionAlert, type UPageAction } from '~/types/actions';
 import type { ActionCallbackData } from './message-parser';
 
 export type ActionPage = {
@@ -72,6 +72,7 @@ export class ActionRunner {
   #editorBridge: Promise<EditorBridge>;
   #currentExecutionPromise: Promise<void> = Promise.resolve();
   #page: ActionPage;
+  #executedActionSignatures = new Map<string, string>();
 
   runnerId = atom<string>(`${Date.now()}`);
   actions: ActionsMap = map({});
@@ -109,6 +110,11 @@ export class ActionRunner {
     });
 
     this.#currentExecutionPromise.then(() => {
+      const nextAction = this.actions.get()[actionId];
+      if (!nextAction || nextAction.abortSignal.aborted) {
+        return;
+      }
+
       this.#updateAction(actionId, { status: 'running' });
     });
   }
@@ -121,15 +127,27 @@ export class ActionRunner {
       unreachable(`Action ${actionId} not found`);
     }
 
-    if (action.executed) {
+    if (action.executed || action.abortSignal.aborted) {
       return;
     }
 
+    const actionSignature = serializeActionPayload(data.action);
+    if (this.#executedActionSignatures.get(actionId) === actionSignature) {
+      this.#updateAction(actionId, {
+        ...action,
+        ...data.action,
+        executed: !isRunning || action.executed,
+        status: isRunning ? 'running' : 'complete',
+      });
+      return;
+    }
+
+    const previousPageName = action.pageName;
     this.#updateAction(actionId, { ...action, ...data.action, executed: !isRunning });
 
     this.#currentExecutionPromise = this.#currentExecutionPromise
       .then(() => {
-        return this.#executeAction(actionId, isRunning);
+        return this.#executeAction(actionId, isRunning, previousPageName);
       })
       .catch((error) => {
         console.error('Action failed:', error);
@@ -140,16 +158,31 @@ export class ActionRunner {
     return;
   }
 
-  async #executeAction(actionId: string, isRunning: boolean = false) {
+  waitForIdle() {
+    return this.#currentExecutionPromise;
+  }
+
+  async #executeAction(actionId: string, isRunning: boolean = false, previousPageName?: string) {
     let action = this.actions.get()[actionId];
+
+    if (!action || action.abortSignal.aborted) {
+      return;
+    }
 
     this.#updateAction(actionId, { status: 'running' });
     const newAction = this.updateSectionRootDomId(actionId, action);
     if (newAction) {
       action = newAction;
     }
+
+    if (action.abortSignal.aborted) {
+      this.#updateAction(actionId, { status: 'aborted' });
+      return;
+    }
+
     try {
-      await this.runPageAction(action);
+      await this.runPageAction(action, previousPageName);
+      this.#executedActionSignatures.set(actionId, serializeActionPayload(action));
       this.#updateAction(actionId, {
         status: isRunning ? 'running' : action.abortSignal.aborted ? 'aborted' : 'complete',
       });
@@ -179,7 +212,15 @@ export class ActionRunner {
   }
 
   async #runPageSectionAction(action: ActionState) {
+    if (action.abortSignal.aborted) {
+      return;
+    }
+
     const editorBridge = await this.#editorBridge;
+    if (action.abortSignal.aborted) {
+      return;
+    }
+
     try {
       await editorBridge.updateSection(action);
       logger.debug(`页面 Section 写入成功 ${action.pageName}`);
@@ -189,22 +230,48 @@ export class ActionRunner {
     }
   }
 
-  async runPageAction(action: ActionState) {
+  async runPageAction(action: ActionState, previousPageName?: string) {
+    if (action.abortSignal.aborted) {
+      return;
+    }
+
     const editorBridge = await this.#editorBridge;
+    if (action.abortSignal.aborted) {
+      return;
+    }
+
+    if (isRemovePageAction(action)) {
+      try {
+        await editorBridge.removePage(action.pageName);
+        logger.debug(`页面删除成功 ${action.pageName}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`页面删除失败\n\n: ${errorMessage}`);
+      }
+      return;
+    }
+
     try {
       // 新增或更新 Pages
-      await editorBridge.upsertPageAction(action.pageName, this.#page.title, action.id);
+      await editorBridge.upsertPageAction(action.pageName, this.#page.title, action.id, previousPageName);
       logger.debug(`页面写入成功 ${action.pageName}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       logger.error(`页面写入失败\n\n: ${errorMessage}`);
     }
 
-    this.#runPageSectionAction(action);
+    if (action.abortSignal.aborted) {
+      return;
+    }
+
+    await this.#runPageSectionAction(action);
   }
 
   private updateSectionRootDomId(actionId: string, action: ActionState) {
     if (action.validRootDomId) {
+      return;
+    }
+    if (isPatchAction(action)) {
       return;
     }
     if (action.action === 'remove') {
@@ -237,4 +304,19 @@ export class ActionRunner {
 
     this.actions.setKey(id, { ...actionState, ...newState });
   }
+}
+
+function serializeActionPayload(action: UPageAction) {
+  return JSON.stringify({
+    id: action.id,
+    action: action.action,
+    pageName: action.pageName,
+    domId: action.domId,
+    rootDomId: action.rootDomId,
+    sort: action.sort,
+    validRootDomId: action.validRootDomId,
+    contentKind: action.contentKind,
+    content: action.content,
+    patches: action.patches,
+  });
 }

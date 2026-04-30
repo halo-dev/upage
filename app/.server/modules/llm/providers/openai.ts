@@ -2,12 +2,14 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModel } from 'ai';
 import { BaseProvider } from '~/.server/modules/llm/base-provider';
+import { createVisionCapabilities } from '~/.server/modules/llm/capabilities';
 import type { ModelInfo } from '~/.server/modules/llm/types';
 import type { IProviderSetting } from '~/types/model';
 
 export default class OpenAILikeProvider extends BaseProvider {
   name = 'OpenAI';
   getApiKeyLink = undefined;
+  resolveModelCapabilities = () => createVisionCapabilities('declared');
 
   staticModels: ModelInfo[] = [];
 

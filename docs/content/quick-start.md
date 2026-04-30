@@ -34,6 +34,10 @@ docker run -d \
   -e PROVIDER_API_KEY=your-openai-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
+  -e LLM_VISION_PROVIDER=your-vision-provider \
+  -e LLM_VISION_MODEL=your-vision-model \
+  -e VISION_PROVIDER_BASE_URL=your-vision-provider-base-url \
+  -e VISION_PROVIDER_API_KEY=your-vision-provider-api-key \
   -v ./data:/app/data \
   -v ./logs:/app/logs \
   -v ./storage:/app/storage \
@@ -47,9 +51,13 @@ docker run -d \
 - `-e PROVIDER_API_KEY=your-openai-api-key`：设置 API 密钥
 - `-e LLM_DEFAULT_MODEL=your-default-model`：设置用于页面生成的默认 AI 模型
 - `-e LLM_MINOR_MODEL=your-minor-model`：设置用于辅助任务的 AI 模型
+- `-e LLM_VISION_PROVIDER=your-vision-provider`：可选的视觉模型提供商，用于在默认模型不支持读图时处理图片参考
+- `-e LLM_VISION_MODEL=your-vision-model`：视觉模型使用的模型
+- `-e VISION_PROVIDER_BASE_URL=your-vision-provider-base-url`：视觉模型的 API 基础 URL，部分提供商需要
+- `-e VISION_PROVIDER_API_KEY=your-vision-provider-api-key`：视觉模型的 API 密钥
 - `-v ./data:/app/data`：挂载数据目录，用于存储数据库文件
 - `-v ./logs:/app/logs`：挂载日志目录
-- `-v ./storage:/app/storage`：挂载存储目录，用于存储上传的文件
+- `-v ./storage:/app/storage`：挂载存储目录，用于存储上传的文件。参考图片首次发送后会转成文件引用并在后续对话中复用，因此请不要使用临时目录。
 
 
 ## 访问 UPage
@@ -63,6 +71,8 @@ http://localhost:3000
 ## 配置 AI 提供商
 
 UPage 支持多种 AI 提供商，您需要至少配置一个 AI 提供商才能使用页面生成功能。以下是常见的 AI 提供商配置示例：
+
+如果您希望“主模型负责生成、视觉模型专门负责读图”，可以额外配置 `LLM_VISION_PROVIDER` / `LLM_VISION_MODEL`。如果默认模型本身支持图片输入，这两项可以留空。
 
 ### DeepSeek
 

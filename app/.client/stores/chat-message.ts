@@ -14,3 +14,7 @@ export const sendChatMessageStore = atom<SendChatMessageFunction | null>(null);
 export function setSendChatMessage(fn: SendChatMessageFunction) {
   sendChatMessageStore.set(fn);
 }
+
+export function clearSendChatMessage() {
+  sendChatMessageStore.set(null);
+}

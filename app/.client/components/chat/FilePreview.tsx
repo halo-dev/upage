@@ -12,18 +12,26 @@ const FilePreview: React.FC<FilePreviewProps> = memo(
     }
 
     return (
-      <div className="flex flex-row overflow-x-auto -mt-2">
+      <div className="flex flex-row gap-2 overflow-x-auto px-1 pt-1">
         {files.map((file, index) => (
-          <div key={file.name + file.size} className="mr-2 relative">
-            <div className="relative pt-4 pr-4">
-              <img src={URL.createObjectURL(file)} alt={file.name} className="max-h-20" />
+          <div
+            key={file.name + file.size}
+            className="relative shrink-0 rounded-xl border border-upage-elements-borderColor/60 bg-upage-elements-background-depth-2/45 p-2 shadow-sm"
+          >
+            <div className="relative">
+              <img
+                src={URL.createObjectURL(file)}
+                alt={file.name}
+                className="h-20 w-auto rounded-lg object-cover"
+              />
               <button
                 onClick={() => onRemove(index)}
-                className="absolute top-1 right-1 z-10 bg-black rounded-full size-5 shadow-md hover:bg-gray-900 transition-colors flex items-center justify-center"
+                className="absolute right-1.5 top-1.5 z-10 flex size-6 items-center justify-center rounded-lg bg-black/75 shadow-md transition-colors hover:bg-black"
               >
                 <div className="i-ph:x size-3 text-gray-200" />
               </button>
             </div>
+            <div className="mt-2 max-w-36 truncate text-[11px] text-upage-elements-textSecondary">{file.name}</div>
           </div>
         ))}
       </div>

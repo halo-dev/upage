@@ -169,3 +169,87 @@ $code-font-size: 13px;
     }
   }
 }
+
+.StepBody {
+  font-size: 14px;
+  line-height: 1.72;
+
+  > *:not(:last-child) {
+    margin-block-end: 18px;
+  }
+
+  :is(p, ul, ol, blockquote) {
+    max-width: 42rem;
+  }
+
+  :is(h1, h2, h3, h4, h5, h6) {
+    @include not-inside-actions {
+      margin-block-start: 20px;
+      margin-block-end: 12px;
+    }
+  }
+
+  p {
+    color: var(--upage-elements-textPrimary);
+
+    &:not(:last-of-type) {
+      margin-block-end: 18px;
+    }
+  }
+
+  :is(ul, ol) {
+    @include not-inside-actions {
+      padding-left: 1.5em;
+      margin-block-end: 18px;
+    }
+  }
+
+  li {
+    @include not-inside-actions {
+      line-height: 1.75;
+
+      & + li {
+        margin-block-start: 10px;
+      }
+    }
+  }
+
+  strong {
+    font-weight: 600;
+    color: var(--upage-elements-textPrimary);
+  }
+}
+
+.UserBody {
+  font-size: 14px;
+  line-height: 1.65;
+
+  > *:not(:last-child) {
+    margin-block-end: 12px;
+  }
+
+  p {
+    color: var(--upage-elements-textPrimary);
+
+    &:not(:last-of-type) {
+      margin-block-end: 12px;
+    }
+  }
+
+  :is(ul, ol) {
+    @include not-inside-actions {
+      padding-left: 1.35em;
+      margin-block-end: 12px;
+    }
+  }
+
+  li {
+    @include not-inside-actions {
+      line-height: 1.65;
+
+      & + li {
+        margin-block-start: 6px;
+      }
+    }
+  }
+}

@@ -1,18 +1,33 @@
 import { diffLines } from 'diff';
 import { atom, computed, type MapStore, map, type WritableAtom } from 'nanostores';
 import { type EditorBridge, type EventPayload, editorBridge } from '~/.client/bridge';
+import type { PageChangeSource } from '~/.client/runtime/protocol/types';
 import { computePageModifications, diffPages } from '~/.client/utils/diff';
 import { isValidContent } from '~/.client/utils/html-parse';
 import { createScopedLogger } from '~/.client/utils/logger';
-import type { ChangeSource, PageHistory } from '~/types/actions';
+import { isPatchAction, type ChangeSource, type PageHistory } from '~/types/actions';
 import type { PageData, PageMap, PageSection, SectionMap } from '~/types/pages';
 import { normalizeContent } from '~/utils/prettier';
 import { generateUUID } from '~/utils/uuid';
 
 const logger = createScopedLogger('PagesStore');
 
+function isValidPageName(pageName: string | undefined | null) {
+  return typeof pageName === 'string' && pageName.trim().length > 0;
+}
+
 type ActiveSection = WritableAtom<string | undefined>;
 type ActivePage = WritableAtom<string | undefined>;
+
+export type EditorPatch = {
+  id: string;
+  messageId: string;
+  artifactId: string;
+  actionId: string;
+  action: PageSection;
+  source: PageChangeSource;
+  streaming: boolean;
+};
 
 /**
  * 保存与 AI 交互的页面数据， AI 生成的页面数据会保存在此处。
@@ -65,6 +80,7 @@ export class PagesStore {
    * 基于 action 的 section 映射，作为与 AI 交互的底层数据，基于 actions 数据解析而来。
    */
   sections: MapStore<SectionMap> = import.meta.hot?.data?.sections ?? map({});
+  editorPatchQueue: WritableAtom<EditorPatch[]> = import.meta.hot?.data?.editorPatchQueue ?? atom<EditorPatch[]>([]);
   /**
    * 当前活跃的 section。
    */
@@ -76,6 +92,9 @@ export class PagesStore {
     }
 
     return sections[activeSection];
+  });
+  currentEditorPatch = computed(this.editorPatchQueue, (patches) => {
+    return patches[0];
   });
 
   get pagesCount() {
@@ -108,6 +127,7 @@ export class PagesStore {
       import.meta.hot.data.deletedPages = this.deletedPages;
       import.meta.hot.data.sections = this.sections;
       import.meta.hot.data.pageHistory = this.pageHistory;
+      import.meta.hot.data.editorPatchQueue = this.editorPatchQueue;
     }
 
     this.#init();
@@ -292,6 +312,11 @@ export class PagesStore {
   #processGrapesBridgeEvent(type: string, payload: EventPayload) {
     const { pageName } = payload;
 
+    if (!isValidPageName(pageName)) {
+      logger.warn(`忽略无效页面名事件: ${type}`);
+      return;
+    }
+
     // Skip processing if this page was explicitly deleted
     if (this.deletedPages.has(pageName)) {
       return;
@@ -390,8 +415,50 @@ export class PagesStore {
     this.updateSectionRootDomId(actionId, sectionState, sectionContent);
   }
 
+  upsertSection(section: PageSection) {
+    const existingSection = this.sections.get()[section.id];
+    const nextSection = {
+      ...existingSection,
+      ...section,
+    };
+
+    this.sections.setKey(section.id, nextSection);
+    this.updateSectionRootDomId(section.id, nextSection, nextSection.content);
+  }
+
+  enqueueEditorPatch(patch: Omit<EditorPatch, 'id'>) {
+    const queue = this.editorPatchQueue.get();
+    const nextPatch: EditorPatch = {
+      id: generateUUID(),
+      ...patch,
+    };
+
+    const existingIndex = queue.findIndex((item) => item.actionId === patch.actionId);
+    if (existingIndex !== -1) {
+      const nextQueue = [...queue];
+      nextQueue[existingIndex] = nextPatch;
+      this.editorPatchQueue.set(nextQueue);
+      return nextPatch;
+    }
+
+    this.editorPatchQueue.set([...queue, nextPatch]);
+    return nextPatch;
+  }
+
+  acknowledgeEditorPatch(patchId: string) {
+    const queue = this.editorPatchQueue.get();
+    if (queue.length === 0) {
+      return;
+    }
+
+    this.editorPatchQueue.set(queue.filter((patch) => patch.id !== patchId));
+  }
+
   private updateSectionRootDomId(actionId: string, section: PageSection, sectionContent: string) {
     if (section.validRootDomId) {
+      return;
+    }
+    if (isPatchAction(section)) {
       return;
     }
     if (section.action === 'remove') {
@@ -430,5 +497,69 @@ export class PagesStore {
       return;
     }
     this.pages.setKey(pageName, { ...oldPage, ...page });
+  }
+
+  replaceSnapshot(pages: PageMap, sections: SectionMap = {}) {
+    const timestamp = Date.now();
+    const nextPageHistory: Record<string, PageHistory> = {};
+
+    for (const [pageName, page] of Object.entries(pages)) {
+      if (!page) {
+        continue;
+      }
+
+      nextPageHistory[pageName] = {
+        originalContent: page.content,
+        latestModified: timestamp,
+        latestVersion: 1,
+        versions: [
+          {
+            version: 1,
+            timestamp,
+            content: page.content,
+            changeSource: 'initial',
+          },
+        ],
+      };
+    }
+
+    this.size = Object.values(pages).filter(Boolean).length;
+    this.modifiedPages.clear();
+    this.deletedPages.clear();
+    this.#persistDeletedPages();
+    this.editorPatchQueue.set([]);
+    this.pages.set(pages);
+    this.sections.set(sections);
+    this.pageHistory.set(nextPageHistory);
+
+    const currentActivePage = this.activePage.get();
+    const nextActivePage =
+      currentActivePage && pages[currentActivePage]
+        ? currentActivePage
+        : Object.keys(pages).find((pageName) => pages[pageName] !== undefined);
+
+    this.activePage.set(nextActivePage);
+
+    if (!nextActivePage) {
+      this.activeSection.set(undefined);
+      return;
+    }
+
+    const currentActiveSection = this.activeSection.get();
+    if (currentActiveSection && sections[currentActiveSection]?.pageName === nextActivePage) {
+      return;
+    }
+
+    const pageActionIds = pages[nextActivePage]?.actionIds || [];
+    for (let index = pageActionIds.length - 1; index >= 0; index -= 1) {
+      const actionId = pageActionIds[index];
+      if (sections[actionId]) {
+        this.activeSection.set(actionId);
+        return;
+      }
+    }
+
+    const firstMatchingSection = Object.values(sections).find((section) => section?.pageName === nextActivePage);
+    this.activeSection.set(firstMatchingSection?.id);
   }
 }

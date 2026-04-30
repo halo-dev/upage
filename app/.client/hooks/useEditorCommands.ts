@@ -16,7 +16,7 @@ export function useEditorCommands(editorRef: RefObject<Editor | null>) {
       if (!editor) {
         return;
       }
-      editor.scrollToElement(`#${domId}`);
+      editor.scrollToElement(`#${domId}`, { force: true });
     },
     [editorRef],
   );

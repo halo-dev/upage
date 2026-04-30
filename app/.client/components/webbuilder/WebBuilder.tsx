@@ -71,6 +71,7 @@ export const WebBuilder = memo(() => {
   const documents = useStore(webBuilderStore.editorStore.editorDocuments);
   const currentPage = useStore(webBuilderStore.editorStore.selectedDocument);
   const currentSection = useStore(webBuilderStore.pagesStore.currentSection);
+  const currentPatch = useStore(webBuilderStore.pagesStore.currentEditorPatch);
   const unsavedPages = useStore(webBuilderStore.editorStore.unsavedDocuments);
   const pages = useStore(webBuilderStore.pagesStore.pages);
   const selectedView = useStore(webBuilderStore.currentView);
@@ -105,17 +106,23 @@ export const WebBuilder = memo(() => {
     if (isStreaming) {
       return;
     }
-    doPageSave();
+    void doPageSave();
   }, [isStreaming]);
 
-  const doPageSave = useCallback(() => {
-    webBuilderStore.saveAllPages('user').catch(() => {
+  const doPageSave = useCallback(async () => {
+    try {
+      await webBuilderStore.saveAllPages('user');
+    } catch {
       toast.error('文件内容更新失败');
-    });
+      return false;
+    }
+
     const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
     if (currentMessageId) {
-      saveProject(currentMessageId);
+      return await saveProject(currentMessageId);
     }
+
+    return false;
   }, [saveProject]);
 
   const onPageReset = useCallback(() => {
@@ -189,8 +196,9 @@ export const WebBuilder = memo(() => {
                     <PanelHeaderButton
                       className="mr-1 text-sm"
                       disabled={!exportable}
-                      onClick={() => {
-                        webBuilderStore.exportToZip();
+                      onClick={async () => {
+                        await doPageSave();
+                        await webBuilderStore.exportToZip();
                       }}
                     >
                       <div className="i-mingcute:download-2-line" />
@@ -222,6 +230,7 @@ export const WebBuilder = memo(() => {
                     documents={documents}
                     currentPage={currentPage}
                     currentSection={currentSection}
+                    currentPatch={currentPatch}
                     isStreaming={isStreaming}
                     pages={pages}
                     unsavedPages={unsavedPages}
@@ -231,6 +240,9 @@ export const WebBuilder = memo(() => {
                     onPageReset={onPageReset}
                     onLoad={onLoad}
                     onReady={onReady}
+                    onPatchApplied={(patchId) => {
+                      webBuilderStore.pagesStore.acknowledgeEditorPatch(patchId);
+                    }}
                   />
                 </View>
                 <View

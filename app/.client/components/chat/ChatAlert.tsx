@@ -32,7 +32,7 @@ export default function ChatAlert({ postMessage }: Props) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className={`rounded-lg border border-upage-elements-borderColor bg-upage-elements-background-depth-2 p-4 mb-2`}
+        className={`rounded-xl border border-upage-elements-borderColor bg-upage-elements-background-depth-2 p-4 mb-2`}
       >
         <div className="flex items-start">
           {/* Icon */}
@@ -62,7 +62,7 @@ export default function ChatAlert({ postMessage }: Props) {
             >
               <p>我们遇到了预览错误。是否想让 UPage 分析并帮助解决这个问题？</p>
               {description && (
-                <div className="text-xs text-upage-elements-textSecondary p-2 bg-upage-elements-background-depth-3 rounded mt-4 mb-4">
+                <div className="text-xs text-upage-elements-textSecondary p-2 bg-upage-elements-background-depth-3 rounded-md mt-4 mb-4">
                   Error: {description}
                 </div>
               )}
@@ -79,7 +79,7 @@ export default function ChatAlert({ postMessage }: Props) {
                 <button
                   onClick={() => handlePostMessage(`*Fix this preview error* \n\`\`\`js\n${content}\n\`\`\`\n`)}
                   className={classNames(
-                    `px-2 py-1.5 rounded-md text-sm font-medium`,
+                    `px-2 py-1.5 rounded-lg text-sm font-medium`,
                     'bg-upage-elements-button-primary-background',
                     'hover:bg-upage-elements-button-primary-backgroundHover',
                     'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-upage-elements-button-danger-background',
@@ -93,7 +93,7 @@ export default function ChatAlert({ postMessage }: Props) {
                 <button
                   onClick={handleClearAlert}
                   className={classNames(
-                    `px-2 py-1.5 rounded-md text-sm font-medium`,
+                    `px-2 py-1.5 rounded-lg text-sm font-medium`,
                     'bg-upage-elements-button-secondary-background',
                     'hover:bg-upage-elements-button-secondary-backgroundHover',
                     'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-upage-elements-button-secondary-background',

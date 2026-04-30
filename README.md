@@ -37,6 +37,10 @@ docker run -d \
   -e PROVIDER_API_KEY=your-openai-api-key \
   -e LLM_DEFAULT_MODEL=your-default-model \
   -e LLM_MINOR_MODEL=your-minor-model \
+  -e LLM_VISION_PROVIDER=your-vision-provider \
+  -e LLM_VISION_MODEL=your-vision-model \
+  -e VISION_PROVIDER_BASE_URL=your-vision-provider-base-url \
+  -e VISION_PROVIDER_API_KEY=your-vision-provider-api-key \
   -v ./data:/app/data \
   -v ./logs:/app/logs \
   -v ./storage:/app/storage \
@@ -49,9 +53,17 @@ docker run -d \
 - `-e PROVIDER_API_KEY=your-openai-api-key`：设置 LLM 提供商的 API 密钥，大部分提供商需要设置此项。
 - `-e LLM_DEFAULT_MODEL=your-default-model`：设置默认的 LLM 模型，用于构建页面。
 - `-e LLM_MINOR_MODEL=your-minor-model`：设置次要的 LLM 模型，用于执行其他任务。
+- `-e LLM_VISION_PROVIDER=your-vision-provider`：可选的视觉模型提供商。当默认模型不支持读图时，UPage 会优先使用这里的模型读取图片并生成视觉摘要。
+- `-e LLM_VISION_MODEL=your-vision-model`：视觉所使用的模型。
+- `-e VISION_PROVIDER_BASE_URL=your-vision-provider-base-url`：视觉模型的 API 基础 URL，部分提供商需要设置。
+- `-e VISION_PROVIDER_API_KEY=your-vision-provider-api-key`：视觉模型的 API 密钥。
 - `-v ./data:/app/data`：挂载数据目录
 - `-v ./logs:/app/logs`：挂载日志目录
-- `-v ./storage:/app/storage`：挂载存储目录
+- `-v ./storage:/app/storage`：挂载存储目录。用户上传的参考图片会在首次发送后落盘，并在后续多轮对话中复用文件引用，避免反复传输 base64，因此生产环境必须持久化此目录。
+
+:::tip
+如果您的默认模型本身支持读图，可以不配置 `LLM_VISION_PROVIDER` 和 `LLM_VISION_MODEL`。只有在默认模型不支持视觉、但您又希望继续使用图片参考生成页面时，才建议额外配置视觉 sidecar。
+:::
 
 访问 `http://localhost:3000` 即可访问 UPage 的界面。
 

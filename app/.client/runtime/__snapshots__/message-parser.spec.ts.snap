@@ -1,5 +1,23 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`StreamingMessageParser > malformed actions > should ignore invalid actions without falling back to raw protocol text > onArtifactClose 1`] = `
+{
+  "id": "artifact_1",
+  "messageId": "message_1",
+  "name": "index",
+  "title": "Some title",
+}
+`;
+
+exports[`StreamingMessageParser > malformed actions > should ignore invalid actions without falling back to raw protocol text > onArtifactOpen 1`] = `
+{
+  "id": "artifact_1",
+  "messageId": "message_1",
+  "name": "index",
+  "title": "Some title",
+}
+`;
+
 exports[`StreamingMessageParser > valid artifacts with actions > should correctly parse chunks and strip out uPage artifacts (0) > onActionClose 1`] = `
 {
   "action": {

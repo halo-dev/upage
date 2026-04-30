@@ -1,27 +1,49 @@
-import { type CallSettings, generateText, type LanguageModel } from 'ai';
+import { type CallSettings, streamText, type LanguageModel } from 'ai';
 import { createScopedLogger } from '~/.server/utils/logger';
-import type { UPageUIMessage } from '~/types/message';
-import { extractCurrentContext, getUserMessageContent, simplifyUPageActions } from './utils';
+import {
+  createEmptyTokenUsage,
+  accumulateUsageSnapshot,
+  estimateTextStreamAbortUsage,
+  type TokenUsageSnapshot,
+} from '~/.server/utils/token';
+import { createAbortError, isAbortError } from './abort';
+import type { ChatUIMessage } from '~/types/message';
+import { consumeStreamTextFullStream, type StreamTextUIEvent } from './ui-message-stream';
+import { extractCurrentContext, extractMessageTextForPrompt, getUserMessageContent, simplifyUPageActions } from './utils';
 
 const logger = createScopedLogger('create-summary');
 
 export async function createSummary({
   messages,
+  visualSummary,
   model,
   abortSignal,
+  onStreamEvent,
+  onAbortUsage,
 }: {
-  messages: UPageUIMessage[];
+  messages: ChatUIMessage[];
+  visualSummary?: string;
   model: LanguageModel;
+  onStreamEvent?: (event: StreamTextUIEvent) => void;
+  onAbortUsage?: (usage: TokenUsageSnapshot) => void;
 } & CallSettings) {
   const processedMessages = messages.map((message) => {
-    if (message.role === 'user') {
-      const content = getUserMessageContent(message);
+    const nextMessage: ChatUIMessage = {
+      ...message,
+      parts: [...(message.parts || [])],
+    };
 
-      return { ...message, content };
+    if (message.role === 'user') {
+      const content = getUserMessageContent(message, {
+        includeVisualHint: true,
+        visualSummary: message === messages[messages.length - 1] ? visualSummary : undefined,
+      });
+
+      return { ...nextMessage, content };
     }
 
     if (message.role == 'assistant') {
-      for (const part of message.parts || []) {
+      for (const part of nextMessage.parts || []) {
         if (part.type === 'text') {
           part.text = simplifyUPageActions(part.text);
           part.text = part.text.replace(/<div class=\\"__uPageThought__\\">.*?<\/div>/s, '');
@@ -31,10 +53,10 @@ export async function createSummary({
         }
       }
 
-      return message;
+      return nextMessage;
     }
 
-    return message;
+    return nextMessage;
   });
 
   let slicedMessages = processedMessages;
@@ -62,18 +84,7 @@ ${summary.summary}`;
 
   logger.debug('切片消息长度:', slicedMessages.length);
 
-  const extractTextContent = (message: UPageUIMessage) =>
-    (message.parts || [])
-      .map((part) => {
-        if (part.type === 'text') {
-          return part.text;
-        }
-        return '';
-      })
-      .join('\n');
-
-  return await generateText({
-    system: `
+  const system = `
         你是一名软件工程师。你正在参与一个项目。你需要总结目前的工作内容，并提供截至目前对话的摘要。
 
         请仅使用以下格式生成摘要：
@@ -121,8 +132,8 @@ Note:
         * 不要提供任何新信息。
         * 不需要过多思考，立即开始写作
         * 不要写任何与提供的结构不同的摘要
-        `,
-    prompt: `
+        `;
+  const prompt = `
 
 以下是之前的聊天摘要：
 <old_summary>
@@ -134,15 +145,62 @@ ${summaryText}
 <new_chats>
 ${slicedMessages
   .map((x) => {
-    return `---\n[${x.role}] ${extractTextContent(x)}\n---`;
+    return `---\n[${x.role}] ${extractMessageTextForPrompt(x)}\n---`;
   })
   .join('\n')}
 </new_chats>
 ---
 
 请提供截至目前聊天的摘要，包括聊天的历史记录摘要。
-`,
+`;
+  const completedUsage = createEmptyTokenUsage();
+  let stepCompleted = false;
+  let streamedText = '';
+
+  const result = streamText({
+    system,
+    prompt,
     model,
     abortSignal,
+    onStepFinish: ({ usage }) => {
+      stepCompleted = true;
+      accumulateUsageSnapshot(completedUsage, usage);
+    },
   });
+
+  try {
+    const text = await consumeStreamTextFullStream({
+      fullStream: result.fullStream,
+      abortSignal,
+      onEvent: (event) => {
+        streamedText = event.text;
+        onStreamEvent?.(event);
+      },
+    });
+
+    const totalUsage = await result.totalUsage;
+    const content = await result.content;
+
+    return {
+      text,
+      totalUsage,
+      content,
+    };
+  } catch (error) {
+    if (isAbortError(error, abortSignal)) {
+      if (!stepCompleted) {
+        const abortedUsage = estimateTextStreamAbortUsage({
+          system,
+          prompt,
+          streamedText,
+        });
+        onAbortUsage?.(abortedUsage);
+      } else {
+        onAbortUsage?.(completedUsage);
+      }
+      throw createAbortError();
+    }
+
+    throw error;
+  }
 }

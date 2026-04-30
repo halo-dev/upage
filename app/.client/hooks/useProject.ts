@@ -1,25 +1,34 @@
-import { useEffect } from 'react';
-import { useFetcher } from 'react-router';
 import { toast } from 'sonner';
 import { createScopedLogger } from '~/.client/utils/logger';
 import type { ApiResponse } from '~/types/global';
+import type { PageSection } from '~/types/pages';
 import { useEditorStorage } from '../persistence/editor';
+import { getChatId } from '../stores/ai-state';
 import { webBuilderStore } from '../stores/web-builder';
 
 const logger = createScopedLogger('useGrapesProject');
+const MESSAGE_NOT_READY_ERROR = '当前消息尚未保存，无法保存项目，请等待响应完成后重试';
+const SAVE_PROJECT_RETRY_DELAY_MS = 500;
+const SAVE_PROJECT_MAX_RETRIES = 3;
+type FetchLike = typeof fetch;
+type SaveProjectPayload = {
+  messageId: string;
+  pages: string;
+  sections: string;
+};
+
+type StoredPage = NonNullable<ReturnType<typeof webBuilderStore.pagesStore.pages.get>[string]>;
+
+function hasValidPageName(page: StoredPage | undefined): page is StoredPage {
+  return page !== undefined && typeof page.name === 'string' && page.name.trim().length > 0;
+}
+
+function hasValidSectionPageName(section: PageSection | undefined): section is PageSection {
+  return section !== undefined && typeof section.pageName === 'string' && section.pageName.trim().length > 0;
+}
 
 export function useProject() {
-  const fetcher = useFetcher();
   const { saveEditorProject } = useEditorStorage();
-
-  useEffect(() => {
-    if (fetcher.state === 'idle' && fetcher.data) {
-      const { success, message } = fetcher.data as ApiResponse<string>;
-      if (!success) {
-        toast.error(`保存项目失败: ${message}`);
-      }
-    }
-  }, [fetcher]);
 
   /**
    * Save project data
@@ -35,11 +44,13 @@ export function useProject() {
       return false;
     }
 
+    await webBuilderStore.chatStore.waitForAllActionsSettled();
+
     // before saving, save all pages
     await webBuilderStore.saveAllPages('auto-save');
-    const projectPages = Object.values(webBuilderStore.pagesStore.pages.get()).filter((page) => page !== undefined);
+    const projectPages = Object.values(webBuilderStore.pagesStore.pages.get()).filter(hasValidPageName);
     const projectSections = Object.values(webBuilderStore.pagesStore.sections.get())
-      .filter((section) => section !== undefined)
+      .filter(hasValidSectionPageName)
       .map((section) => ({
         ...section,
         actionId: section.id,
@@ -73,22 +84,21 @@ export function useProject() {
     try {
       // 先保存在本地数据中
       saveEditorProject(messageId, projectPageV2, projectSections);
-      // 再调用远程接口保存到后端数据库
-      // 使用fetcher调用API保存项目数据
-      fetcher.submit(
-        {
-          messageId,
-          pages: JSON.stringify(projectPageV2),
-          sections: JSON.stringify(projectSections),
-        },
-        {
-          method: 'POST',
-          action: '/api/project',
-        },
-      );
+      const result = await saveProjectToServer({
+        messageId,
+        pages: JSON.stringify(projectPageV2),
+        sections: JSON.stringify(projectSections),
+      });
+
+      if (!result.success) {
+        toast.error(`保存项目失败: ${result.message}`);
+        logger.error(`保存项目失败: ${result.message}`);
+        return false;
+      }
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
+      toast.error(`保存项目失败: ${errorMessage}`);
       logger.error(`保存项目失败: ${errorMessage}`);
       return false;
     }
@@ -108,6 +118,11 @@ export function useProject() {
     }
 
     try {
+      const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
+      if (!messageId && currentMessageId && getChatId() === chatId) {
+        await saveProject(currentMessageId);
+      }
+
       // 调用后端API复制聊天
       const response = await fetch('/api/chat/fork', {
         method: 'POST',
@@ -140,4 +155,45 @@ export function useProject() {
     saveProject,
     forkChat,
   };
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+export async function saveProjectToServer(
+  payload: SaveProjectPayload,
+  fetchImplementation: FetchLike = fetch,
+): Promise<ApiResponse<string>> {
+  for (let attempt = 1; attempt <= SAVE_PROJECT_MAX_RETRIES; attempt++) {
+    const formData = new FormData();
+    formData.append('messageId', payload.messageId);
+    formData.append('pages', payload.pages);
+    formData.append('sections', payload.sections);
+
+    const response = await fetchImplementation('/api/project', {
+      method: 'POST',
+      body: formData,
+    });
+    const result = (await response.json()) as ApiResponse<string>;
+
+    if (response.ok && result.success) {
+      return result;
+    }
+
+    const canRetry = result.message === MESSAGE_NOT_READY_ERROR && attempt < SAVE_PROJECT_MAX_RETRIES;
+    if (canRetry) {
+      await sleep(SAVE_PROJECT_RETRY_DELAY_MS * attempt);
+      continue;
+    }
+
+    return result;
+  }
+
+  return {
+    success: false,
+    message: '项目保存失败',
+  } as ApiResponse<string>;
 }

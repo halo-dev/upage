@@ -88,6 +88,11 @@ export default [
     ]),
     // 用户设置相关
     route('user/settings', 'routes/api/user-settings.ts'),
+    // 设计系统相关
+    ...prefix('design-system', [
+      route('list', 'routes/api/design-system/list.ts'),
+      route('content', 'routes/api/design-system/content.ts'),
+    ]),
   ]),
 
   // 用户资源文件访问

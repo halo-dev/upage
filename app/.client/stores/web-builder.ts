@@ -2,14 +2,20 @@ import { atom, type WritableAtom } from 'nanostores';
 import { toast } from 'sonner';
 import { replaceUrlsWithRelativePaths } from '~/.client/utils/asset-path-converter';
 import { createScopedLogger } from '~/.client/utils/logger';
+import type { Section } from '~/types/actions';
 import type { ChangeSource } from '~/types/actions';
 import type { PageMap } from '~/types/pages';
+import type { PageData, SectionMap } from '~/types/pages';
 import { ChatStore } from './chat';
 import { EditorStore } from './editor';
 import { PagesStore } from './pages';
 import { PreviewsStore } from './previews';
 
 const logger = createScopedLogger('WebBuilderStore');
+
+function filterValidPages<T extends { name: string }>(pages: T[]) {
+  return pages.filter((page) => typeof page.name === 'string' && page.name.trim().length > 0);
+}
 
 export type WebBuilderViewType = 'code' | 'diff' | 'preview';
 
@@ -65,21 +71,33 @@ export class WebBuilderStore {
    * @param pages 页面数据
    */
   setPages(pages: PageMap) {
-    this.editorStore.setDocuments(pages, true);
-    for (const [pageName, page] of Object.entries(pages)) {
-      if (page) {
-        this.pagesStore.setPage(pageName, page);
-        this.pagesStore.savePageHistory(pageName, page.content as string, 'initial');
-      }
-    }
+    const validPages = Object.fromEntries(
+      Object.entries(pages).filter(([, page]) => page && page.name.trim().length > 0),
+    ) as PageMap;
 
-    if (this.pagesStore.pagesCount > 0 && this.editorStore.currentDocument.get() === undefined) {
-      // 找到第一个页面并选中
-      for (const [pageName] of Object.entries(pages)) {
-        this.setSelectedPage(pageName);
-        this.setActiveSectionByPageName(pageName);
-        break;
-      }
+    this.pagesStore.replaceSnapshot(validPages);
+    this.editorStore.resetSnapshot(validPages);
+  }
+
+  restoreProjectSnapshot(pages: PageData[], sections: Section[] = []) {
+    const validPages = filterValidPages(pages);
+    const pageMap = Object.fromEntries(validPages.map((page) => [page.name, page])) as PageMap;
+    const sectionMap = Object.fromEntries(
+      sections
+        .filter((section) => typeof section.pageName === 'string' && section.pageName.trim().length > 0)
+        .map((section) => [
+        section.id,
+        {
+          ...section,
+        },
+      ]),
+    ) as SectionMap;
+
+    this.pagesStore.replaceSnapshot(pageMap, sectionMap);
+    this.editorStore.resetSnapshot(pageMap);
+
+    if (this.currentView.get() !== 'code') {
+      this.currentView.set('code');
     }
   }
 
@@ -159,9 +177,29 @@ export class WebBuilderStore {
   }
 
   async saveAllPages(changeSource: ChangeSource) {
+    await this.flushIncomingChanges();
+
     for (const pageName of this.editorStore.unsavedDocuments.get()) {
       await this.saveDocument(pageName, changeSource);
     }
+  }
+
+  async flushIncomingChanges() {
+    const maxAttempts = 20;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (this.pagesStore.editorPatchQueue.get().length === 0) {
+        break;
+      }
+
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, 25);
+      });
+    }
+
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
   }
 
   /**

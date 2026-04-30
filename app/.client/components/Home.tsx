@@ -1,9 +1,11 @@
+import { useStore } from '@nanostores/react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { generateId } from 'ai';
 import classNames from 'classnames';
 import { AnimatePresence, motion, useAnimate } from 'framer-motion';
 import { startTransition, useState } from 'react';
 import { useNavigate, useNavigation } from 'react-router';
+import { aiState } from '~/.client/stores/ai-state';
 import { ChatTextarea } from './chat/ChatTextarea';
 import { ExamplePrompts } from './chat/ExamplePrompts';
 import FilePreview from './chat/FilePreview';
@@ -13,6 +15,7 @@ export function Home({ className }: { className?: string }) {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const isNavigating = Boolean(navigation.location);
+  const { designMd, designBrand } = useStore(aiState);
 
   const [animationScope] = useAnimate();
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
@@ -26,7 +29,7 @@ export function Home({ className }: { className?: string }) {
 
     startTransition(() => {
       navigate(`/chat/${id}`, {
-        state: { message, files: uploadFiles },
+        state: { message, files: uploadFiles, designMd, designBrand },
         preventScrollReset: true,
       });
     });
@@ -67,7 +70,7 @@ export function Home({ className }: { className?: string }) {
                   <div className="flex flex-col gap-4 w-full max-w-chat mx-auto z-prompt mb-6">
                     <div
                       className={classNames(
-                        'bg-upage-elements-background-depth-2 p-1 rounded-lg border border-upage-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
+                        'bg-upage-elements-background-depth-2 p-1 rounded-xl border border-upage-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
                       )}
                     >
                       <FilePreview

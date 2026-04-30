@@ -1,35 +1,30 @@
-import type { UIMessage } from 'ai';
-
-export type UPageUIMessage = UIMessage<UPageMessageMetadata, UPageDataParts>;
-
-export type ElementInfoMetadata = {
-  tagName: string;
-  className?: string;
-  id?: string;
-  innerHTML?: string;
-  outerHTML?: string;
-};
-
-export type UPageMessageMetadata = {
-  isHidden?: boolean;
-  elementInfo?: ElementInfoMetadata;
-};
-
-// 自定义的 parts, 用于在前端显示进度条。
-export type ProgressAnnotation = {
-  label: string;
-  status: 'in-progress' | 'complete' | 'stopped' | 'warning';
-  order: number;
-  message: string;
-};
-
-// 自定义的 parts, 用于在前端显示摘要。
-export type SummaryAnnotation = {
-  chatId: string;
-  summary: string;
-};
-
-export type UPageDataParts = {
-  progress: ProgressAnnotation;
-  summary: SummaryAnnotation;
-};
+export type {
+  AnnounceUpageBlockToolOutput,
+  BuildPageDetailedSnapshotToolOutput,
+  BuildPageOutlineSnapshotToolOutput,
+  BuildPageSnapshotToolOutput,
+  EnsureDesignSystemToolOutput,
+  FinishRunToolOutput,
+  HistorySummaryToolOutput,
+  PageBuilderCoreToolName,
+  PageBuilderCoreUITools,
+  PageBuilderOptionalToolName,
+  PageBuilderOptionalUITools,
+  PageBuilderUITools,
+  SelectRelevantPagesToolOutput,
+  UPagePagePart,
+  UPageToolOutput,
+} from './page-builder-tools';
+export type * from './message-protocol';
+export {
+  extractRenderableStructuredPageParts,
+  extractStructuredPageParts,
+  getCompletedUpageToolPartPages,
+  getStructuredPageSource,
+  getUpageToolPartInputPages,
+  getUpageToolPartOutputPages,
+  getUpageToolPartPages,
+  hasStructuredPageParts,
+  hasUpageBlockParts,
+  isUpageToolPart,
+} from '../utils/message-parts';

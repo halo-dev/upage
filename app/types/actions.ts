@@ -5,15 +5,95 @@ export interface Page {
   actionIds: string[];
 }
 
-export interface Section {
+export type UPageActionType = 'add' | 'update' | 'remove';
+export type UPageActionContentKind = 'html' | 'patch';
+
+export type PatchTarget = {
+  domId: string;
+  selector?: string;
+};
+
+export type PatchInsertPosition = 'append' | 'prepend' | 'before' | 'after';
+
+export type PatchOpBase = {
+  opId: string;
+  reason?: string;
+};
+
+export type InsertNodePatchOp = PatchOpBase & {
+  type: 'insert-node';
+  parentDomId: string;
+  html: string;
+  position?: PatchInsertPosition;
+  relativeToDomId?: string;
+  sort?: number;
+};
+
+export type ReplaceNodePatchOp = PatchOpBase & {
+  type: 'replace-node';
+  target: PatchTarget;
+  html: string;
+};
+
+export type RemoveNodePatchOp = PatchOpBase & {
+  type: 'remove-node';
+  target: PatchTarget;
+};
+
+export type RemovePagePatchOp = PatchOpBase & {
+  type: 'remove-page';
+};
+
+export type MoveNodePatchOp = PatchOpBase & {
+  type: 'move-node';
+  target: PatchTarget;
+  parentDomId?: string;
+  position?: Extract<PatchInsertPosition, 'append' | 'prepend'>;
+  sort?: number;
+};
+
+export type SetAttrPatchOp = PatchOpBase & {
+  type: 'set-attr';
+  target: PatchTarget;
+  name: string;
+  value: string;
+};
+
+export type RemoveAttrPatchOp = PatchOpBase & {
+  type: 'remove-attr';
+  target: PatchTarget;
+  name: string;
+};
+
+export type SetTextPatchOp = PatchOpBase & {
+  type: 'set-text';
+  target: PatchTarget;
+  text: string;
+};
+
+export type PatchOp =
+  | InsertNodePatchOp
+  | ReplaceNodePatchOp
+  | RemoveNodePatchOp
+  | RemovePagePatchOp
+  | MoveNodePatchOp
+  | SetAttrPatchOp
+  | RemoveAttrPatchOp
+  | SetTextPatchOp;
+
+export interface SectionBase {
   id: string;
-  action: 'add' | 'update' | 'remove';
+  action: UPageActionType;
   pageName: string;
   content: string;
   domId: string;
   rootDomId: string;
   sort?: number;
+  contentKind?: UPageActionContentKind;
+  patches?: PatchOp[];
 }
+
+export interface Section extends SectionBase {}
 export interface BaseAction {
   content: string;
 }
@@ -21,11 +101,32 @@ export interface BaseAction {
 /**
  * UPageAction 是 UPage 的 action 类型，由 AI 返回的结构化数据。
  */
-export interface UPageAction extends Section {
+export interface UPageAction extends SectionBase {
   validRootDomId: boolean;
 }
 
 export type UPageActionData = UPageAction | BaseAction;
+
+export function isPatchAction(action: Pick<UPageAction, 'contentKind' | 'patches'>): action is UPageAction & {
+  contentKind: 'patch';
+  patches: PatchOp[];
+} {
+  return action.contentKind === 'patch' && Array.isArray(action.patches) && action.patches.length > 0;
+}
+
+export function isHtmlAction(action: Pick<UPageAction, 'contentKind'>): boolean {
+  return action.contentKind !== 'patch';
+}
+
+export function isRemovePageAction(
+  action: Pick<UPageAction, 'action' | 'contentKind' | 'patches'>,
+): action is UPageAction & {
+  action: 'remove';
+  contentKind: 'patch';
+  patches: PatchOp[];
+} {
+  return action.action === 'remove' && isPatchAction(action) && action.patches.some((patch) => patch.type === 'remove-page');
+}
 
 export interface ActionAlert {
   type: string;

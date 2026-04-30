@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { memo, useMemo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
@@ -15,24 +16,25 @@ interface MarkdownProps {
   children: string;
   html?: boolean;
   limitedMarkdown?: boolean;
+  className?: string;
 }
 
-export const Markdown = memo(({ children, html = false, limitedMarkdown = false }: MarkdownProps) => {
+export const Markdown = memo(({ children, html = false, limitedMarkdown = false, className }: MarkdownProps) => {
   const components = useMemo(() => {
     return {
       div: ({ className, children, node, ...props }) => {
         if (className?.includes('__uPageArtifact__')) {
+          const artifactId = node?.properties.dataArtifactId as string;
           const messageId = node?.properties.dataMessageId as string;
-          const pageName = node?.properties.dataPageName as string;
 
+          if (!artifactId) {
+            logger.error(`无效的 Artifact ID ${artifactId}`);
+          }
           if (!messageId) {
             logger.error(`无效的消息 ID ${messageId}`);
           }
-          if (!pageName) {
-            logger.error(`无效的页面名称 ${pageName}`);
-          }
 
-          return <Artifact messageId={messageId} pageName={pageName} />;
+          return <Artifact messageId={messageId} artifactId={artifactId} />;
         }
 
         if (className?.includes('__uPageThought__')) {
@@ -68,7 +70,7 @@ export const Markdown = memo(({ children, html = false, limitedMarkdown = false 
   }, []);
 
   return (
-    <div className={styles.MarkdownContent}>
+    <div className={classNames(styles.MarkdownContent, className)}>
       <ReactMarkdown
         allowedElements={allowedHTMLElements}
         components={components}

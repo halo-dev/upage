@@ -59,9 +59,15 @@ async function saveOrUpdateSections(sections: SectionCreateParams[]) {
 export async function saveOrUpdateProject(pages: PageV2CreateParams[], sections: SectionCreateParams[]) {
   try {
     const validPages = pages.filter((page) => page.name && page.content);
-    const validSections = sections.filter((section) => section.pageName && section.content);
+    const normalizedSections = sections
+      .filter((section) => section.pageName && (section.actionId || section.id) && (section.domId || section.rootDomId))
+      .map((section) => ({
+        ...section,
+        actionId: section.actionId || section.id,
+        domId: section.domId || section.rootDomId,
+      }));
 
-    if (validPages.length === 0 || validSections.length === 0) {
+    if (validPages.length === 0 || normalizedSections.length === 0) {
       throw new Error('保存页面和部分数据失败: 页面或部分数据无效');
     }
 
@@ -69,7 +75,7 @@ export async function saveOrUpdateProject(pages: PageV2CreateParams[], sections:
     const pagesResult = await saveOrUpdatePages(validPages);
     const pageV2IdMap = new Map(pagesResult?.map((page) => [page.name, page.id]) || []);
 
-    const saveSections: SectionCreateParams[] = validSections.map((section) => {
+    const saveSections: SectionCreateParams[] = normalizedSections.map((section) => {
       const pageV2Id = pageV2IdMap.get(section.pageName);
       return {
         ...section,

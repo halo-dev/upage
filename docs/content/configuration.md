@@ -44,6 +44,31 @@ UPage 支持多种 AI 提供商，您需要配置一个 AI 提供商才能使用
 | <span className="api-key-highlight">`PROVIDER_API_KEY`</span> | LLM 提供商的 API 密钥，大部分提供商需要设置此项 | - | 否，部分提供商不需要设置此项 |
 | `LLM_DEFAULT_MODEL` | 生成页面所使用的模型 | - | 是 |
 | `LLM_MINOR_MODEL` | 辅助页面生成所使用的模型 | - | 是 |
+| `LLM_VISION_PROVIDER` | 可选的视觉模型提供商。当默认模型不支持读图时，可单独指定负责图片理解的提供商 | - | 否 |
+| `LLM_VISION_MODEL` | 可选的视觉模型 | - | 否 |
+| <span className="base-url-highlight">`VISION_PROVIDER_BASE_URL`</span> | 视觉模型的 API 基础 URL，部分提供商需要设置 | - | 否 |
+| <span className="api-key-highlight">`VISION_PROVIDER_API_KEY`</span> | 视觉模型的 API 密钥 | - | 否 |
+
+## 图片参考与视觉模型
+
+UPage 现在将“页面生成能力”和“图片理解能力”解耦处理：
+
+- `LLM_DEFAULT_MODEL` 负责最终页面生成；
+- `LLM_MINOR_MODEL` 负责摘要、筛选等辅助步骤；
+- `LLM_VISION_MODEL` 仅在需要读取图片、而主模型又不支持视觉输入时介入。
+
+推荐配置策略如下：
+
+- 如果默认模型本身支持读图，可以不配置 `LLM_VISION_PROVIDER` / `LLM_VISION_MODEL`；
+- 如果默认模型是文本模型，但您希望“参考截图生成页面”，建议额外配置视觉模型；
+- 如果既没有主模型视觉能力，也没有配置视觉模型，系统会退化为仅基于文本描述生成，并明确提示能力边界。
+
+## 图片引用复用
+
+当用户上传图片后，UPage 会在首次请求时将图片保存到 `STORAGE_DIR`，并在后续多轮对话中复用文件引用，而不是每轮都重复发送 base64 图片。这带来两个影响：
+
+- 可以显著减少多轮对话中的请求体积和延迟；
+- 部署时必须持久化 `STORAGE_DIR`，否则历史对话中的图片引用可能失效。
 
 以下是常见的 AI 提供商配置：
 

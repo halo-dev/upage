@@ -61,6 +61,18 @@ export class LLMManager {
     };
   }
 
+  private _getVisionProviderConfig() {
+    const providerName = this._getEnvConfig<string>('LLM_VISION_PROVIDER', '');
+    const baseUrl = this._getEnvConfig<string>('VISION_PROVIDER_BASE_URL', '');
+    const apiKey = this._getEnvConfig<string>('VISION_PROVIDER_API_KEY', '');
+
+    return {
+      providerName,
+      baseUrl,
+      apiKey,
+    };
+  }
+
   getDefaultProvider(): BaseProvider {
     const { providerName } = this._getUnifiedProviderConfig();
 
@@ -73,6 +85,16 @@ export class LLMManager {
     }
 
     return this._providers.get(providerName)!;
+  }
+
+  getProviderByName(providerName: string): BaseProvider {
+    const provider = this._providers.get(providerName);
+
+    if (!provider) {
+      throw new Error(`Provider ${providerName} not found`);
+    }
+
+    return provider;
   }
 
   private _registerProvidersFromDirectory() {
@@ -100,16 +122,44 @@ export class LLMManager {
     return this._getEnvConfig<string>('LLM_MINOR_MODEL', '');
   }
 
+  getVisionProviderName(): string {
+    return this._getEnvConfig<string>('LLM_VISION_PROVIDER', '');
+  }
+
+  getVisionModel(): string {
+    return this._getEnvConfig<string>('LLM_VISION_MODEL', '');
+  }
+
   getConfiguredProviderSettings(): Record<string, IProviderSetting> {
     const providerSettings: Record<string, IProviderSetting> = {};
 
     const { providerName, baseUrl, apiKey } = this._getUnifiedProviderConfig();
+    const {
+      providerName: visionProviderName,
+      baseUrl: visionBaseUrl,
+      apiKey: visionApiKey,
+    } = this._getVisionProviderConfig();
 
     providerSettings[providerName] = {
       enabled: true,
       baseUrl,
       apiKey,
     };
+
+    if (visionProviderName && visionProviderName !== providerName) {
+      providerSettings[visionProviderName] = {
+        enabled: true,
+        baseUrl: visionBaseUrl,
+        apiKey: visionApiKey,
+      };
+    } else if (visionProviderName && providerSettings[visionProviderName]) {
+      providerSettings[visionProviderName] = {
+        ...providerSettings[visionProviderName],
+        baseUrl: visionBaseUrl || providerSettings[visionProviderName]?.baseUrl,
+        apiKey: visionApiKey || providerSettings[visionProviderName]?.apiKey,
+      };
+    }
+
     return providerSettings;
   }
 

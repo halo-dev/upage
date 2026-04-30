@@ -1,12 +1,21 @@
-import { convertToModelMessages, type LanguageModel, streamText, type UIMessage } from 'ai';
+import {
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  type LanguageModel,
+  streamText,
+  type UIMessage,
+} from 'ai';
 import { DEFAULT_PROVIDER } from '~/.server/modules/constants';
 import { createScopedLogger } from '~/.server/utils/logger';
 import { stripIndents } from '~/utils/strip-indent';
+import { consumeStreamTextFullStream, createStreamTextUIMessageWriter } from './ui-message-stream';
 
 const logger = createScopedLogger('stream-enhancer');
 
 export async function streamEnhancer(props: { messages: UIMessage[]; model: LanguageModel; maxTokens?: number }) {
   const { messages, model, maxTokens } = props;
+  const modelMessages = await convertToModelMessages(messages);
 
   logger.info(`发送 llm 调用至 ${DEFAULT_PROVIDER.name} 使用模型 ${model}`);
 
@@ -39,7 +48,17 @@ export async function streamEnhancer(props: { messages: UIMessage[]; model: Lang
     model,
     system: systemMessage,
     maxOutputTokens: maxTokens,
-    messages: convertToModelMessages(messages),
+    messages: modelMessages,
   });
-  return result.toUIMessageStreamResponse();
+
+  const stream = createUIMessageStream<UIMessage>({
+    execute: async ({ writer }) => {
+      await consumeStreamTextFullStream({
+        fullStream: result.fullStream,
+        onEvent: createStreamTextUIMessageWriter({ writer }),
+      });
+    },
+  });
+
+  return createUIMessageStreamResponse({ stream });
 }

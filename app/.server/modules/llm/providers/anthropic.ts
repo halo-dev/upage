@@ -1,12 +1,14 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
 import type { LanguageModel } from 'ai';
 import { BaseProvider } from '~/.server/modules/llm/base-provider';
+import { createVisionCapabilities } from '~/.server/modules/llm/capabilities';
 import type { ModelInfo } from '~/.server/modules/llm/types';
 import type { IProviderSetting } from '~/types/model';
 
 export default class AnthropicProvider extends BaseProvider {
   name = 'Anthropic';
   getApiKeyLink = 'https://console.anthropic.com/settings/keys';
+  resolveModelCapabilities = () => createVisionCapabilities('declared');
 
   staticModels: ModelInfo[] = [
     {

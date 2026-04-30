@@ -79,10 +79,12 @@ export const EditDialog: React.FC<EditDialogProps> = ({ element, onClose }) => {
       return;
     }
 
+    const domId = element.id || element.closest<HTMLElement>('[id]')?.id;
     const elementInfo = {
       tagName: element.tagName,
       className: element.className,
       id: element.id,
+      domId,
       innerHTML: element.innerHTML,
       outerHTML: element.outerHTML,
     };

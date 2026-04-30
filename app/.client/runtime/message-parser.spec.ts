@@ -157,6 +157,18 @@ describe('StreamingMessageParser', () => {
       runTest(input, expected);
     });
   });
+
+  describe('malformed actions', () => {
+    it('should ignore invalid actions without falling back to raw protocol text', () => {
+      runTest(
+        'Before <uPageArtifact title="Some title" id="artifact_1" name="index"><uPageAction pageName="index" action="patch" domId="page-index" rootDomId="section-1">npm install</uPageAction></uPageArtifact> After',
+        {
+          output: 'Before  After',
+          callbacks: { onArtifactOpen: 1, onArtifactClose: 1, onActionOpen: 0, onActionClose: 0 },
+        },
+      );
+    });
+  });
 });
 
 function runTest(input: string | string[], outputOrExpectedResult: string | ExpectedResult) {

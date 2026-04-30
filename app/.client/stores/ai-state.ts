@@ -1,9 +1,5 @@
 import { map } from 'nanostores';
-import type { UPageUIMessage } from '~/types/message';
-
-export type ParsedUIMessage = UPageUIMessage & {
-  content?: string;
-};
+import type { ChatRequestPhase } from '~/types/message';
 
 export type UIState = {
   // 是否显示聊天
@@ -15,14 +11,20 @@ export type AiState = {
   chatStarted: boolean;
   // 是否正在流式传输
   isStreaming: boolean;
+  // 当前请求阶段
+  requestPhase: ChatRequestPhase;
   // 是否已经初始化
   isInitialized: boolean;
   // 是否中止聊天
   aborted: boolean;
   // 当前的聊天 ID
   chatId: string | undefined;
-  // 当前聊天的消息列表，包含解析后的消息内容，仅用于前端渲染
-  parseMessages: ParsedUIMessage[];
+  // 用户选择或 AI 生成的设计系统规范（DESIGN.md 格式）
+  designMd: string | undefined;
+  // 当前设计系统的显示名称（如 "Zapier"、"Airbnb"）
+  designBrand: string | undefined;
+  // 用户主动移除了设计系统，此标志为 true 时禁止服务端推送覆盖
+  designMdUserRemoved: boolean;
 };
 
 /**
@@ -36,40 +38,15 @@ export type AiState = {
 export const aiState = map<AiState & UIState>({
   chatStarted: false,
   isStreaming: false,
+  requestPhase: 'idle',
   chatId: undefined,
   isInitialized: false,
-  parseMessages: [],
   aborted: false,
   showChat: true,
+  designMd: undefined,
+  designBrand: undefined,
+  designMdUserRemoved: false,
 });
-
-/**
- * 更新聊天消息列表
- * @param messages 原始消息列表
- * @param parsedMessages 解析后的消息内容映射
- */
-export function updateParseMessages(messages: UPageUIMessage[], parsedMessages: { [key: number]: string }) {
-  const updatedMessages = messages.map((message, i) => {
-    if (message.role === 'user') {
-      return message;
-    }
-
-    return {
-      ...message,
-      content: parsedMessages[i] || '',
-    };
-  });
-
-  aiState.setKey('parseMessages', updatedMessages);
-}
-
-/**
- * 获取当前的聊天消息列表
- * @returns 当前的聊天消息列表
- */
-export function getParseMessages(): ParsedUIMessage[] {
-  return aiState.get().parseMessages;
-}
 
 export function setChatStarted(chatStarted: boolean) {
   aiState.setKey('chatStarted', chatStarted);
@@ -85,6 +62,14 @@ export function getChatStarted(): boolean {
  */
 export function setStreamingState(streaming: boolean) {
   aiState.setKey('isStreaming', streaming);
+}
+
+export function setRequestPhase(phase: ChatRequestPhase) {
+  aiState.setKey('requestPhase', phase);
+}
+
+export function getRequestPhase(): ChatRequestPhase {
+  return aiState.get().requestPhase;
 }
 
 /**
@@ -125,4 +110,28 @@ export function setAborted(aborted: boolean) {
 
 export function getAborted(): boolean {
   return aiState.get().aborted;
+}
+
+export function setDesignMd(designMd: string | undefined) {
+  aiState.setKey('designMd', designMd);
+}
+
+export function getDesignMd(): string | undefined {
+  return aiState.get().designMd;
+}
+
+export function setDesignSystem(content: string, brand: string) {
+  aiState.set({ ...aiState.get(), designMd: content, designBrand: brand, designMdUserRemoved: false });
+}
+
+export function clearDesignSystem() {
+  aiState.set({ ...aiState.get(), designMd: undefined, designBrand: undefined, designMdUserRemoved: false });
+}
+
+export function removeDesignSystem() {
+  aiState.set({ ...aiState.get(), designMd: undefined, designBrand: undefined, designMdUserRemoved: true });
+}
+
+export function isDesignMdUserRemoved(): boolean {
+  return aiState.get().designMdUserRemoved;
 }

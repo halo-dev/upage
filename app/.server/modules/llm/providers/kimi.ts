@@ -1,12 +1,39 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import type { LanguageModel } from 'ai';
 import { BaseProvider } from '~/.server/modules/llm/base-provider';
+import { createVisionCapabilities } from '~/.server/modules/llm/capabilities';
 import type { ModelInfo } from '~/.server/modules/llm/types';
 import type { IProviderSetting } from '~/types/model';
+
+function shouldDisableThinking(body: {
+  tool_choice?: unknown;
+  tools?: unknown;
+}): boolean {
+  if (Array.isArray(body.tools) && body.tools.length > 0) {
+    return true;
+  }
+
+  const { tool_choice: toolChoice } = body;
+
+  if (toolChoice === 'required') {
+    return true;
+  }
+
+  if (typeof toolChoice !== 'object' || toolChoice === null) {
+    return false;
+  }
+
+  const choice = toolChoice as {
+    type?: unknown;
+  };
+
+  return choice.type === 'function';
+}
 
 export default class KimiProvider extends BaseProvider {
   name = 'Kimi';
   getApiKeyLink = undefined;
+  resolveModelCapabilities = () => createVisionCapabilities('declared');
 
   staticModels: ModelInfo[] = [];
 
@@ -50,6 +77,16 @@ export default class KimiProvider extends BaseProvider {
       baseURL: 'https://api.moonshot.cn/v1',
       apiKey,
       includeUsage: true,
+      transformRequestBody: (body) => {
+        if (!shouldDisableThinking(body)) {
+          return body;
+        }
+
+        return {
+          ...body,
+          thinking: { type: 'disabled' },
+        };
+      },
     });
 
     return provider(model);

@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import classNames from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
-import { computed } from 'nanostores';
+import { atom, computed } from 'nanostores';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { type BundledLanguage, type BundledTheme, createHighlighter, type HighlighterGeneric } from 'shiki';
 import type { ActionState } from '~/.client/runtime/action-runner';
@@ -22,29 +22,67 @@ if (import.meta.hot && import.meta.hot.data) {
 
 interface ArtifactProps {
   messageId: string;
-  pageName: string;
+  artifactId: string;
+  actionIds?: string[];
 }
 
-export const Artifact = memo(({ messageId, pageName }: ArtifactProps) => {
+function renderActionStatusIcon(status: ActionState['status']) {
+  switch (status) {
+    case 'running':
+      return <div className="i-svg-spinners:90-ring-with-bg"></div>;
+    case 'pending':
+      return <div className="i-ph:circle-duotone"></div>;
+    case 'complete':
+      return <div className="i-ph:check"></div>;
+    case 'failed':
+    case 'aborted':
+      return <div className="i-ph:x"></div>;
+    default:
+      return null;
+  }
+}
+
+function getActionVerb(action: ActionState['action']) {
+  switch (action) {
+    case 'add':
+      return 'Create';
+    case 'update':
+      return 'Update';
+    default:
+      return 'Delete';
+  }
+}
+
+export const Artifact = memo(({ messageId, artifactId, actionIds }: ArtifactProps) => {
   const userToggledActions = useRef(false);
   const [showActions, setShowActions] = useState(false);
   const [allActionFinished, setAllActionFinished] = useState(false);
+  const emptyActionsStore = useMemo(() => atom<ActionState[]>([]), []);
 
   const artifacts = useStore(webBuilderStore.chatStore.artifacts);
   const artifact = useMemo(() => {
-    const artifactsByPageName = artifacts.get(messageId);
-    if (!artifactsByPageName) {
+    const artifactsById = artifacts.get(messageId);
+    if (!artifactsById) {
       return undefined;
     }
 
-    return artifactsByPageName.get(pageName);
-  }, [artifacts, messageId, pageName]);
+    return artifactsById.get(artifactId);
+  }, [artifacts, messageId, artifactId]);
 
-  const actions = useStore(
-    computed(artifact?.runner.actions!, (actions) => {
-      return Object.values(actions);
-    }),
-  );
+  const actionsStore = useMemo(() => {
+    if (!artifact) {
+      return emptyActionsStore;
+    }
+
+    return computed(artifact.runner.actions, (actions) => {
+      if (!actionIds || actionIds.length === 0) {
+        return Object.values(actions);
+      }
+
+      return actionIds.map((actionId) => actions[actionId]).filter((action) => action !== undefined);
+    });
+  }, [actionIds, artifact, emptyActionsStore]);
+  const actions = useStore(actionsStore);
 
   const toggleActions = () => {
     userToggledActions.current = true;
@@ -68,7 +106,7 @@ export const Artifact = memo(({ messageId, pageName }: ArtifactProps) => {
   }, []);
 
   useEffect(() => {
-    if (actions.length && !showActions && !userToggledActions.current) {
+    if (actions.length > 0 && !showActions && !userToggledActions.current) {
       setShowActions(true);
     }
 
@@ -79,7 +117,11 @@ export const Artifact = memo(({ messageId, pageName }: ArtifactProps) => {
         setAllActionFinished(finished);
       }
     }
-  }, [actions]);
+  }, [actions, artifact?.type, allActionFinished, showActions]);
+
+  if (!artifact) {
+    return null;
+  }
 
   return (
     <div className="artifact border border-upage-elements-borderColor flex flex-col overflow-hidden rounded-lg w-full transition-border duration-150">
@@ -185,21 +227,11 @@ const ActionList = memo(({ actions }: ActionListProps) => {
               }}
             >
               <div className="flex items-center gap-1.5 text-sm">
-                <div className={classNames('text-lg', getIconColor(action.status))}>
-                  {status === 'running' ? (
-                    <div className="i-svg-spinners:90-ring-with-bg"></div>
-                  ) : status === 'pending' ? (
-                    <div className="i-ph:circle-duotone"></div>
-                  ) : status === 'complete' ? (
-                    <div className="i-ph:check"></div>
-                  ) : status === 'failed' || status === 'aborted' ? (
-                    <div className="i-ph:x"></div>
-                  ) : null}
-                </div>
+                <div className={classNames('text-lg', getIconColor(action.status))}>{renderActionStatusIcon(status)}</div>
                 <div>
-                  {action.action === 'add' ? 'Create' : action.action === 'update' ? 'Update' : 'Delete'}{' '}
+                  {getActionVerb(action.action)}{' '}
                   <code
-                    className="bg-upage-ele ments-artifacts-inlineCode-background text-upage-elements-artifacts-inlineCode-text px-1.5 py-1 rounded-md text-upage-elements-item-contentAccent hover:underline cursor-pointer"
+                    className="bg-upage-elements-artifacts-inlineCode-background text-upage-elements-artifacts-inlineCode-text px-1.5 py-1 rounded-md text-upage-elements-item-contentAccent hover:underline cursor-pointer"
                     onClick={() => openArtifactInWebBuilder(action.pageName, action.rootDomId)}
                   >
                     {action.id}

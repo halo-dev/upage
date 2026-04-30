@@ -1,5 +1,6 @@
 import type { LanguageModel } from 'ai';
 import type { IProviderSetting } from '~/types/model';
+import type { ModelCapabilities } from './capabilities';
 
 export interface ModelInfo {
   name: string;
@@ -20,6 +21,7 @@ export interface ProviderInfo {
   getApiKeyLink?: string;
   labelForGetApiKey?: string;
   icon?: string;
+  resolveModelCapabilities?: (model: string) => ModelCapabilities | Partial<ModelCapabilities> | null | undefined;
 }
 export interface ProviderConfig {
   baseUrlKey?: string;

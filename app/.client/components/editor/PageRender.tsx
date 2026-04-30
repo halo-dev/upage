@@ -16,6 +16,48 @@ export interface EditorRenderProps {
   onUpdate?: (pageName: string, html: string) => void;
   onSave?: (pageName: string, html: string) => void;
   isCurrentPage?: boolean;
+  onAutoScrollChange?: (pageName: string, enabled: boolean) => void;
+}
+
+const meaningfulAttributeNames = new Set(['src', 'href', 'target', 'icon', 'alt', 'title', 'value', 'placeholder']);
+
+function isMeaningfulMutation(mutation: MutationRecord) {
+  if (mutation.type === 'childList' || mutation.type === 'characterData') {
+    return true;
+  }
+
+  if (mutation.type !== 'attributes') {
+    return false;
+  }
+
+  const attributeName = mutation.attributeName;
+  if (!attributeName || attributeName === 'contenteditable') {
+    return false;
+  }
+
+  if (attributeName.startsWith('data-') || attributeName.startsWith('aria-')) {
+    return false;
+  }
+
+  return meaningfulAttributeNames.has(attributeName);
+}
+
+const scrollShortcutKeys = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Spacebar']);
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  return ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+}
+
+function isScrollShortcutKey(event: KeyboardEvent) {
+  return scrollShortcutKeys.has(event.key) || event.key === ' ';
 }
 
 const pageAnimationVariants: Variants = {
@@ -50,10 +92,11 @@ const pageAnimationVariants: Variants = {
  * 为了保证纯净性，此函数将只考虑渲染 HTML 以及更新，与外部的所有交互无关。
  */
 export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
-  ({ document, onUpdate, onSave, isCurrentPage }, ref) => {
+  ({ document, onUpdate, onSave, isCurrentPage, onAutoScrollChange }, ref) => {
     const frameRef = useRef<HTMLIFrameElement | null>(null);
     const contentRef = useRef<HTMLDivElement | null>(null);
     const observerRef = useRef<MutationObserver | null>(null);
+    const autoScrollCleanupRef = useRef<(() => void) | null>(null);
     const lastContentRef = useRef<string | null>(null);
     const isMountedRef = useRef<boolean>(false);
     const documentContentRef = useRef<string>(document.content);
@@ -176,9 +219,7 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
           return;
         }
 
-        const hasRealChanges = mutations.some(
-          (mutation) => !(mutation.type === 'attributes' && mutation.attributeName === 'contenteditable'),
-        );
+        const hasRealChanges = mutations.some((mutation) => isMeaningfulMutation(mutation));
 
         if (!hasRealChanges) {
           return;
@@ -232,6 +273,87 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
       [handleSave],
     );
 
+    const setupAutoScrollPauseDetection = useCallback(() => {
+      autoScrollCleanupRef.current?.();
+      autoScrollCleanupRef.current = null;
+
+      if (!onAutoScrollChange || !frameRef.current) {
+        return;
+      }
+
+      const iframeDocument = frameRef.current.contentDocument;
+      if (!iframeDocument) {
+        return;
+      }
+
+      const scrollContainer = iframeDocument.getElementById('page-content');
+      if (!(scrollContainer instanceof HTMLElement)) {
+        return;
+      }
+
+      let manualScrollPending = false;
+      let pendingResetTimer: number | null = null;
+
+      const markManualScrollIntent = () => {
+        manualScrollPending = true;
+        if (pendingResetTimer) {
+          window.clearTimeout(pendingResetTimer);
+        }
+        pendingResetTimer = window.setTimeout(() => {
+          manualScrollPending = false;
+          pendingResetTimer = null;
+        }, 180);
+      };
+
+      const pauseAutoScroll = () => {
+        onAutoScrollChange(document.name, false);
+      };
+
+      const handleWheel = () => {
+        markManualScrollIntent();
+      };
+
+      const handleTouchMove = () => {
+        markManualScrollIntent();
+      };
+
+      const handleScrollKeyDown = (event: KeyboardEvent) => {
+        if (!isScrollShortcutKey(event) || isEditableTarget(event.target)) {
+          return;
+        }
+
+        markManualScrollIntent();
+      };
+
+      const handleScroll = () => {
+        if (!manualScrollPending) {
+          return;
+        }
+
+        pauseAutoScroll();
+        manualScrollPending = false;
+        if (pendingResetTimer) {
+          window.clearTimeout(pendingResetTimer);
+          pendingResetTimer = null;
+        }
+      };
+
+      iframeDocument.addEventListener('wheel', handleWheel, { passive: true });
+      iframeDocument.addEventListener('touchmove', handleTouchMove, { passive: true });
+      iframeDocument.addEventListener('keydown', handleScrollKeyDown);
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+
+      autoScrollCleanupRef.current = () => {
+        iframeDocument.removeEventListener('wheel', handleWheel);
+        iframeDocument.removeEventListener('touchmove', handleTouchMove);
+        iframeDocument.removeEventListener('keydown', handleScrollKeyDown);
+        scrollContainer.removeEventListener('scroll', handleScroll);
+        if (pendingResetTimer) {
+          window.clearTimeout(pendingResetTimer);
+        }
+      };
+    }, [document.name, onAutoScrollChange]);
+
     useEffect(() => {
       if (isCurrentPage && frameRef.current) {
         if (frameRef.current.style.display === 'none') {
@@ -241,6 +363,7 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
           frameRef.current.style.visibility = 'visible';
         }
         setupMutationObserver();
+        setupAutoScrollPauseDetection();
 
         // 添加键盘事件监听器
         window.addEventListener('keydown', handleKeyDown);
@@ -252,6 +375,8 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
         }
       } else if (!isCurrentPage && observerRef.current) {
         observerRef.current.disconnect();
+        autoScrollCleanupRef.current?.();
+        autoScrollCleanupRef.current = null;
         if (frameRef.current) {
           frameRef.current.style.visibility = 'hidden';
           frameRef.current.style.display = 'none';
@@ -262,13 +387,15 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
         if (observerRef.current) {
           observerRef.current.disconnect();
         }
+        autoScrollCleanupRef.current?.();
+        autoScrollCleanupRef.current = null;
         window.removeEventListener('keydown', handleKeyDown);
 
         if (frameRef.current?.contentDocument) {
           frameRef.current.contentDocument.removeEventListener('keydown', handleKeyDown);
         }
       };
-    }, [isCurrentPage, setupMutationObserver, handleKeyDown]);
+    }, [isCurrentPage, setupMutationObserver, handleKeyDown, setupAutoScrollPauseDetection]);
 
     const handleFrameMount = useCallback(() => {
       isMountedRef.current = true;
@@ -277,6 +404,7 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
           frameRef.current.style.visibility = 'visible';
           frameRef.current.style.display = 'block';
           setupMutationObserver();
+          setupAutoScrollPauseDetection();
 
           const iframeDocument = frameRef.current.contentDocument;
           if (iframeDocument) {
@@ -299,7 +427,7 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
         initialPageContent();
       }
       // 如果 document 的 content 不为空，则设置为初始内容。
-    }, [isCurrentPage, setupMutationObserver, handleKeyDown]);
+    }, [isCurrentPage, setupMutationObserver, handleKeyDown, setupAutoScrollPauseDetection]);
 
     const initialPageContent = useCallback(() => {
       if (!contentRef.current) {
