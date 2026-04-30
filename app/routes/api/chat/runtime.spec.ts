@@ -1,4 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('~/.server/service/prisma', () => ({
+  prisma: {},
+}));
+
 import { resolveGuardrailStopReason, sanitizeMessagesForAgent } from './runtime';
 
 describe('resolveGuardrailStopReason', () => {
