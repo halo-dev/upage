@@ -25,7 +25,14 @@ import type { PageData } from '~/types/pages';
 import { isAbortError, throwIfAborted } from '../abort';
 import { createSummary } from '../create-summary';
 import { generateDesignMd } from '../generate-design-md';
-import { buildContextFromPages, buildPageSelectionCandidates, resolveSelectedPages } from '../preparation';
+import {
+  buildContextFromPages,
+  buildPageSelectionCandidates,
+  extractPageScripts,
+  extractPageStyles,
+  resolveSelectedPages,
+  stripPageScriptsAndStyles,
+} from '../preparation';
 import { selectContext } from '../select-context';
 import { structuredPageSnapshot } from '../structured-page-snapshot';
 import type { StreamTextUIEvent } from '../ui-message-stream';
@@ -39,7 +46,9 @@ export type PreparationToolName =
   | 'selectRelevantPages'
   | 'buildPageOutlineSnapshot'
   | 'buildPageDetailedSnapshot'
-  | 'ensureDesignSystem';
+  | 'ensureDesignSystem'
+  | 'fetchPageContent'
+  | 'listAvailablePages';
 export type PageBuilderToolName = PreparationToolName | 'announceUpageBlock' | 'upage' | 'finishRun';
 const MAX_DETAILED_SNAPSHOT_PAGES = 2;
 
@@ -745,6 +754,67 @@ export function createPageBuilderTools({
     },
   });
 
+  const fetchPageContentTool = tool({
+    description:
+      '按需读取指定页面的原始源码片段。当你需要修改某个 script 或 style，但当前上下文中没有其具体内容时，调用此工具补充缺失信息；也可用于在 html-only 模式下读取去除脚本后的完整 HTML 结构。不要在已有足够上下文时重复调用。',
+    inputSchema: z.object({
+      pageName: z.string().trim().min(1).describe('目标页面名称。'),
+      filter: z
+        .enum(['all', 'scripts', 'styles', 'html-only'])
+        .optional()
+        .default('all')
+        .describe(
+          '内容过滤模式：all=完整 HTML（含 script/style），scripts=仅 <script> 块，styles=仅 <style> 块，html-only=去掉 script/style 的 HTML。',
+        ),
+    }),
+    execute: async ({ pageName, filter }) => {
+      const rawPages = await ensureRawPagesLoaded();
+      const page = rawPages.find((p) => p.name === pageName);
+
+      if (!page) {
+        markEffectiveTool('fetchPageContent');
+        return { found: false, pageName, content: '' };
+      }
+
+      let content: string;
+      switch (filter) {
+        case 'scripts':
+          content = extractPageScripts(page.content);
+          break;
+        case 'styles':
+          content = extractPageStyles(page.content);
+          break;
+        case 'html-only':
+          content = stripPageScriptsAndStyles(page.content);
+          break;
+        default:
+          content = page.content;
+      }
+
+      markEffectiveTool('fetchPageContent');
+      return { found: true, pageName, filter, content };
+    },
+  });
+
+  const listAvailablePagesTool = tool({
+    description:
+      '列出当前项目中所有可用页面的名称、标题及简要结构信息。适用于需要跨页面操作时（如创建导航链接、了解整体页面架构），或不确定项目有哪些页面时使用。不要在已有页面列表上下文时重复调用。',
+    inputSchema: z.object({}),
+    execute: async () => {
+      const rawPages = await ensureRawPagesLoaded();
+      markEffectiveTool('listAvailablePages');
+      return {
+        count: rawPages.length,
+        pages: rawPages.map((page) => ({
+          name: page.name,
+          title: page.title,
+          sectionCount: page.actionIds.length,
+          sort: page.sort ?? 0,
+        })),
+      };
+    },
+  });
+
   const { announceUpageBlockTool, upageTool, finishRunTool } = createPageBuilderMutationTools({
     state,
     onUpageBlockStart,
@@ -760,6 +830,8 @@ export function createPageBuilderTools({
     buildPageOutlineSnapshot: buildPageOutlineSnapshotTool,
     buildPageDetailedSnapshot: buildPageDetailedSnapshotTool,
     ensureDesignSystem: ensureDesignSystemTool,
+    fetchPageContent: fetchPageContentTool,
+    listAvailablePages: listAvailablePagesTool,
     announceUpageBlock: announceUpageBlockTool,
     upage: upageTool,
     finishRun: finishRunTool,

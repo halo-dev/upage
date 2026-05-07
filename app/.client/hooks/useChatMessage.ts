@@ -6,7 +6,12 @@ import { toast } from 'sonner';
 import { extractBrandNameFromDesignMd } from '~/.client/utils/design-system';
 import { createScopedLogger } from '~/.client/utils/logger';
 import type { ChatMessage } from '~/types/chat';
-import type { ChatUIMessage, PreparationStageAnnotation, ProgressAnnotation } from '~/types/message';
+import type {
+  ChatDescriptionAnnotation,
+  ChatUIMessage,
+  PreparationStageAnnotation,
+  ProgressAnnotation,
+} from '~/types/message';
 import {
   getChatStarted,
   getDesignMd,
@@ -83,6 +88,9 @@ export function useChatMessage({
           const brand = extractBrandNameFromDesignMd(content);
           setDesignSystem(content, brand);
         }
+      }
+      if (dataPart.type === 'data-chat-description') {
+        webBuilderStore.chatStore.applyGeneratedDescription((dataPart.data as ChatDescriptionAnnotation).description);
       }
     },
     onError: (e) => {
@@ -265,6 +273,7 @@ export function useChatMessage({
     const fileDataList = await filesToFileUIParts(files);
 
     runAnimation();
+    webBuilderStore.chatStore.ensureDescription();
 
     const rewindTo = getActiveRewindTo({
       rewindTo: searchParams.get('rewindTo'),

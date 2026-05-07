@@ -71,6 +71,31 @@ export type SetTextPatchOp = PatchOpBase & {
   text: string;
 };
 
+export type AddClassPatchOp = PatchOpBase & {
+  type: 'add-class';
+  target: PatchTarget;
+  classes: string;
+};
+
+export type RemoveClassPatchOp = PatchOpBase & {
+  type: 'remove-class';
+  target: PatchTarget;
+  classes: string;
+};
+
+export type SetStylePatchOp = PatchOpBase & {
+  type: 'set-style';
+  target: PatchTarget;
+  property: string;
+  value: string;
+};
+
+export type RemoveStylePatchOp = PatchOpBase & {
+  type: 'remove-style';
+  target: PatchTarget;
+  property: string;
+};
+
 export type PatchOp =
   | InsertNodePatchOp
   | ReplaceNodePatchOp
@@ -79,7 +104,11 @@ export type PatchOp =
   | MoveNodePatchOp
   | SetAttrPatchOp
   | RemoveAttrPatchOp
-  | SetTextPatchOp;
+  | SetTextPatchOp
+  | AddClassPatchOp
+  | RemoveClassPatchOp
+  | SetStylePatchOp
+  | RemoveStylePatchOp;
 
 export interface SectionBase {
   id: string;

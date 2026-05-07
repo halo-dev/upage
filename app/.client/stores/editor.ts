@@ -33,6 +33,7 @@ export const editorCommands = atom<EditorCommand | null>(null);
  */
 export class EditorStore {
   private readonly pagesStore: PagesStore;
+  private cleanupCallbacks: Array<() => void> = [];
 
   editorInstance: WritableAtom<Editor | null> = import.meta.hot?.data?.editorInstance ?? atom<Editor | null>(null);
   // 编辑器中当前选中的文档。
@@ -60,6 +61,9 @@ export class EditorStore {
       import.meta.hot.data.selectedDocument = this.selectedDocument;
       import.meta.hot.data.editorDocuments = this.editorDocuments;
       import.meta.hot.data.documentLastSaved = this.documentLastSaved;
+      import.meta.hot.dispose(() => {
+        this.dispose();
+      });
     }
 
     this.setupCoordination();
@@ -67,14 +71,16 @@ export class EditorStore {
 
   private setupCoordination() {
     // 监听 pagesStore 的 pages 变化
-    this.pagesStore.pages.listen((pages) => {
+    const unsubscribePages = this.pagesStore.pages.listen((pages) => {
       this.setDocuments(pages);
     });
+    this.cleanupCallbacks.push(unsubscribePages);
 
     // 监听 pagesStore 的 activePage 变化
-    this.pagesStore.activePage.listen((pageName) => {
+    const unsubscribeActivePage = this.pagesStore.activePage.listen((pageName) => {
       this.selectedDocument.set(pageName);
     });
+    this.cleanupCallbacks.push(unsubscribeActivePage);
   }
 
   setEditorInstance(editor: Editor) {
@@ -207,5 +213,11 @@ export class EditorStore {
     this.setDocuments(pages, true);
     this.unsavedDocuments.set(new Set());
     this.documentLastSaved.set({});
+  }
+
+  private dispose() {
+    for (const callback of this.cleanupCallbacks.splice(0).reverse()) {
+      callback();
+    }
   }
 }

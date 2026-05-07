@@ -5,6 +5,7 @@ import { Checkbox } from '~/.client/components/ui/Checkbox';
 import WithTooltip from '~/.client/components/ui/Tooltip';
 import { useEditChatDescription } from '~/.client/hooks';
 import type { ServerChatItem } from '~/.client/hooks/useChatEntries';
+import { resolveChatDescription } from '~/utils/chat-description';
 
 interface HistoryItemProps {
   item: ServerChatItem;
@@ -27,9 +28,10 @@ export function HistoryItem({
   const isActiveChat = id === item.id;
   const { editing, handleChange, handleBlur, handleSubmit, handleKeyDown, currentDescription, toggleEditMode } =
     useEditChatDescription({
-      initialDescription: item.description || '',
+      initialDescription: resolveChatDescription(item.description),
       chatId: item.id,
     });
+  const displayDescription = resolveChatDescription(currentDescription);
 
   const handleItemClick = useCallback(
     (e: React.MouseEvent) => {
@@ -90,7 +92,7 @@ export function HistoryItem({
             type="text"
             className="flex-1 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-md px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
             autoFocus
-            value={currentDescription}
+            value={displayDescription}
             onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
@@ -107,7 +109,7 @@ export function HistoryItem({
           className="flex w-full relative items-center"
           onClick={selectionMode ? handleItemClick : undefined}
         >
-          <span className="truncate max-w-[calc(100%-90px)] pl-2">{currentDescription}</span>
+          <span className="truncate max-w-[calc(100%-90px)] pl-2">{displayDescription}</span>
           <div
             className={classNames(
               'absolute right-0 top-0 bottom-0 flex items-center px-2 transition-colors',

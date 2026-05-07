@@ -125,6 +125,36 @@ function applyPatchOps(container: HTMLDivElement, patches: PatchOp[]) {
         }
         break;
       }
+      case 'add-class': {
+        const target = findTarget(container, patch.target);
+        if (target) {
+          const classesToAdd = patch.classes.split(/\s+/).filter(Boolean);
+          target.classList.add(...classesToAdd);
+        }
+        break;
+      }
+      case 'remove-class': {
+        const target = findTarget(container, patch.target);
+        if (target) {
+          const classesToRemove = patch.classes.split(/\s+/).filter(Boolean);
+          target.classList.remove(...classesToRemove);
+        }
+        break;
+      }
+      case 'set-style': {
+        const target = findTarget(container, patch.target);
+        if (target) {
+          (target as HTMLElement).style.setProperty(patch.property, patch.value);
+        }
+        break;
+      }
+      case 'remove-style': {
+        const target = findTarget(container, patch.target);
+        if (target) {
+          (target as HTMLElement).style.removeProperty(patch.property);
+        }
+        break;
+      }
     }
   }
 }

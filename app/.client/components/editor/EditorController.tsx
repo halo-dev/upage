@@ -2,6 +2,18 @@ import { executeScript } from '~/.client/utils/execute-scripts';
 import { isScriptContent } from '~/.client/utils/html-parse';
 import type { Editor, EditorControllerProps, ScrollToElementOptions } from '~/types/editor';
 
+function escapeAttributeValue(value: string) {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function findElement(root: ParentNode, query: string) {
+  if (query.startsWith('#')) {
+    return root.querySelector(`[id="${escapeAttributeValue(query.slice(1))}"]`);
+  }
+
+  return root.querySelector(query);
+}
+
 export class EditorController implements Editor {
   private props: EditorControllerProps;
 
@@ -23,29 +35,36 @@ export class EditorController implements Editor {
       return;
     }
 
-    const targetElement = pageElement.querySelector(query);
+    const targetElement = findElement(pageElement, query);
     if (!targetElement) {
       return;
     }
 
-    targetElement.outerHTML = newHTML;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = newHTML;
+    const replacement = tempDiv.firstElementChild as HTMLElement | null;
+    if (!replacement) {
+      return;
+    }
+
+    targetElement.replaceWith(replacement);
     if (sort === undefined) {
       return;
     }
 
-    const parent = targetElement.parentElement;
+    const parent = replacement.parentElement;
     if (!parent) {
       return;
     }
 
     const children = Array.from(parent.children);
-    const index = children.indexOf(targetElement);
+    const index = children.indexOf(replacement);
     if (index === -1) {
       return;
     }
 
     if (sort !== index) {
-      parent.insertBefore(targetElement, children[sort]);
+      parent.insertBefore(replacement, children[sort] || null);
     }
   }
 
@@ -61,7 +80,7 @@ export class EditorController implements Editor {
       return;
     }
 
-    const targetElement = pageElement.querySelector(query);
+    const targetElement = findElement(pageElement, query);
     const parent = targetElement || pageElement;
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = newHTML;
@@ -89,7 +108,7 @@ export class EditorController implements Editor {
       return;
     }
     const id = newElement.id;
-    const targetElement = pageElement.querySelector(`#${id}`);
+    const targetElement = findElement(pageElement, `#${id}`);
     if (targetElement) {
       this.replaceWith(`#${id}`, newHTML, sort);
       if (isScriptContent(newHTML)) {
@@ -98,7 +117,7 @@ export class EditorController implements Editor {
       return;
     }
     this.append(query, newHTML, sort);
-    const element = pageElement.querySelector(`#${id}`);
+    const element = findElement(pageElement, `#${id}`);
     if (element instanceof HTMLScriptElement) {
       executeScript(element);
       const frameRef = this.props.getIframeElement();
@@ -127,7 +146,7 @@ export class EditorController implements Editor {
       return;
     }
 
-    const targetElement = pageElement.querySelector(query);
+    const targetElement = findElement(pageElement, query);
     if (targetElement) {
       targetElement.remove();
     }
@@ -143,7 +162,7 @@ export class EditorController implements Editor {
     }
 
     if (query) {
-      const targetElement = pageElement.querySelector(query);
+      const targetElement = findElement(pageElement, query);
       return targetElement ? targetElement.innerHTML : '';
     }
 
@@ -161,7 +180,7 @@ export class EditorController implements Editor {
       return;
     }
 
-    const targetElement = pageElement.querySelector(query);
+    const targetElement = findElement(pageElement, query);
     const scrollContainer = pageElement.parentElement;
     if (targetElement instanceof HTMLElement && scrollContainer instanceof HTMLElement) {
       const containerRect = scrollContainer.getBoundingClientRect();

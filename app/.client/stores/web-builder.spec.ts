@@ -34,3 +34,88 @@ describe('WebBuilderStore.setPages', () => {
     expect(resetSnapshot).toHaveBeenCalledWith(pages);
   });
 });
+
+describe('WebBuilderStore.deletePage', () => {
+  it('should prevent deleting the last remaining page', async () => {
+    const deletePage = vi.fn();
+
+    const result = await WebBuilderStore.prototype.deletePage.call(
+      {
+        pagesStore: {
+          pages: {
+            get: () => ({
+              index: {
+                id: 'page-1',
+                name: 'index',
+                title: '首页',
+                content: '<main id="main"></main>',
+                actionIds: [],
+              },
+            }),
+          },
+          deletePage,
+        },
+        editorStore: {
+          currentDocument: {
+            get: () => ({ name: 'index' }),
+          },
+        },
+        setSelectedPage: vi.fn(),
+      },
+      'index',
+    );
+
+    expect(result).toBe(false);
+    expect(deletePage).not.toHaveBeenCalled();
+  });
+
+  it('should switch to another existing page after deleting the current page', async () => {
+    const nextPages: PageMap = {
+      index: undefined,
+      about: {
+        id: 'page-2',
+        name: 'about',
+        title: '关于',
+        content: '<main id="about"></main>',
+        actionIds: [],
+      },
+    };
+    const getPages = vi
+      .fn()
+      .mockReturnValueOnce({
+        index: {
+          id: 'page-1',
+          name: 'index',
+          title: '首页',
+          content: '<main id="main"></main>',
+          actionIds: [],
+        },
+        about: nextPages.about,
+      })
+      .mockReturnValueOnce(nextPages);
+    const deletePage = vi.fn().mockResolvedValue(true);
+    const setSelectedPage = vi.fn();
+
+    const result = await WebBuilderStore.prototype.deletePage.call(
+      {
+        pagesStore: {
+          pages: {
+            get: getPages,
+          },
+          deletePage,
+        },
+        editorStore: {
+          currentDocument: {
+            get: () => ({ name: 'index' }),
+          },
+        },
+        setSelectedPage,
+      },
+      'index',
+    );
+
+    expect(result).toBe(true);
+    expect(deletePage).toHaveBeenCalledWith('index');
+    expect(setSelectedPage).toHaveBeenCalledWith('about');
+  });
+});

@@ -35,6 +35,8 @@ export type EditorPatch = {
  */
 export class PagesStore {
   private readonly editorBridge: Promise<EditorBridge> = editorBridge;
+  private cleanupCallbacks: Array<() => void> = [];
+  private disposed = false;
 
   /**
    * 跟踪页面数量
@@ -128,6 +130,9 @@ export class PagesStore {
       import.meta.hot.data.sections = this.sections;
       import.meta.hot.data.pageHistory = this.pageHistory;
       import.meta.hot.data.editorPatchQueue = this.editorPatchQueue;
+      import.meta.hot.dispose(() => {
+        this.dispose();
+      });
     }
 
     this.#init();
@@ -135,7 +140,7 @@ export class PagesStore {
   }
 
   private setupCoordination() {
-    this.sections.listen(() => {
+    const unsubscribe = this.sections.listen(() => {
       const currentPage = this.activePage.get();
 
       if (currentPage && this.currentSection.get() === undefined) {
@@ -145,6 +150,7 @@ export class PagesStore {
         }
       }
     });
+    this.registerCleanup(unsubscribe);
   }
 
   getPage(pageName: string): Omit<PageData, 'messageId'> | undefined {
@@ -273,10 +279,18 @@ export class PagesStore {
 
   async #init() {
     const grapesBridge = await this.editorBridge;
+    if (this.disposed) {
+      return;
+    }
 
     this.#cleanupDeletedPages();
 
-    grapesBridge.watch(({ type, payload }) => this.#processGrapesBridgeEvent(type, payload));
+    const handler = ({ type, payload }: { type: string; payload: EventPayload }) =>
+      this.#processGrapesBridgeEvent(type, payload);
+    grapesBridge.watch(handler);
+    this.registerCleanup(() => {
+      grapesBridge.unwatch(handler);
+    });
   }
 
   /**
@@ -356,10 +370,14 @@ export class PagesStore {
         break;
       }
       case 'remove_page': {
+        const deletedPage = this.pages.get()[pageName];
         this.deletedPages.add(pageName);
 
         this.pages.setKey(pageName, undefined);
-        this.size--;
+        if (deletedPage) {
+          this.size--;
+          this.removeSectionsByPage(pageName, deletedPage.actionIds);
+        }
 
         if (this.modifiedPages.has(pageName)) {
           this.modifiedPages.delete(pageName);
@@ -386,6 +404,33 @@ export class PagesStore {
   async deletePage(pageName: string) {
     await this.editorBridge.then((grapesBridge) => grapesBridge.removePage(pageName));
     return true;
+  }
+
+  private removeSectionsByPage(pageName: string, actionIds: string[] = []) {
+    const handledSectionIds = new Set<string>();
+
+    for (const actionId of actionIds) {
+      handledSectionIds.add(actionId);
+      this.sections.setKey(actionId, undefined);
+    }
+
+    for (const [sectionId, section] of Object.entries(this.sections.get())) {
+      if (!section || section.pageName !== pageName || handledSectionIds.has(sectionId)) {
+        continue;
+      }
+
+      this.sections.setKey(sectionId, undefined);
+    }
+
+    const activeSection = this.activeSection.get();
+    if (activeSection && handledSectionIds.has(activeSection)) {
+      this.activeSection.set(undefined);
+      return;
+    }
+
+    if (activeSection && this.sections.get()[activeSection]?.pageName === pageName) {
+      this.activeSection.set(undefined);
+    }
   }
 
   // method to persist deleted paths to localStorage
@@ -561,5 +606,25 @@ export class PagesStore {
 
     const firstMatchingSection = Object.values(sections).find((section) => section?.pageName === nextActivePage);
     this.activeSection.set(firstMatchingSection?.id);
+  }
+
+  private registerCleanup(callback: () => void) {
+    if (this.disposed) {
+      callback();
+      return;
+    }
+
+    this.cleanupCallbacks.push(callback);
+  }
+
+  private dispose() {
+    if (this.disposed) {
+      return;
+    }
+
+    this.disposed = true;
+    for (const callback of this.cleanupCallbacks.splice(0).reverse()) {
+      callback();
+    }
   }
 }

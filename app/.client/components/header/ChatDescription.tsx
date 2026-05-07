@@ -5,6 +5,7 @@ import WithTooltip from '~/.client/components/ui/Tooltip';
 import { useEditChatDescription } from '~/.client/hooks';
 import { useChatHistory } from '~/.client/hooks/useChatHistory';
 import { webBuilderStore } from '~/.client/stores/web-builder';
+import { isUntitledChatDescription, resolveChatDescription } from '~/utils/chat-description';
 
 export function ChatDescription() {
   const chatHistory = useChatHistory();
@@ -21,19 +22,18 @@ export function ChatDescription() {
     setCurrentDescription,
     updateChatDescription,
   } = useEditChatDescription({
-    initialDescription: chatHistory?.getChatLatestDescription?.() || '',
+    initialDescription: resolveChatDescription(chatHistory?.getChatLatestDescription?.()),
   });
 
   useEffect(() => {
-    if (!currentDescription && description) {
-      setCurrentDescription(description);
-      updateChatDescription(description);
+    const resolvedDescription = resolveChatDescription(description);
+    if (isUntitledChatDescription(currentDescription) && !isUntitledChatDescription(resolvedDescription)) {
+      setCurrentDescription(resolvedDescription);
+      updateChatDescription(resolvedDescription);
     }
-  }, [description]);
+  }, [currentDescription, description, setCurrentDescription, updateChatDescription]);
 
-  if (!currentDescription) {
-    return null;
-  }
+  const displayDescription = resolveChatDescription(currentDescription);
 
   return (
     <div className="flex items-center justify-center">
@@ -43,11 +43,11 @@ export function ChatDescription() {
             type="text"
             className="bg-upage-elements-background-depth-1 text-upage-elements-textPrimary rounded px-2 py-0.5 mr-2 focus:outline-none focus:ring-1 focus:ring-upage-elements-ring"
             autoFocus
-            value={currentDescription}
+            value={displayDescription}
             onChange={handleChange}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            style={{ width: `${Math.max(currentDescription?.length * 9 || 0, 180)}px` }}
+            style={{ width: `${Math.max(displayDescription.length * 9 || 0, 180)}px` }}
           />
           <TooltipProvider>
             <WithTooltip tooltip="保存标题">
@@ -63,7 +63,7 @@ export function ChatDescription() {
         </form>
       ) : (
         <>
-          {currentDescription}
+          {displayDescription}
           <TooltipProvider>
             <WithTooltip tooltip="重命名聊天">
               <div className="flex justify-between items-center p-2 rounded-md bg-upage-elements-item-backgroundAccent ml-2">

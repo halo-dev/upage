@@ -2,11 +2,12 @@ import { createAgentUIStream, createUIMessageStream, createUIMessageStreamRespon
 import type { ActionFunctionArgs } from 'react-router';
 import { createPageBuilderAgent } from '~/.server/llm/agents/page-builder';
 import { PAGE_GENERATION_STEP_LIMIT } from '~/.server/llm/agents/page-generation';
+import { generateChatDescription } from '~/.server/llm/chat-description';
 import type { StreamTextUIEvent } from '~/.server/llm/ui-message-stream';
 import { createUserPageSnapshotContext, getUserMessageContent } from '~/.server/llm/utils';
-import { DEFAULT_MODEL, DEFAULT_PROVIDER, MINOR_MODEL } from '~/.server/modules/constants';
+import { DEFAULT_MODEL, DEFAULT_PROVIDER, getModel, MINOR_MODEL } from '~/.server/modules/constants';
 import { getModelCapabilities } from '~/.server/modules/llm/capabilities';
-import { updateChat, upsertChat } from '~/.server/service/chat';
+import { getChatById, updateChat, upsertChat } from '~/.server/service/chat';
 import {
   materializeMessagesFileReferencesForModel,
   normalizeMessageFileReferences,
@@ -28,6 +29,7 @@ import type {
   UPageBlockAnnotation,
   UserPageSnapshot,
 } from '~/types/message';
+import { DEFAULT_CHAT_DESCRIPTION, isUntitledChatDescription } from '~/utils/chat-description';
 import { resolveChatMetadataForRequest } from './metadata';
 import {
   createChatStreamEventWriters,
@@ -85,6 +87,7 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
     messageId: incomingMessage.id,
     message: incomingMessage,
   });
+  const messageContent = message.role === 'user' ? getUserMessageContent(message) : '';
   const chat = await upsertChat({
     id: chatId,
     userId,
@@ -100,8 +103,11 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
     designMdRemoved,
   });
 
-  if (shouldUpdate) {
+  const shouldGenerateChatDescription = message.role === 'user' && isUntitledChatDescription(chat.description);
+
+  if (shouldUpdate || shouldGenerateChatDescription) {
     await updateChat(chat.id, {
+      ...(shouldGenerateChatDescription ? { description: DEFAULT_CHAT_DESCRIPTION } : {}),
       metadata: nextMetadata,
     });
   }
@@ -111,7 +117,6 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
 
   const elementInfo = message.metadata?.elementInfo;
   const messageId = message.id;
-  const messageContent = message.role === 'user' ? getUserMessageContent(message) : '';
   const initialUsageRecord = await recordUsage({
     userId,
     chatId: chat.id,
@@ -215,6 +220,9 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
   let writeDesignSystemStreamEvent: ((event: StreamTextUIEvent) => void) | undefined;
   let writeUpageBlockStartEvent: ((block: UPageBlockAnnotation) => void) | undefined;
   let writePreparationStageEvent: ((event: PreparationStageAnnotation) => void) | undefined;
+  let writeChatDescriptionEvent:
+    | ((event: { chatId: string; description: string; source: 'default' | 'ai' }) => void)
+    | undefined;
   const completedPrimaryUsage = createEmptyTokenUsage();
   let primaryUsageFlushed = false;
   const { agent, state } = createPageBuilderAgent({
@@ -246,12 +254,59 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
   const stream = createUIMessageStream<ChatUIMessage>({
     originalMessages: messages,
     execute: async ({ writer }) => {
-      ({ writePreparationStageEvent, writeUpageBlockStartEvent, writeDesignSystemStreamEvent } =
-        createChatStreamEventWriters({
-          writer,
-          messageId,
-          designStreamPartId,
-        }));
+      ({
+        writeChatDescriptionEvent,
+        writePreparationStageEvent,
+        writeUpageBlockStartEvent,
+        writeDesignSystemStreamEvent,
+      } = createChatStreamEventWriters({
+        writer,
+        messageId,
+        designStreamPartId,
+      }));
+
+      if (shouldGenerateChatDescription) {
+        writeChatDescriptionEvent?.({
+          chatId: chat.id,
+          description: DEFAULT_CHAT_DESCRIPTION,
+          source: 'default',
+        });
+      }
+
+      const chatDescriptionPromise = shouldGenerateChatDescription
+        ? (async () => {
+            try {
+              const result = await generateChatDescription({
+                message,
+                model: getModel(MINOR_MODEL, { executionMode: 'no-thinking' }),
+                abortSignal: request.signal,
+              });
+              updateMinorModelUsage(result.totalUsage);
+
+              const nextDescription = result.description.trim();
+              if (!nextDescription) {
+                return;
+              }
+
+              const latestChat = await getChatById(chat.id);
+              if (!isUntitledChatDescription(latestChat?.description)) {
+                return;
+              }
+
+              await updateChat(chat.id, {
+                description: nextDescription,
+              });
+              writeChatDescriptionEvent?.({
+                chatId: chat.id,
+                description: nextDescription,
+                source: 'ai',
+              });
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : '未知错误';
+              logger.warn(`聊天 ${chat.id} 标题生成失败，已保留默认标题: ${errorMessage}`);
+            }
+          })()
+        : Promise.resolve();
 
       const agentStream = await createAgentUIStream({
         agent,
@@ -265,6 +320,7 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
       });
 
       writer.merge(agentStream as Parameters<typeof writer.merge>[0]);
+      await chatDescriptionPromise;
     },
     onFinish: async (event: {
       messages: unknown[];

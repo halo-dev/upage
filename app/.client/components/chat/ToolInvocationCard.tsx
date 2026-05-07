@@ -8,7 +8,7 @@ export function ToolInvocationCard({ part, runStatus }: { part: ToolPart; runSta
   return (
     <div className="rounded-md border border-upage-elements-borderColor/50 bg-upage-elements-background-depth-1/20 px-2.5 py-2">
       <div className="flex items-start justify-between gap-2.5 text-sm">
-        <div className="flex min-w-0 items-start gap-2">
+        <div className="flex min-w-0 items-start gap-2 items-center">
           <div className="mt-0.5 flex size-5.5 shrink-0 items-center justify-center rounded-full bg-upage-elements-background/85">
             {presentation.isRunning ? (
               <RunningStatus label={presentation.statusLabel} iconClassName="text-sm" />

@@ -6,6 +6,7 @@ import { memo, type ReactNode, useCallback, useEffect, useMemo, useState } from 
 import { toast } from 'sonner';
 import { Button } from '~/.client/components/ui/Button';
 import { ConfirmationDialog, Dialog, DialogDescription, DialogRoot, DialogTitle } from '~/.client/components/ui/Dialog';
+import { useProject } from '~/.client/hooks/useProject';
 import { webBuilderStore } from '~/.client/stores/web-builder';
 import { createScopedLogger, renderLogger } from '~/.client/utils/logger';
 import type { PageMap } from '~/types/pages';
@@ -44,6 +45,7 @@ export const PageTree = memo(({ pages = {}, onPageSelect, selectedPage, classNam
             key={page.id}
             selected={selectedPage === page.name}
             page={page}
+            pageCount={pageList.length}
             unsavedChanges={unsavedPages instanceof Set && unsavedPages.has(page.name)}
             onClick={() => {
               onPageSelect?.(page.name);
@@ -57,22 +59,46 @@ export const PageTree = memo(({ pages = {}, onPageSelect, selectedPage, classNam
 
 export default PageTree;
 
-function ContextMenuItem({ onSelect, children }: { onSelect?: () => void; children: ReactNode }) {
+function ContextMenuItem({
+  onSelect,
+  children,
+  disabled = false,
+}: {
+  onSelect?: () => void;
+  children: ReactNode;
+  disabled?: boolean;
+}) {
   return (
     <ContextMenu.Item
+      disabled={disabled}
       onSelect={onSelect}
-      className="flex items-center w-full px-3 py-2 outline-0 text-sm cursor-pointer rounded-md transition-colors duration-200 hover:bg-upage-elements-item-backgroundActive hover:text-upage-elements-item-contentActive"
+      className={classNames(
+        'flex items-center w-full px-3 py-2 outline-0 text-sm rounded-md transition-colors duration-200',
+        disabled
+          ? 'cursor-not-allowed opacity-50'
+          : 'cursor-pointer hover:bg-upage-elements-item-backgroundActive hover:text-upage-elements-item-contentActive',
+      )}
     >
       {children}
     </ContextMenu.Item>
   );
 }
 
-function PageContextMenu({ pageName, children }: { pageName: string; children: ReactNode }) {
+function PageContextMenu({
+  pageName,
+  pageCount,
+  children,
+}: {
+  pageName: string;
+  pageCount: number;
+  children: ReactNode;
+}) {
+  const { saveProject } = useProject();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const canDeletePage = pageCount > 1;
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -112,15 +138,33 @@ function PageContextMenu({ pageName, children }: { pageName: string; children: R
   };
 
   const handleDelete = async () => {
+    if (!canDeletePage) {
+      toast.error('至少保留一个页面，无法删除最后一个页面');
+      setIsDeleteDialogOpen(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const success = await webBuilderStore.deletePage(pageName);
 
       if (success) {
-        toast.success(`页面删除成功`);
+        const currentMessageId = webBuilderStore.chatStore.currentMessageId.get();
+        let persisted = true;
+
+        if (currentMessageId) {
+          persisted = await saveProject(currentMessageId);
+        }
+
+        if (!persisted) {
+          toast.warning('页面已删除，但保存失败，刷新后可能会恢复');
+        } else {
+          toast.success(`页面删除成功`);
+        }
+
         setIsDeleteDialogOpen(false);
       } else {
-        toast.error(`页面删除失败`);
+        toast.error(canDeletePage ? '页面删除失败' : '至少保留一个页面，无法删除最后一个页面');
       }
     } catch (error) {
       toast.error(`页面删除失败`);
@@ -164,7 +208,7 @@ function PageContextMenu({ pageName, children }: { pageName: string; children: R
             <ContextMenu.Separator className="h-px bg-upage-elements-borderColor my-1" />
 
             <ContextMenu.Group className="mt-1">
-              <ContextMenuItem onSelect={() => setIsDeleteDialogOpen(true)}>
+              <ContextMenuItem disabled={!canDeletePage} onSelect={() => canDeletePage && setIsDeleteDialogOpen(true)}>
                 <div className="flex items-center gap-2 text-red-500">
                   <div className="i-ph:trash" />
                   删除页面
@@ -198,6 +242,7 @@ function PageContextMenu({ pageName, children }: { pageName: string; children: R
 
 interface PageProps {
   page: PageNode;
+  pageCount: number;
   selected: boolean;
   unsavedChanges?: boolean;
   onClick: () => void;
@@ -208,7 +253,7 @@ function formatSaveTime(timestamp: number): string {
   return `${saveDate.getHours().toString().padStart(2, '0')}:${saveDate.getMinutes().toString().padStart(2, '0')}`;
 }
 
-function Page({ page, onClick, selected, unsavedChanges = false }: PageProps) {
+function Page({ page, pageCount, onClick, selected, unsavedChanges = false }: PageProps) {
   const pageHistory = useStore(webBuilderStore.pagesStore.pageHistory);
   const { name, title } = page;
   const pageModifications = pageHistory[name];
@@ -252,7 +297,7 @@ function Page({ page, onClick, selected, unsavedChanges = false }: PageProps) {
   const showStats = additions > 0 || deletions > 0;
 
   return (
-    <PageContextMenu pageName={name}>
+    <PageContextMenu pageName={name} pageCount={pageCount}>
       <div
         className={classNames('rounded-md transition-colors duration-200 my-1 overflow-hidden', {
           'bg-upage-elements-background-depth-1 hover:bg-upage-elements-item-backgroundActive': !selected,

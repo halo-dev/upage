@@ -111,11 +111,21 @@ export function extractContextSections(content: string, maxChars = MAX_CONTEXT_S
   return [start, `...省略 ${normalized.length - start.length - end.length} 个字符...`, end];
 }
 
-function stripPageScriptsAndStyles(content: string) {
+export function stripPageScriptsAndStyles(content: string) {
   return content
     .replace(/<script[\s\S]*?<\/script>/gi, ' ')
     .replace(/<style[\s\S]*?<\/style>/gi, ' ')
     .trim();
+}
+
+export function extractPageScripts(content: string): string {
+  const matches = content.match(/<script[\s\S]*?<\/script>/gi) || [];
+  return matches.join('\n\n').trim();
+}
+
+export function extractPageStyles(content: string): string {
+  const matches = content.match(/<style[\s\S]*?<\/style>/gi) || [];
+  return matches.join('\n\n').trim();
 }
 
 function extractStructuralBlocks(content: string) {

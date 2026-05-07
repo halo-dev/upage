@@ -7,6 +7,12 @@ import type { WebBuilderStore } from '~/.client/stores/web-builder';
 import { createSampler } from '~/.client/utils/sampler';
 import { unreachable } from '~/.client/utils/unreachable';
 import type { ActionAlert } from '~/types/actions';
+import {
+  DEFAULT_CHAT_DESCRIPTION,
+  isUntitledChatDescription,
+  resolveChatDescription,
+  shouldUsePageTitleAsChatDescription,
+} from '~/utils/chat-description';
 
 export interface ArtifactState {
   id: string;
@@ -27,6 +33,7 @@ export class ChatStore {
   private globalExecutionQueue = Promise.resolve();
   private executionQueueVersion = 0;
   private reloadedMessages = new Set<string>();
+  private cleanupCallbacks: Array<() => void> = [];
 
   // 当前消息 id
   currentMessageId: WritableAtom<string | undefined> =
@@ -51,15 +58,29 @@ export class ChatStore {
       import.meta.hot.data.artifacts = this.artifacts;
       import.meta.hot.data.actionAlert = this.actionAlert;
       import.meta.hot.data.currentDescription = this.currentDescription;
+      import.meta.hot.dispose(() => {
+        this.dispose();
+      });
     }
 
     this.setupCoordination();
   }
 
   private setupCoordination() {
-    this.artifacts.listen(() => {
-      this.currentDescription.set(this.firstArtifact?.title || '未命名页面');
+    const unsubscribe = this.artifacts.listen(() => {
+      const pageTitle = this.firstArtifact?.title;
+      const currentDescription = this.currentDescription.get();
+
+      if (shouldUsePageTitleAsChatDescription(currentDescription, pageTitle)) {
+        this.currentDescription.set(resolveChatDescription(pageTitle));
+        return;
+      }
+
+      if (!currentDescription) {
+        this.currentDescription.set(DEFAULT_CHAT_DESCRIPTION);
+      }
     });
+    this.cleanupCallbacks.push(unsubscribe);
   }
 
   get firstArtifact(): ArtifactState | undefined {
@@ -73,6 +94,20 @@ export class ChatStore {
 
   get description() {
     return this.currentDescription;
+  }
+
+  applyGeneratedDescription(description?: string) {
+    if (!description || !isUntitledChatDescription(this.currentDescription.get())) {
+      return;
+    }
+
+    this.currentDescription.set(resolveChatDescription(description));
+  }
+
+  ensureDescription() {
+    if (!this.currentDescription.get()) {
+      this.currentDescription.set(DEFAULT_CHAT_DESCRIPTION);
+    }
   }
 
   get alert() {
@@ -264,5 +299,11 @@ export class ChatStore {
     });
 
     await Promise.all(runners.map((runner) => runner.waitForIdle()));
+  }
+
+  private dispose() {
+    for (const callback of this.cleanupCallbacks.splice(0).reverse()) {
+      callback();
+    }
   }
 }

@@ -62,6 +62,12 @@ export type DesignMdAnnotation = {
   content: string;
 };
 
+export type ChatDescriptionAnnotation = {
+  chatId: string;
+  description: string;
+  source: 'default' | 'ai';
+};
+
 export type PreparationStage =
   | 'history-summary'
   | 'candidate-pages'
@@ -113,6 +119,7 @@ export type UPageDataParts = {
   progress: ProgressAnnotation;
   summary: SummaryAnnotation;
   'design-md': DesignMdAnnotation;
+  'chat-description': ChatDescriptionAnnotation;
   'preparation-stage': PreparationStageAnnotation;
   'upage-page': UPagePagePart;
   'upage-block-start': UPageBlockAnnotation;
@@ -141,6 +148,8 @@ export type PartialPatchOp = {
   name?: unknown;
   value?: unknown;
   text?: unknown;
+  classes?: unknown;
+  property?: unknown;
 };
 
 export type { PatchOp, UPageAction, UPageActionType };

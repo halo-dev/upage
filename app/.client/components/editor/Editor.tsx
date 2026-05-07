@@ -58,6 +58,7 @@ export const EditorStudio = memo(
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const chatHistory = useChatHistory();
     const onPatchAppliedRef = useRef(onPatchApplied);
+    const currentPatchRef = useRef<EditorPatch | undefined>(undefined);
 
     useEffect(() => {
       onPatchAppliedRef.current = onPatchApplied;
@@ -138,6 +139,8 @@ export const EditorStudio = memo(
     }
 
     useEffect(() => {
+      currentPatchRef.current = currentPatch;
+
       const editor = editorRef.current;
 
       if (!editor) {
@@ -184,6 +187,13 @@ export const EditorStudio = memo(
     const handleEditorReady = useCallback(
       async (editor: Editor) => {
         editorRef.current = editor ?? null;
+
+        const missedPatch = currentPatchRef.current;
+        if (missedPatch) {
+          pendingPatchRef.current = missedPatch;
+          setEditorDocument(editor, missedPatch);
+        }
+
         if (onReady) {
           onReady(editor);
         }

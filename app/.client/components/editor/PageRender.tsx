@@ -129,9 +129,28 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
       element.blur();
     }, []);
 
+    const initialPageContent = useCallback(() => {
+      if (!contentRef.current) {
+        return;
+      }
+
+      hasUnsavedChangesRef.current = false;
+      lastContentRef.current = documentContentRef.current;
+      contentRef.current.innerHTML = documentContentRef.current;
+      executeScripts(contentRef.current);
+      const event = new Event('DOMContentLoaded', {
+        bubbles: true,
+        cancelable: true,
+      });
+      frameRef.current?.contentDocument?.dispatchEvent(event);
+    }, [ref, documentContentRef]);
+
     useEffect(() => {
       documentContentRef.current = document.content;
-    }, [document.content]);
+      if (isMountedRef.current && lastContentRef.current === null && document.content) {
+        initialPageContent();
+      }
+    }, [document.content, initialPageContent]);
 
     const handleSave = useCallback(() => {
       if (!onSave || !hasUnsavedChangesRef.current || !frameRef.current) {
@@ -428,22 +447,6 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
       }
       // 如果 document 的 content 不为空，则设置为初始内容。
     }, [isCurrentPage, setupMutationObserver, handleKeyDown, setupAutoScrollPauseDetection]);
-
-    const initialPageContent = useCallback(() => {
-      if (!contentRef.current) {
-        return;
-      }
-
-      hasUnsavedChangesRef.current = false;
-      lastContentRef.current = documentContentRef.current;
-      contentRef.current.innerHTML = documentContentRef.current;
-      executeScripts(contentRef.current);
-      const event = new Event('DOMContentLoaded', {
-        bubbles: true,
-        cancelable: true,
-      });
-      frameRef.current?.contentDocument?.dispatchEvent(event);
-    }, [ref, documentContentRef]);
 
     // 初始化的 HTML 内容，如果有 HTML 所需的一些外部资源，可以在这里添加。但需要注意的是，导出时，需要将这些资源也导出。
     const initialContent = `

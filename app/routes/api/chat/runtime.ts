@@ -4,6 +4,7 @@ import { ChatUsageStatus } from '~/.server/service/chat-usage';
 import type {
   AgentErrorPhase,
   AgentRunStatus,
+  ChatDescriptionAnnotation,
   ChatUIMessage,
   GuardrailStopReason,
   PreparationStageAnnotation,
@@ -38,6 +39,14 @@ export function createChatStreamEventWriters({
     });
   };
 
+  const writeChatDescriptionEvent = (event: ChatDescriptionAnnotation) => {
+    writer.write({
+      type: 'data-chat-description',
+      id: `chat-description-${messageId}-${event.source}`,
+      data: event,
+    });
+  };
+
   const writeDesignSystemStreamEvent = createStreamTextUIMessageWriter({
     writer,
     idPrefix: designStreamPartId,
@@ -57,6 +66,7 @@ export function createChatStreamEventWriters({
   });
 
   return {
+    writeChatDescriptionEvent,
     writePreparationStageEvent,
     writeUpageBlockStartEvent,
     writeDesignSystemStreamEvent,

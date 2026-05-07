@@ -15,6 +15,12 @@ function filterValidPages<T extends { name: string }>(pages: T[]) {
   return pages.filter((page) => typeof page.name === 'string' && page.name.trim().length > 0);
 }
 
+function getExistingPageNames(pages: PageMap) {
+  return Object.entries(pages)
+    .filter(([, page]) => page !== undefined)
+    .map(([pageName]) => pageName);
+}
+
 export type WebBuilderViewType = 'code' | 'diff' | 'preview';
 
 export type GetProjectFilesOptions = {
@@ -36,6 +42,7 @@ export class WebBuilderStore {
   readonly previewsStore: PreviewsStore;
   readonly pagesStore: PagesStore;
   readonly editorStore: EditorStore;
+  private cleanupCallbacks: Array<() => void> = [];
 
   // 是否显示 webBuilder
   showWorkbench: WritableAtom<boolean> = import.meta.hot?.data?.showWorkbench ?? atom(false);
@@ -51,17 +58,21 @@ export class WebBuilderStore {
     if (import.meta.hot && import.meta.hot.data) {
       import.meta.hot.data.showWorkbench = this.showWorkbench;
       import.meta.hot.data.currentView = this.currentView;
+      import.meta.hot.dispose(() => {
+        this.dispose();
+      });
     }
 
     this.setupCoordination();
   }
 
   private setupCoordination() {
-    this.currentView.listen((view) => {
+    const unsubscribe = this.currentView.listen((view) => {
       if (view === 'preview') {
         this.setPreviews();
       }
     });
+    this.cleanupCallbacks.push(unsubscribe);
   }
 
   /**
@@ -223,19 +234,17 @@ export class WebBuilderStore {
    */
   async deletePage(pageName: string) {
     try {
+      const existingPageNames = getExistingPageNames(this.pagesStore.pages.get());
+      if (existingPageNames.length <= 1) {
+        return false;
+      }
+
       const currentDocument = this.editorStore.currentDocument.get();
       const isInCurrentPage = currentDocument?.name === pageName;
       const success = await this.pagesStore.deletePage(pageName);
       if (success) {
         if (isInCurrentPage) {
-          const pages = this.pagesStore.pages.get();
-          let nextPage: string | undefined = undefined;
-
-          for (const [path] of Object.entries(pages)) {
-            nextPage = path;
-            break;
-          }
-
+          const nextPage = getExistingPageNames(this.pagesStore.pages.get())[0];
           this.setSelectedPage(nextPage);
         }
       }
@@ -286,6 +295,12 @@ export class WebBuilderStore {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       logger.error(`导出 HTML 文件失败: ${errorMessage}`);
       toast.error(`导出 HTML 文件失败: ${errorMessage}`);
+    }
+  }
+
+  private dispose() {
+    for (const callback of this.cleanupCallbacks.splice(0).reverse()) {
+      callback();
     }
   }
 }

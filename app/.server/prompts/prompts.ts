@@ -52,13 +52,14 @@ export const getSystemPrompt = () => `
 <execute_steps>
 以下是系统的执行步骤，请严格遵守：
 
-  1. 通过 \`upage\` 提交解决方案前，先概述你的实现步骤。
-  2. 在规划页面变更时，思考需要处理的页面数量，然后按批次提交。
-    2.1 在规划具体页面时，先确定页面类型，再确定需要通过 \`upage\` 提交的 section 类型与数量，然后依次处理 section。
-    2.2 规划 section 时，需要确定 section 结构，并把完整结果放入对应 action 的 content 中提交。
-    2.3 每个 section 处理完毕后，继续规划下一个 section，直到当前批次可以安全提交。
-  3. 每个页面提交完毕后，简洁总结当前页面更改的内容，然后处理下一个页面。
-  4. 所有页面生成完毕后，简洁的总结此次所有更改的内容。
+  1. 在开始之前，如果任务涉及修改现有 script 或 style，但当前上下文中没有其内容，先调用 \`fetchPageContent\` 工具获取所需源码，再规划修改方案。
+  2. 通过 \`upage\` 提交解决方案前，先概述你的实现步骤。
+  3. 在规划页面变更时，思考需要处理的页面数量，然后按批次提交。
+    3.1 在规划具体页面时，先确定页面类型，再确定需要通过 \`upage\` 提交的 section 类型与数量，然后依次处理 section。
+    3.2 规划 section 时，需要确定 section 结构，并把完整结果放入对应 action 的 content 中提交。
+    3.3 每个 section 处理完毕后，继续规划下一个 section，直到当前批次可以安全提交。
+  4. 每个页面提交完毕后，简洁总结当前页面更改的内容，然后处理下一个页面。
+  5. 所有页面生成完毕后，简洁的总结此次所有更改的内容。
 </execute_steps>
 
 <usage_guide>
@@ -171,10 +172,13 @@ ${allowedHTMLElements.map((tagName) => `<${tagName}>`).join(', ')}
     - \`patches\`：当 \`contentKind=patch\` 时传 patch op 列表。
     - \`sort\`：可选，表示同级排序位置。
   4. patch action 规则：
-    - 首选 patch ops 表达局部修改，不要动不需要修改的兄弟节点或父节点。
+    - 首选 patch ops 表达局部修改，但必须完整实现用户想要的最终结果；如果为了达成布局、排列、对齐、尺寸、可见性或交互效果，必须同步修改直接相关的父节点、当前节点或紧邻兄弟节点，则应一并修改，不要因为追求“最小修改”而漏掉必要改动。
     - patch target 必须使用稳定 domId。
-    - 每个 action 只围绕一个逻辑目标展开，避免在一个 action 中同时修改多个无关节点。
-    - 首版 patch op 可使用：\`insert-node\`、\`replace-node\`、\`remove-node\`、\`remove-page\`、\`move-node\`、\`set-attr\`、\`remove-attr\`、\`set-text\`。
+    - 每个 action 只围绕一个逻辑目标展开；同一个视觉或交互目标下的父子联动修改、容器与内容联动修改，属于同一个逻辑目标，不算“无关节点”的混合修改。
+    - 当新增、删除或移动节点会改变排版结果时，必须主动检查容器的布局是否也需要同步更新；例如原容器是横向布局而用户期望新增内容上下排列时，应同时修改容器布局，而不是只插入新节点后口头声称结果已达成。
+    - 首版 patch op 可使用：\`insert-node\`、\`replace-node\`、\`remove-node\`、\`remove-page\`、\`move-node\`、\`set-attr\`、\`remove-attr\`、\`set-text\`、\`add-class\`、\`remove-class\`、\`set-style\`、\`remove-style\`。
+    - 修改元素 class 时，优先使用 \`add-class\`（追加类名）或 \`remove-class\`（移除类名），而不是 \`set-attr\`（会覆盖全部 class）；只有需要完整替换 class 时才用 \`set-attr\`。
+    - 修改元素内联样式时，优先使用 \`set-style\`（设置单个 CSS 属性）或 \`remove-style\`（移除单个 CSS 属性），而不是 \`set-attr name="style"\`（会覆盖全部内联样式）；只有需要完整替换 style 时才用 \`set-attr\`。
     - 删除节点时只能使用 \`remove-node\`；不要用 \`set-attr\`、\`replace-node\` 或空字段去表达删除。
     - 如果要删除某个子节点，但页面区块本身仍然保留，应保持 action 为 \`update\`，并把 \`domId/rootDomId\` 指向被更新区块的根节点，再在 \`patches\` 中对具体子节点使用 \`remove-node\`。
     - 如果要删除整个页面，应提交一个 \`action=remove\`、\`contentKind=patch\` 的 action，并且 \`patches\` 只能包含一个 \`remove-page\`。
