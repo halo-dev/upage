@@ -254,10 +254,10 @@ describe('AssistantMessage', () => {
 
     render(<AssistantMessage message={message} />);
 
-    expect(screen.getByText('上下文准备')).toBeTruthy();
-    expect(screen.getByText('相关页面筛选')).toBeTruthy();
-    expect(screen.getByText('页面：index、pricing')).toBeTruthy();
-    expect(screen.getAllByText('相关页面筛选')).toHaveLength(1);
+    expect(screen.queryByText('上下文准备')).toBeNull();
+    expect(screen.getByText('筛选相关页面')).toBeTruthy();
+    expect(screen.getByText(/相关页面：index、pricing/)).toBeTruthy();
+    expect(screen.getByText('步骤 1')).toBeTruthy();
   });
 
   it('should not render preparation timeline without preparation tool parts', () => {
@@ -284,7 +284,7 @@ describe('AssistantMessage', () => {
     expect(screen.queryByText('历史摘要')).toBeNull();
   });
 
-  it('should hide preparation tool cards when preparation timeline is present', () => {
+  it('should keep preparation tool cards visible inside steps even when stage annotations exist', () => {
     const message: ChatUIMessage = {
       id: 'assistant-message-preparation-tools',
       role: 'assistant',
@@ -331,9 +331,10 @@ describe('AssistantMessage', () => {
 
     render(<AssistantMessage message={message} />);
 
-    expect(screen.getByText('上下文准备')).toBeTruthy();
-    expect(screen.queryByText('生成历史摘要')).toBeNull();
+    expect(screen.queryByText('上下文准备')).toBeNull();
+    expect(screen.getByText('生成历史摘要')).toBeTruthy();
     expect(screen.getByText('筛选相关页面')).toBeTruthy();
+    expect(screen.getByText('步骤 1')).toBeTruthy();
   });
 
   it('should keep preparation tool cards visible when their stage is absent from the timeline', () => {
@@ -383,9 +384,10 @@ describe('AssistantMessage', () => {
 
     render(<AssistantMessage message={message} />);
 
-    expect(screen.getByText('上下文准备')).toBeTruthy();
-    expect(screen.queryByText('生成历史摘要')).toBeNull();
+    expect(screen.queryByText('上下文准备')).toBeNull();
+    expect(screen.getByText('生成历史摘要')).toBeTruthy();
     expect(screen.getByText('筛选相关页面')).toBeTruthy();
+    expect(screen.getByText('步骤 1')).toBeTruthy();
   });
 
   it('should keep streaming tool-upage input as a tool status without artifact cards', () => {
@@ -1194,7 +1196,7 @@ describe('AssistantMessage', () => {
     expect(screen.queryByTestId('step-container-2')).toBeNull();
   });
 
-  it('should hide duplicate preparation step when preparation timeline is present', () => {
+  it('should keep preparation-only steps visible when stage annotations exist', () => {
     const message: ChatUIMessage = {
       id: 'assistant-message-prepare-deduped',
       role: 'assistant',
@@ -1228,12 +1230,12 @@ describe('AssistantMessage', () => {
 
     render(<AssistantMessage message={message} />);
 
-    expect(screen.getByText('上下文准备')).toBeTruthy();
-    expect(screen.queryByText('生成历史摘要')).toBeNull();
-    expect(screen.queryByText('步骤 1')).toBeNull();
+    expect(screen.queryByText('上下文准备')).toBeNull();
+    expect(screen.getByText('生成历史摘要')).toBeTruthy();
+    expect(screen.getByText('步骤 1')).toBeTruthy();
   });
 
-  it('should exclude design system from preparation timeline and keep the tool step visible', () => {
+  it('should render design system preparation in its own step instead of a separate timeline', () => {
     const message: ChatUIMessage = {
       id: 'assistant-message-design-system-separated',
       role: 'assistant',
@@ -1286,11 +1288,48 @@ describe('AssistantMessage', () => {
 
     render(<AssistantMessage message={message} isStreaming />);
 
-    expect(screen.getByText('上下文准备')).toBeTruthy();
-    expect(screen.queryByText('正在准备设计系统规范。')).toBeNull();
-    expect(screen.getByText('步骤 1')).toBeTruthy();
+    expect(screen.queryByText('上下文准备')).toBeNull();
+    expect(screen.getByTestId('step-container-1')).toBeTruthy();
+    expect(screen.getByTestId('step-container-2')).toBeTruthy();
     expect(screen.getByText('准备设计系统')).toBeTruthy();
     expect(screen.getByText('正在准备设计系统规范...')).toBeTruthy();
+  });
+
+  it('should render design system thinking inline with the execution step', () => {
+    const message: ChatUIMessage = {
+      id: 'assistant-message-design-system-inline-thinking',
+      role: 'assistant',
+      parts: [
+        {
+          type: 'data-preparation-stage',
+          data: {
+            stage: 'design-system',
+            status: 'in-progress',
+            order: 1,
+            label: '设计系统',
+            message: '正在准备设计系统规范。',
+            detail: '先整理配色与间距规则，再补齐组件层级约束。',
+          },
+        },
+        {
+          type: 'step-start',
+        },
+        {
+          type: 'tool-ensureDesignSystem',
+          toolCallId: 'tool-ensure-design-system-inline',
+          state: 'input-available',
+          input: {},
+        },
+      ],
+    };
+
+    render(<AssistantMessage message={message} isStreaming />);
+
+    expect(screen.queryByText('上下文准备')).toBeNull();
+    expect(screen.getByText('步骤 1')).toBeTruthy();
+    expect(screen.getByText('思考过程')).toBeTruthy();
+    expect(screen.getByText('先整理配色与间距规则，再补齐组件层级约束。')).toBeTruthy();
+    expect(screen.getByText('准备设计系统')).toBeTruthy();
   });
 
   it('should render ensure design system tool while it is running', () => {

@@ -10,6 +10,7 @@ type MutationToolName = 'announceUpageBlock' | 'upage' | 'finishRun';
 type MutationToolContext = {
   state: PageBuilderAgentState;
   onUpageBlockStart?: (block: UPageBlockAnnotation) => void;
+  onDraftCheckpoint?: (page: Parameters<Parameters<typeof createUPageTool>[0]>[0]) => Promise<void> | void;
   markEffectiveTool: (toolName: string) => void;
   markInvalidToolCall: (
     toolName: MutationToolName,
@@ -20,9 +21,21 @@ type MutationToolContext = {
   submittedActionKeys: Set<string>;
 };
 
+function resolveFinishRunRequiresMutation(
+  state: Pick<PageBuilderAgentState, 'effectiveMutationCount' | 'hasRejectedPageMutation'>,
+  requiresMutation?: boolean,
+) {
+  if (typeof requiresMutation === 'boolean') {
+    return requiresMutation;
+  }
+
+  return state.effectiveMutationCount > 0 || state.hasRejectedPageMutation;
+}
+
 export function createPageBuilderMutationTools({
   state,
   onUpageBlockStart,
+  onDraftCheckpoint,
   markEffectiveTool,
   markInvalidToolCall,
   announcedBlockKeys,
@@ -99,7 +112,7 @@ export function createPageBuilderMutationTools({
     },
   });
 
-  const upageTool = createUPageTool((page) => {
+  const upageTool = createUPageTool(async (page) => {
     let emittedNewAction = false;
     let newActionCount = 0;
 
@@ -119,6 +132,7 @@ export function createPageBuilderMutationTools({
       state.effectiveMutationCount += newActionCount;
       state.hasRejectedPageMutation = false;
       markEffectiveTool('upage');
+      await onDraftCheckpoint?.(page);
       return;
     }
 
@@ -132,20 +146,38 @@ export function createPageBuilderMutationTools({
       reason: z.string().optional(),
       requiresMutation: z
         .boolean()
+        .optional()
         .describe(
-          '你对当前这轮请求的内部判断：true 表示这轮任务必须产生实际页面变更才算完成；false 表示本轮只需说明、分析、解释或明确无法修改。',
+          '你对当前这轮请求的内部判断：true 表示这轮任务必须产生实际页面变更才算完成；false 表示本轮只需说明、分析、解释或明确无法修改。若只是说明信息不足、缺少参考或暂时无法继续，应传 false。',
         ),
     }),
     execute: async ({ reason, requiresMutation }) => {
-      if (shouldBlockPrematureFinishRun(state, requiresMutation)) {
-        const blockedReason = requiresMutation
+      const resolvedRequiresMutation = resolveFinishRunRequiresMutation(state, requiresMutation);
+      const shouldBlockForTemplateReference = Boolean(
+        !state.templateReferenceReady && !state.templateReferenceAttempted,
+      );
+
+      if (shouldBlockForTemplateReference) {
+        const blockedReason = '当前会话已选择借鉴模板，必须先完成或至少尝试一次模板参考分析，才能结束本轮。';
+        markInvalidToolCall('finishRun', blockedReason);
+        return {
+          acknowledged: false,
+          reason: blockedReason,
+          requiresMutation: resolvedRequiresMutation,
+          effectiveMutationCount: state.effectiveMutationCount,
+          invalidStepCount: state.invalidStepCount,
+        };
+      }
+
+      if (shouldBlockPrematureFinishRun(state, resolvedRequiresMutation)) {
+        const blockedReason = resolvedRequiresMutation
           ? '你已判断本轮任务必须产生实际页面变更，但当前还没有成功提交任何页面修改；请继续完成修改，或重新审视你的任务判断。'
           : '上一轮页面提交未产生有效变更，请先修正问题或明确说明无法继续修改';
         markInvalidToolCall('finishRun', blockedReason);
         return {
           acknowledged: false,
           reason: blockedReason,
-          requiresMutation,
+          requiresMutation: resolvedRequiresMutation,
           effectiveMutationCount: state.effectiveMutationCount,
           invalidStepCount: state.invalidStepCount,
         };
@@ -159,7 +191,7 @@ export function createPageBuilderMutationTools({
       return {
         acknowledged: true,
         reason,
-        requiresMutation,
+        requiresMutation: resolvedRequiresMutation,
         effectiveMutationCount: state.effectiveMutationCount,
         invalidStepCount,
       };

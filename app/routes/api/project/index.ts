@@ -2,7 +2,7 @@ import { type ActionFunctionArgs } from 'react-router';
 import { requireAuth } from '~/.server/service/auth';
 import type { PageV2CreateParams } from '~/.server/service/page-v2';
 import { prisma } from '~/.server/service/prisma';
-import { saveOrUpdateProject } from '~/.server/service/project-service';
+import { clearProjectSnapshot, saveOrUpdateProject } from '~/.server/service/project-service';
 import type { SectionCreateParams } from '~/.server/service/section';
 import { errorResponse, successResponse } from '~/.server/utils/api-response';
 import { createScopedLogger } from '~/.server/utils/logger';
@@ -27,6 +27,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const formData = await request.formData();
     const messageId = formData.get('messageId')?.toString();
+    const clearDraftMessageId = formData.get('clearDraftMessageId')?.toString();
     const pagesStr = formData.get('pages')?.toString();
     const sectionsStr = formData.get('sections')?.toString();
 
@@ -44,6 +45,7 @@ export async function action({ request }: ActionFunctionArgs) {
       where: { id: messageId },
       select: {
         id: true,
+        chatId: true,
         chat: {
           select: {
             userId: true,
@@ -58,6 +60,29 @@ export async function action({ request }: ActionFunctionArgs) {
     if (message.chat.userId !== userId) {
       logger.warn(`项目保存失败: 用户 ${userId} 无权保存消息 ${messageId} 的项目数据`);
       return errorResponse(403, '无权保存当前项目');
+    }
+
+    if (clearDraftMessageId) {
+      const draftMessage = await prisma.message.findUnique({
+        where: { id: clearDraftMessageId },
+        select: {
+          id: true,
+          chatId: true,
+          chat: {
+            select: {
+              userId: true,
+            },
+          },
+        },
+      });
+
+      if (!draftMessage) {
+        return errorResponse(400, '待清理的草稿消息不存在');
+      }
+
+      if (draftMessage.chat.userId !== userId || draftMessage.chatId !== message.chatId) {
+        return errorResponse(403, '无权清理当前草稿');
+      }
     }
 
     let pages: PageV2CreateParams[];
@@ -88,6 +113,10 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const result = await saveOrUpdateProject(pages, sections);
+
+    if (clearDraftMessageId) {
+      await clearProjectSnapshot(clearDraftMessageId);
+    }
 
     return successResponse(result, '项目保存成功');
   } catch (error) {

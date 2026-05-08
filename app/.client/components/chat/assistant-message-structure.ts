@@ -22,7 +22,9 @@ export type PreparationToolPartType =
   | 'tool-selectRelevantPages'
   | 'tool-buildPageOutlineSnapshot'
   | 'tool-buildPageDetailedSnapshot'
-  | 'tool-buildPageSnapshot';
+  | 'tool-ensureTemplateReference'
+  | 'tool-buildPageSnapshot'
+  | 'tool-ensureDesignSystem';
 
 export function buildStepGroups(parts: ChatUIMessage['parts']) {
   const leadingParts: StructuredPartItem[] = [];
@@ -97,22 +99,13 @@ export function mergeRelatedPageChangeSteps(steps: StepGroup[]) {
 
 export function getRenderableSteps(
   steps: StepGroup[],
-  hasPreparationTimeline: boolean,
-  timelinePreparationToolTypes: Set<PreparationToolPartType>,
   structuredPageSource: RenderableStructuredPageSource | undefined,
   renderedPageActionKeys: Set<string>,
   blockArtifacts: Map<number, UPagePagePart>,
 ) {
   return steps.filter((step) => {
     return step.parts.some((item) =>
-      isVisibleStructuredPart(
-        item,
-        hasPreparationTimeline,
-        timelinePreparationToolTypes,
-        structuredPageSource,
-        renderedPageActionKeys,
-        blockArtifacts,
-      ),
+      isVisibleStructuredPart(item, structuredPageSource, renderedPageActionKeys, blockArtifacts),
     );
   });
 }
@@ -129,6 +122,10 @@ export function getPreparationToolTypeByStage(
       return 'tool-buildPageOutlineSnapshot';
     case 'precise-locate':
       return 'tool-buildPageDetailedSnapshot';
+    case 'template-reference':
+      return 'tool-ensureTemplateReference';
+    case 'design-system':
+      return 'tool-ensureDesignSystem';
     default:
       return null;
   }
@@ -144,20 +141,15 @@ export function isHiddenToolPart(part: Extract<ChatUIMessage['parts'][number], {
   return part.type === 'tool-announceUpageBlock';
 }
 
-export function shouldHidePreparationToolPart(
-  part: Extract<ChatUIMessage['parts'][number], { type: `tool-${string}` }>,
-  timelinePreparationToolTypes: Set<PreparationToolPartType>,
-) {
-  return isPreparationToolPart(part) && timelinePreparationToolTypes.has(part.type);
-}
-
 export function isPreparationToolPart(part: Extract<ChatUIMessage['parts'][number], { type: `tool-${string}` }>) {
   return (
     part.type === 'tool-historySummary' ||
     part.type === 'tool-selectRelevantPages' ||
     part.type === 'tool-buildPageOutlineSnapshot' ||
     part.type === 'tool-buildPageDetailedSnapshot' ||
-    part.type === 'tool-buildPageSnapshot'
+    part.type === 'tool-ensureTemplateReference' ||
+    part.type === 'tool-buildPageSnapshot' ||
+    part.type === 'tool-ensureDesignSystem'
   );
 }
 
@@ -350,8 +342,6 @@ function createTextSignature(text: string) {
 
 function isVisibleStructuredPart(
   item: StructuredPartItem,
-  hasPreparationTimeline: boolean,
-  timelinePreparationToolTypes: Set<PreparationToolPartType>,
   structuredPageSource: RenderableStructuredPageSource | undefined,
   renderedPageActionKeys: Set<string>,
   blockArtifacts: Map<number, UPagePagePart>,
@@ -376,10 +366,6 @@ function isVisibleStructuredPart(
 
   if (isToolPart(part)) {
     if (isHiddenToolPart(part)) {
-      return false;
-    }
-
-    if (hasPreparationTimeline && shouldHidePreparationToolPart(part, timelinePreparationToolTypes)) {
       return false;
     }
 

@@ -1,6 +1,6 @@
 import { createScopedLogger } from '~/.server/utils/logger';
-import { createOrUpdatePagesV2, type PageV2CreateParams } from './page-v2';
-import { createOrUpdateManySections, type SectionCreateParams } from './section';
+import { createOrUpdatePagesV2, deletePageV2ByMessageId, type PageV2CreateParams } from './page-v2';
+import { createOrUpdateManySections, deleteMessageSections, type SectionCreateParams } from './section';
 
 const logger = createScopedLogger('projectService');
 
@@ -91,6 +91,60 @@ export async function saveOrUpdateProject(pages: PageV2CreateParams[], sections:
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '未知错误';
     logger.error(`保存页面和部分数据失败: ${errorMessage}`);
+    throw error;
+  }
+}
+
+export async function replaceProjectSnapshot(
+  messageId: string,
+  pages: PageV2CreateParams[],
+  sections: SectionCreateParams[],
+) {
+  try {
+    await clearProjectSnapshot(messageId);
+
+    if (pages.length === 0) {
+      return {
+        success: true,
+        pages: [],
+        sections: [],
+      };
+    }
+
+    const normalizedPages = pages.map((page) => ({
+      ...page,
+      messageId,
+    }));
+    const normalizedSections = sections.map((section) => ({
+      ...section,
+      messageId,
+    }));
+
+    if (normalizedSections.length === 0) {
+      const pagesResult = await createOrUpdatePagesV2(normalizedPages);
+      return {
+        success: true,
+        pages: pagesResult,
+        sections: [],
+      };
+    }
+
+    return await saveOrUpdateProject(normalizedPages, normalizedSections);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`替换项目快照失败: ${errorMessage}`);
+    throw error;
+  }
+}
+
+export async function clearProjectSnapshot(messageId: string) {
+  try {
+    await deleteMessageSections(messageId);
+    await deletePageV2ByMessageId(messageId);
+    return true;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    logger.error(`清理项目快照失败: ${errorMessage}`);
     throw error;
   }
 }

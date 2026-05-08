@@ -3,14 +3,15 @@ import { useStore } from '@nanostores/react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import classNames from 'classnames';
 import { useAnimate } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useSnapScroll } from '~/.client/hooks';
 import { useChatMessage } from '~/.client/hooks/useChatMessage';
 import { aiState, clearDesignSystem, setChatId, setChatStarted, setDesignSystem } from '~/.client/stores/ai-state';
 import { webBuilderStore } from '~/.client/stores/web-builder';
 import { extractBrandNameFromDesignMd } from '~/.client/utils/design-system';
-import type { ChatMessage } from '~/types/chat';
+import { createScopedLogger } from '~/.client/utils/logger';
+import type { ChatMessage, TemplateReference } from '~/types/chat';
 import { WebBuilder } from '../webbuilder/WebBuilder';
 import styles from './BaseChat.module.scss';
 import ChatAlert from './ChatAlert';
@@ -25,6 +26,8 @@ export type ImageData = {
   base64?: string;
 };
 
+const logger = createScopedLogger('Chat');
+
 export function getChatArtifactSyncState(
   displayedMessages: Array<Pick<ChatMessage, 'id'>>,
   reloadedMessages?: Array<Pick<ChatMessage, 'id'>>,
@@ -35,14 +38,19 @@ export function getChatArtifactSyncState(
   };
 }
 
-export function getChatStateAfterInitialMessage(state?: { designMd?: string; designBrand?: string }) {
-  if (!state?.designMd) {
+export function getChatStateAfterInitialMessage(state?: {
+  designMd?: string;
+  designBrand?: string;
+  templateReference?: TemplateReference;
+}) {
+  if (!state?.designMd && !state?.templateReference) {
     return null;
   }
 
   return {
     designMd: state.designMd,
     designBrand: state.designBrand,
+    templateReference: state.templateReference,
   };
 }
 
@@ -55,6 +63,7 @@ export function Chat({ loaderData, className }: Route.ComponentProps & { classNa
     files?: File[];
     designMd?: string;
     designBrand?: string;
+    templateReference?: TemplateReference;
   };
   const navigate = useNavigate();
   const { showChat } = useStore(aiState);
@@ -69,6 +78,9 @@ export function Chat({ loaderData, className }: Route.ComponentProps & { classNa
 
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const hasProcessedStateRef = useRef(false);
+  const activeTemplateReference = useMemo(() => {
+    return chat?.metadata?.templateReference || locationState?.templateReference;
+  }, [chat?.metadata?.templateReference, locationState?.templateReference]);
 
   useEffect(() => {
     const persistedDesignMd = chat?.metadata?.designMd;
@@ -107,9 +119,19 @@ export function Chat({ loaderData, className }: Route.ComponentProps & { classNa
     }
 
     if (locationState.message) {
+      if (locationState.templateReference) {
+        logger.info('首次进入聊天页时检测到模板引用', {
+          chatId: id,
+          templateId: locationState.templateReference.templateId,
+          templateTitle: locationState.templateReference.title,
+          sourceChatId: locationState.templateReference.sourceChatId,
+        });
+      }
+
       sendChatMessage({
         messageContent: locationState.message,
         files: locationState.files || [],
+        templateReference: locationState.templateReference,
       });
     }
 
@@ -182,6 +204,45 @@ export function Chat({ loaderData, className }: Route.ComponentProps & { classNa
                         />
                       )}
                     </div>
+                    {activeTemplateReference && (
+                      <div className="flex items-center justify-between gap-3 rounded-2xl border border-upage-elements-borderColor bg-upage-elements-background-depth-2/70 px-4 py-3">
+                        <div className="min-w-0 flex items-center gap-3">
+                          {activeTemplateReference.coverImage ? (
+                            <img
+                              src={activeTemplateReference.coverImage}
+                              alt={activeTemplateReference.title || '当前借鉴模板'}
+                              className="h-12 w-16 shrink-0 rounded-lg object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded-lg border border-dashed border-upage-elements-borderColor text-xs text-upage-elements-textTertiary">
+                              模板
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium uppercase tracking-wide text-upage-elements-textTertiary">
+                              当前借鉴模板
+                            </p>
+                            <p className="truncate text-sm font-semibold text-upage-elements-textPrimary">
+                              {activeTemplateReference.title || activeTemplateReference.templateId}
+                            </p>
+                            <p className="mt-0.5 truncate text-xs text-upage-elements-textSecondary">
+                              模板 ID: {activeTemplateReference.templateId}
+                            </p>
+                          </div>
+                        </div>
+                        {activeTemplateReference.previewUrl ? (
+                          <a
+                            className="shrink-0 rounded-lg border border-upage-elements-borderColor px-3 py-1.5 text-xs font-medium text-upage-elements-textSecondary transition-colors hover:bg-upage-elements-background-depth-2"
+                            href={activeTemplateReference.previewUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            预览模板
+                          </a>
+                        ) : null}
+                      </div>
+                    )}
                     {progressAnnotations && <ProgressCompilation data={progressAnnotations} />}
                     <div
                       className={classNames(

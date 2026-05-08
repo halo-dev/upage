@@ -15,6 +15,7 @@ type SaveProjectPayload = {
   messageId: string;
   pages: string;
   sections: string;
+  clearDraftMessageId?: string;
 };
 
 type StoredPage = NonNullable<ReturnType<typeof webBuilderStore.pagesStore.pages.get>[string]>;
@@ -28,7 +29,55 @@ function hasValidSectionPageName(section: PageSection | undefined): section is P
 }
 
 export function useProject() {
-  const { saveEditorProject } = useEditorStorage();
+  const { saveEditorProject, deleteEditorProjectByMessageId } = useEditorStorage();
+
+  function collectProjectData(options?: { strict?: boolean }) {
+    const strict = options?.strict ?? false;
+    const projectPages = Object.values(webBuilderStore.pagesStore.pages.get()).filter(hasValidPageName);
+    const projectSections = Object.values(webBuilderStore.pagesStore.sections.get())
+      .filter(hasValidSectionPageName)
+      .map((section) => ({
+        ...section,
+        actionId: section.id,
+      }));
+
+    if (projectPages.length === 0) {
+      logger.error('保存项目失败: 页面不能为空');
+      return undefined;
+    }
+
+    if (strict && projectSections.length === 0) {
+      logger.error('保存项目失败: Section 不能为空');
+      return undefined;
+    }
+
+    if (strict) {
+      const isConsistent = projectPages.every((page) => {
+        const actionIds = page.actionIds;
+        const content = page.content;
+        if (actionIds.length === 0) {
+          return true;
+        }
+        return Boolean(content);
+      });
+
+      if (!isConsistent) {
+        logger.error(
+          '保存项目失败: 页面内容与 actions 不一致',
+          JSON.stringify({
+            projectPages,
+            projectSections,
+          }),
+        );
+        return undefined;
+      }
+    }
+
+    return {
+      projectPages,
+      projectSections,
+    };
+  }
 
   /**
    * Save project data
@@ -38,7 +87,7 @@ export function useProject() {
    * @param sections page section data
    * @returns whether the project is saved successfully
    */
-  async function saveProject(messageId: string) {
+  async function saveProject(messageId: string, options?: { clearDraftMessageId?: string }) {
     if (!messageId) {
       logger.error('保存项目失败: 消息ID不能为空');
       return false;
@@ -46,48 +95,21 @@ export function useProject() {
 
     await webBuilderStore.chatStore.waitForAllActionsSettled();
 
-    // before saving, save all pages
     await webBuilderStore.saveAllPages('auto-save');
-    const projectPages = Object.values(webBuilderStore.pagesStore.pages.get()).filter(hasValidPageName);
-    const projectSections = Object.values(webBuilderStore.pagesStore.sections.get())
-      .filter(hasValidSectionPageName)
-      .map((section) => ({
-        ...section,
-        actionId: section.id,
-      }));
-    if (projectPages.length === 0 || projectSections.length === 0) {
-      logger.error('保存项目失败: 页面或 Section 不能为空');
+
+    const projectData = collectProjectData({ strict: true });
+    if (!projectData) {
       return false;
     }
-    const isConsistent = projectPages.every((page) => {
-      const actionIds = page.actionIds;
-      const content = page.content;
-      if (actionIds.length === 0) {
-        return true;
-      }
-      if (!content) {
-        return false;
-      }
-      return true;
-    });
-    if (!isConsistent) {
-      logger.error(
-        '保存项目失败: 页面内容与 actions 不一致',
-        JSON.stringify({
-          projectPages,
-          projectSections,
-        }),
-      );
-      return false;
-    }
+    const { projectPages, projectSections } = projectData;
     const projectPageV2 = projectPages.map((page) => ({ ...page, messageId }));
     try {
-      // 先保存在本地数据中
-      saveEditorProject(messageId, projectPageV2, projectSections);
+      await saveEditorProject(messageId, projectPageV2, projectSections);
       const result = await saveProjectToServer({
         messageId,
         pages: JSON.stringify(projectPageV2),
         sections: JSON.stringify(projectSections),
+        clearDraftMessageId: options?.clearDraftMessageId,
       });
 
       if (!result.success) {
@@ -95,11 +117,38 @@ export function useProject() {
         logger.error(`保存项目失败: ${result.message}`);
         return false;
       }
+      if (options?.clearDraftMessageId && options.clearDraftMessageId !== messageId) {
+        await deleteEditorProjectByMessageId(options.clearDraftMessageId);
+      }
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '未知错误';
       toast.error(`保存项目失败: ${errorMessage}`);
       logger.error(`保存项目失败: ${errorMessage}`);
+      return false;
+    }
+  }
+
+  async function saveDraftProject(messageId: string) {
+    if (!messageId) {
+      logger.error('保存草稿失败: 消息ID不能为空');
+      return false;
+    }
+
+    await webBuilderStore.saveAllPages('auto-save');
+    const projectData = collectProjectData({ strict: false });
+    if (!projectData) {
+      return false;
+    }
+
+    const { projectPages, projectSections } = projectData;
+    const projectPageV2 = projectPages.map((page) => ({ ...page, messageId }));
+
+    try {
+      return await saveEditorProject(messageId, projectPageV2, projectSections);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`保存草稿失败: ${errorMessage}`);
       return false;
     }
   }
@@ -153,6 +202,7 @@ export function useProject() {
 
   return {
     saveProject,
+    saveDraftProject,
     forkChat,
   };
 }
@@ -172,6 +222,9 @@ export async function saveProjectToServer(
     formData.append('messageId', payload.messageId);
     formData.append('pages', payload.pages);
     formData.append('sections', payload.sections);
+    if (payload.clearDraftMessageId) {
+      formData.append('clearDraftMessageId', payload.clearDraftMessageId);
+    }
 
     const response = await fetchImplementation('/api/project', {
       method: 'POST',

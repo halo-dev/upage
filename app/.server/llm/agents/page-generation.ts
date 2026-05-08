@@ -12,6 +12,8 @@ export type PreparedPageGenerationState = {
   designMd: string;
   visualSummary?: string;
   userPageContext?: string;
+  templateReferenceAnalysis?: string;
+  templateReferenceHtmlSnippets?: string;
   elementInfo?: ElementInfo;
 };
 
@@ -23,6 +25,8 @@ export function buildPageGenerationSystemPrompt({
   designMd,
   visualSummary,
   userPageContext,
+  templateReferenceAnalysis,
+  templateReferenceHtmlSnippets,
   elementInfo,
 }: PreparedPageGenerationState) {
   let systemPrompt = getSystemPrompt();
@@ -75,6 +79,26 @@ ${userPageContext}
 VISUAL SUMMARY:
 ---
 ${visualSummary}
+---
+    `;
+  }
+
+  if (templateReferenceAnalysis) {
+    systemPrompt = `${systemPrompt}
+以下是本轮生成所参考的模板摘要。你应当借鉴它的结构与视觉方向，但绝不能直接复制其品牌、文案、图片或实现细节：
+TEMPLATE REFERENCE:
+---
+${templateReferenceAnalysis}
+---
+    `;
+  }
+
+  if (templateReferenceHtmlSnippets) {
+    systemPrompt = `${systemPrompt}
+以下是从模板中截取的关键 HTML 片段。它们用于帮助你理解真实页面结构与组件组织方式，但你只能参考其布局模式，不能直接复制代码、文案或品牌元素，也不要复用其中依赖脚本解除隐藏的实现方式：
+TEMPLATE HTML SNIPPETS:
+---
+${templateReferenceHtmlSnippets}
 ---
     `;
   }

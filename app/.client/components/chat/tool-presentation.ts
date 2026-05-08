@@ -6,6 +6,7 @@ import type {
   BuildPageSnapshotToolOutput,
   ChatUIMessage,
   EnsureDesignSystemToolOutput,
+  EnsureTemplateReferenceToolOutput,
   HistorySummaryToolOutput,
   SelectRelevantPagesToolOutput,
   UPageToolOutput,
@@ -58,6 +59,8 @@ function getToolTitle(toolName: string) {
       return '精确定位页面';
     case 'buildPageSnapshot':
       return '构建页面快照';
+    case 'ensureTemplateReference':
+      return '模板参考分析';
     case 'ensureDesignSystem':
       return '准备设计系统';
     case 'upage':
@@ -117,6 +120,10 @@ function getStatusIconClass(state: ToolPart['state'], isAborted: boolean) {
 
 function getToolSummary(part: ToolPart, isAborted: boolean) {
   if (isAborted) {
+    if (part.type === 'tool-ensureTemplateReference') {
+      return '模板参考分析已中断';
+    }
+
     if (part.type === 'tool-ensureDesignSystem') {
       return '设计系统规范生成已中断';
     }
@@ -135,6 +142,16 @@ function getToolSummary(part: ToolPart, isAborted: boolean) {
 
     if (part.state === 'input-available') {
       return '正在准备设计系统规范...';
+    }
+  }
+
+  if (part.type === 'tool-ensureTemplateReference') {
+    if (part.state === 'input-streaming') {
+      return '正在生成模板参考分析...';
+    }
+
+    if (part.state === 'input-available') {
+      return '正在准备模板参考分析...';
     }
   }
 
@@ -213,6 +230,20 @@ function getToolSummary(part: ToolPart, isAborted: boolean) {
   if (part.type === 'tool-ensureDesignSystem') {
     const output = part.output as EnsureDesignSystemToolOutput;
     return output.reused ? '已复用会话中的设计系统' : '已生成新的设计系统';
+  }
+
+  if (part.type === 'tool-ensureTemplateReference') {
+    const output = part.output as EnsureTemplateReferenceToolOutput;
+    return [
+      output.available
+        ? output.reused
+          ? '已复用模板参考分析'
+          : '已生成模板参考分析'
+        : output.warning || '当前模板暂无可用参考分析',
+      typeof output.durationMs === 'number' ? `耗时：${Math.round(output.durationMs)}ms` : undefined,
+    ]
+      .filter(Boolean)
+      .join('\n');
   }
 
   if (part.type === 'tool-upage') {

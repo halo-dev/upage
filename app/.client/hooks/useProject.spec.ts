@@ -55,4 +55,25 @@ describe('saveProjectToServer', () => {
     expect(result.success).toBe(false);
     expect(result.message).toBe('sections数据格式无效');
   });
+
+  it('should include clearDraftMessageId when promoting a draft to final', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, message: '项目保存成功' }),
+    });
+
+    await saveProjectToServer(
+      {
+        messageId: 'message-1',
+        pages: '[]',
+        sections: '[]',
+        clearDraftMessageId: 'draft-message-1',
+      },
+      fetchMock as typeof fetch,
+    );
+
+    const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const formData = requestInit.body as FormData;
+    expect(formData.get('clearDraftMessageId')).toBe('draft-message-1');
+  });
 });

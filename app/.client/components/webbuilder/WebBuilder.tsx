@@ -130,9 +130,11 @@ export const WebBuilder = memo(() => {
   }, []);
 
   const onLoad = useCallback<OnLoadCallback>(async () => {
-    const pages = await handleLoadProject();
+    const projectData = await handleLoadProject();
+    const pages = projectData.pages;
     const pageMap = Object.fromEntries(pages.map((page) => [page.name, page])) as PageMap;
     webBuilderStore.setPages(pageMap);
+    webBuilderStore.chatStore.setCurrentMessageId(projectData.messageId);
   }, []);
 
   const onReady = useCallback<OnReadyCallback>((editor) => {
@@ -145,14 +147,17 @@ export const WebBuilder = memo(() => {
   }, []);
 
   // 处理保存的数据，将其转为编辑器可直接使用的格式
-  const handleLoadProject = useCallback(async (): Promise<PageData[]> => {
+  const handleLoadProject = useCallback(async (): Promise<{ messageId?: string; pages: PageData[] }> => {
     const projectData = await chatHistory?.getLoadProject?.();
-    // 新版本数据
     if (projectData?.pages) {
-      // html 为 pages 中 index 的 content
-      return projectData.pages;
+      return {
+        messageId: projectData.messageId,
+        pages: projectData.pages,
+      };
     }
-    return [];
+    return {
+      pages: [],
+    };
   }, [chatHistory]);
 
   return (

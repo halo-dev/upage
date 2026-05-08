@@ -360,6 +360,7 @@ export async function getEditorProject(
   messageId?: string,
 ): Promise<
   | {
+      messageId?: string;
       sections: Section[] | undefined;
       pages?: PageData[];
       assets?: PageAssetData[];
@@ -397,6 +398,7 @@ export async function getEditorProject(
         }));
 
         resolve({
+          messageId: data?.messageId,
           pages: deserializedPagesV2 || pagesV2,
           sections: deserializedSections,
           project,
@@ -432,6 +434,7 @@ export async function getEditorProject(
           }));
 
           resolve({
+            messageId: lastMessageProject?.messageId,
             pages: deserializedPagesV2 || pagesV2,
             sections: deserializedSections,
             project,
@@ -584,6 +587,25 @@ export function useEditorStorage() {
     }
   };
 
+  const deleteEditorProjectByMessageId = async (messageId: string | undefined) => {
+    const db = await openEditorDatabase();
+
+    if (!db || !messageId) {
+      return false;
+    }
+
+    try {
+      await deleteEditorProject(db, getChatId()!, messageId);
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      logger.error(`删除 editor 项目失败: ${errorMessage}`);
+      return false;
+    } finally {
+      db.close();
+    }
+  };
+
   /**
    * Load editor project
    *
@@ -594,6 +616,7 @@ export function useEditorStorage() {
    */
   const loadEditorProject = async (): Promise<
     | {
+        messageId?: string;
         pages?: PageData[];
         sections?: Section[];
         assets?: PageAssetData[];
@@ -608,6 +631,7 @@ export function useEditorStorage() {
     messageId?: string,
   ): Promise<
     | {
+        messageId?: string;
         pages?: PageData[];
         sections?: Section[];
         assets?: PageAssetData[];
@@ -628,6 +652,7 @@ export function useEditorStorage() {
       }
 
       return {
+        messageId: result.messageId,
         pages: result.pages,
         sections: result.sections,
         assets: result.assets,
@@ -644,6 +669,7 @@ export function useEditorStorage() {
 
   return {
     saveEditorProject,
+    deleteEditorProjectByMessageId,
     loadEditorProject,
     loadEditorProjectByMessageId,
   };

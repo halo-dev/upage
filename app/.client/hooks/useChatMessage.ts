@@ -40,7 +40,6 @@ import { mergeStreamingProgressAnnotations } from './chat-progress';
 
 export { getActiveRewindTo } from './chat-message-utils';
 
-import { useChatHistory } from './useChatHistory';
 import { useChatUsage } from './useChatUsage';
 import { useMessageParser } from './useMessageParser';
 import { useProject } from './useProject';
@@ -57,10 +56,11 @@ export function useChatMessage({
   const SAVE_PROJECT_DELAY_MS = 1000;
   const abortRequestedRef = useRef(false);
   const lastStableMessageIdRef = useRef<string | undefined>(initialMessages?.[initialMessages.length - 1]?.id);
+  const activeDraftMessageIdRef = useRef<string | undefined>(undefined);
+  const draftSaveTimerRef = useRef<number | undefined>(undefined);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const { saveProject } = useProject();
-  const chatHistory = useChatHistory();
+  const { saveProject, saveDraftProject } = useProject();
   const { refreshUsageStats } = useChatUsage();
   const { renderedTexts, parseMessages, resetParser } = useMessageParser();
   const [progressAnnotations, setProgressAnnotations] = useState<ProgressAnnotation[]>([]);
@@ -98,12 +98,18 @@ export function useChatMessage({
       setStreamingState(false);
       if (abortRequestedRef.current || isAbortLikeError(e)) {
         logger.debug('请求已按用户操作中断');
+        if (activeDraftMessageIdRef.current) {
+          void saveDraftProject(activeDraftMessageIdRef.current);
+        }
         return;
       }
 
       const errorMessage = e instanceof Error ? e.message : '未知错误';
       logger.error(`请求处理失败: ${errorMessage}`);
       toast.error(`请求处理失败: ${errorMessage}`, { position: 'bottom-right' });
+      if (activeDraftMessageIdRef.current) {
+        void saveDraftProject(activeDraftMessageIdRef.current);
+      }
 
       // 如果最后一条进度已经是 stopped 状态（服务端主动写入），则不重复追加
       setProgressAnnotations((prev) => {
@@ -131,14 +137,21 @@ export function useChatMessage({
         return;
       }
 
+      const draftMessageId = activeDraftMessageIdRef.current;
       lastStableMessageIdRef.current = message.id;
       syncRewindTo(message.id);
       setAborted(false);
       setRequestPhase('idle');
+      webBuilderStore.chatStore.setCurrentMessageId(message.id);
+      if (draftSaveTimerRef.current) {
+        window.clearTimeout(draftSaveTimerRef.current);
+      }
       setTimeout(() => {
-        // 保存 editor project
-        saveProject(message.id);
+        void saveProject(message.id, {
+          clearDraftMessageId: draftMessageId,
+        });
       }, SAVE_PROJECT_DELAY_MS);
+      activeDraftMessageIdRef.current = undefined;
       refreshUsageStats();
       logger.debug('流式响应完成');
     },
@@ -168,6 +181,44 @@ export function useChatMessage({
   useEffect(() => {
     parseMessages(messages, isLoading);
   }, [messages, isLoading, parseMessages]);
+
+  useEffect(() => {
+    if (!isLoading || activeDraftMessageIdRef.current) {
+      return;
+    }
+
+    const latestUserMessage = [...messages].reverse().find((item) => item.role === 'user');
+    if (!latestUserMessage?.id) {
+      return;
+    }
+
+    activeDraftMessageIdRef.current = latestUserMessage.id;
+    webBuilderStore.chatStore.setCurrentMessageId(latestUserMessage.id);
+  }, [messages, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading || !activeDraftMessageIdRef.current) {
+      return;
+    }
+
+    if (draftSaveTimerRef.current) {
+      window.clearTimeout(draftSaveTimerRef.current);
+    }
+
+    draftSaveTimerRef.current = window.setTimeout(() => {
+      const draftMessageId = activeDraftMessageIdRef.current;
+      if (!draftMessageId) {
+        return;
+      }
+      void saveDraftProject(draftMessageId);
+    }, SAVE_PROJECT_DELAY_MS);
+
+    return () => {
+      if (draftSaveTimerRef.current) {
+        window.clearTimeout(draftSaveTimerRef.current);
+      }
+    };
+  }, [messages, isLoading, saveDraftProject]);
 
   useEffect(() => {
     const latestAssistantMessage = [...messages].reverse().find((item) => item.role === 'assistant');
@@ -218,30 +269,18 @@ export function useChatMessage({
     addProgressMessage(stoppedProgressMessage);
   };
 
-  const restoreStableProjectSnapshot = async () => {
-    const messageId = lastStableMessageIdRef.current;
-    if (!messageId) {
-      return;
-    }
-
-    const projectData = await chatHistory?.getProjectByMessageId?.(messageId);
-    if (!projectData?.pages) {
-      return;
-    }
-
-    webBuilderStore.restoreProjectSnapshot(projectData.pages, projectData.sections);
-  };
-
   const abort = () => {
     abortRequestedRef.current = true;
     stop();
     setAborted(true);
     setRequestPhase('idle');
     setStreamingState(false);
-    webBuilderStore.chatStore.setCurrentMessageId(lastStableMessageIdRef.current);
+    webBuilderStore.chatStore.setCurrentMessageId(activeDraftMessageIdRef.current || lastStableMessageIdRef.current);
     webBuilderStore.chatStore.abortAllActions();
     addStoppedProgressMessage('响应已中断');
-    void restoreStableProjectSnapshot();
+    if (activeDraftMessageIdRef.current) {
+      void saveDraftProject(activeDraftMessageIdRef.current);
+    }
     logger.debug('流式响应中断');
   };
 
@@ -253,7 +292,7 @@ export function useChatMessage({
     setChatStarted(true);
   };
 
-  const sendChatMessage = async ({ messageContent, files, metadata }: SendChatMessageParams) => {
+  const sendChatMessage = async ({ messageContent, files, metadata, templateReference }: SendChatMessageParams) => {
     if (!messageContent?.trim()) {
       return;
     }
@@ -266,6 +305,7 @@ export function useChatMessage({
     abortRequestedRef.current = false;
     setAborted(false);
     setRequestPhase('submitted');
+    activeDraftMessageIdRef.current = undefined;
     lastStableMessageIdRef.current =
       webBuilderStore.chatStore.currentMessageId.get() || messages[messages.length - 1]?.id;
     setProgressAnnotations([createInitialProgressAnnotation()]);
@@ -288,6 +328,16 @@ export function useChatMessage({
       sections,
     });
 
+    if (templateReference) {
+      logger.info('发送聊天消息时附带模板引用', {
+        chatId: id,
+        rewindTo,
+        templateId: templateReference.templateId,
+        templateTitle: templateReference.title,
+        sourceChatId: templateReference.sourceChatId,
+      });
+    }
+
     sendMessage(
       {
         text: messageContent,
@@ -301,6 +351,7 @@ export function useChatMessage({
           designMd: getDesignMd(),
           designMdRemoved: isDesignMdUserRemoved(),
           pageSnapshot,
+          templateReference,
         },
       },
     );

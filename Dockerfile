@@ -55,6 +55,7 @@ COPY --from=build /app/public ./public
 COPY --from=build /app/package.json /app/package.json
 COPY --from=build /app/server.mjs ./
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/app/.server/prompts /app/app/.server/prompts
 
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

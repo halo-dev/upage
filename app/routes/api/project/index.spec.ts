@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { requireAuthMock, findUniqueMock, saveOrUpdateProjectMock } = vi.hoisted(() => ({
+const { requireAuthMock, findUniqueMock, saveOrUpdateProjectMock, clearProjectSnapshotMock } = vi.hoisted(() => ({
   requireAuthMock: vi.fn(),
   findUniqueMock: vi.fn(),
   saveOrUpdateProjectMock: vi.fn(),
+  clearProjectSnapshotMock: vi.fn(),
 }));
 
 vi.mock('~/.server/service/auth', () => ({
@@ -20,13 +21,17 @@ vi.mock('~/.server/service/prisma', () => ({
 
 vi.mock('~/.server/service/project-service', () => ({
   saveOrUpdateProject: saveOrUpdateProjectMock,
+  clearProjectSnapshot: clearProjectSnapshotMock,
 }));
 
 import { action } from './index';
 
-function createRequest() {
+function createRequest(options?: { clearDraftMessageId?: string }) {
   const formData = new FormData();
   formData.append('messageId', 'message-1');
+  if (options?.clearDraftMessageId) {
+    formData.append('clearDraftMessageId', options.clearDraftMessageId);
+  }
   formData.append('pages', JSON.stringify([{ name: 'index', title: '首页', content: '<main id="main"></main>' }]));
   formData.append(
     'sections',
@@ -61,6 +66,7 @@ describe('/api/project action', () => {
     });
     findUniqueMock.mockResolvedValue({
       id: 'message-1',
+      chatId: 'chat-1',
       chat: {
         userId: 'user-2',
       },
@@ -88,6 +94,7 @@ describe('/api/project action', () => {
     });
     findUniqueMock.mockResolvedValue({
       id: 'message-1',
+      chatId: 'chat-1',
       chat: {
         userId: 'user-1',
       },
@@ -104,6 +111,7 @@ describe('/api/project action', () => {
       where: { id: 'message-1' },
       select: {
         id: true,
+        chatId: true,
         chat: {
           select: {
             userId: true,
@@ -125,6 +133,46 @@ describe('/api/project action', () => {
         }),
       ],
     );
+    expect(result).toMatchObject({
+      init: {
+        status: 200,
+      },
+      data: {
+        success: true,
+      },
+    });
+  });
+
+  it('should clear the previous draft snapshot after a final save', async () => {
+    requireAuthMock.mockResolvedValue({
+      userInfo: {
+        sub: 'user-1',
+      },
+    });
+    findUniqueMock
+      .mockResolvedValueOnce({
+        id: 'message-1',
+        chatId: 'chat-1',
+        chat: {
+          userId: 'user-1',
+        },
+      })
+      .mockResolvedValueOnce({
+        id: 'draft-message-1',
+        chatId: 'chat-1',
+        chat: {
+          userId: 'user-1',
+        },
+      });
+    saveOrUpdateProjectMock.mockResolvedValue({
+      success: true,
+      pages: [],
+      sections: [],
+    });
+
+    const result = await action({ request: createRequest({ clearDraftMessageId: 'draft-message-1' }) } as never);
+
+    expect(clearProjectSnapshotMock).toHaveBeenCalledWith('draft-message-1');
     expect(result).toMatchObject({
       init: {
         status: 200,

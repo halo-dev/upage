@@ -2,10 +2,12 @@ import type { Route } from '.react-router/types/app/routes/+types/chat';
 import { useCallback } from 'react';
 import { useRouteLoaderData, useSearchParams } from 'react-router';
 import type { Section } from '~/types/actions';
+import type { ChatMessage } from '~/types/chat';
 import type { PageAssetData, PageData } from '~/types/pages';
 import { useEditorStorage } from '../persistence/editor';
 
 export interface ProjectData {
+  messageId?: string;
   pages?: PageData[];
   sections?: Section[];
   assets?: PageAssetData[];
@@ -30,6 +32,7 @@ export function useChatHistory() {
       const localProjectData = await loadEditorProjectByMessageId(messageId);
       if (localProjectData?.pages || localProjectData?.sections) {
         return {
+          messageId: localProjectData.messageId,
           pages: localProjectData.pages,
           sections: localProjectData.sections,
           assets: localProjectData.assets,
@@ -38,12 +41,13 @@ export function useChatHistory() {
       }
 
       if (!messageId) {
-        const lastMessage = chat.messages[chat.messages.length - 1];
+        const lastMessage = getLatestProjectMessage(chat.messages);
         if (!lastMessage) {
           return;
         }
 
         return {
+          messageId: lastMessage.id,
           pages: lastMessage.pagesV2 as unknown as PageData[],
           sections: normalizeSections(lastMessage.sections),
         };
@@ -55,6 +59,7 @@ export function useChatHistory() {
       }
 
       return {
+        messageId: message.id,
         pages: message.pagesV2 as unknown as PageData[],
         sections: normalizeSections(message.sections),
       };
@@ -87,6 +92,7 @@ export function useChatHistory() {
     const projectData = await loadEditorProject();
     if (projectData) {
       return {
+        messageId: projectData.messageId,
         pages: projectData.pages,
         sections: projectData.sections,
       };
@@ -142,5 +148,14 @@ function normalizeSections(sections: unknown): Section[] {
         sort: typeof candidate.sort === 'number' ? candidate.sort : undefined,
       },
     ];
+  });
+}
+
+function getLatestProjectMessage(messages: ChatMessage[]) {
+  return [...messages].reverse().find((message) => {
+    return (
+      (Array.isArray(message.pagesV2) && message.pagesV2.length > 0) ||
+      (Array.isArray(message.sections) && message.sections.length > 0)
+    );
   });
 }

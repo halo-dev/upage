@@ -278,7 +278,7 @@ export const upageInputSchema = z
     pages: pages.map((page) => normalizePageInput(page)),
   }));
 
-export function createUPageTool(onPage: (page: UPagePagePart) => void) {
+export function createUPageTool(onPage: (page: UPagePagePart) => Promise<void> | void) {
   return tool({
     description:
       '当你需要创建、更新或删除页面内容时，必须调用此工具输出结构化页面数据。请使用小批次提交：每次只处理少量区块，优先单页提交，单页单次最多 3 个区块。使用 artifact/actions 组织页面与区块变更。优先用 contentKind=patch + patches 表达局部修改；只有新增大块结构或无法安全 patch 时才回退到 html。注意：小批次和局部 patch 不等于只做最偷懒的单节点修改；只要为了完成用户要求的最终视觉、布局或交互结果，允许并且应该在同一 action 中一起修改直接相关的父节点、容器属性和新增/更新的子节点。不要因为过度追求最小修改而漏掉必要的容器联动调整。典型的必须联动修改容器的情况：容器有 flex 但没有 flex-col 时，向其中新增子节点会横排而不是竖排，必须在同一 action 里用 add-class 给容器加上 flex-col，否则视觉结果必然错误。该工具输出是最终页面结果的唯一结构化真相，不要重复提交已经发过的 actionId。调用完成后，不要立即在当前工具步骤里重复总结；最终只在 finishRun 之后输出一次简短自然语言说明。面向普通用户描述结果，不要重复任何页面内部标识、工具参数或技术实现细节。',
@@ -289,7 +289,7 @@ export function createUPageTool(onPage: (page: UPagePagePart) => void) {
       );
 
       for (const page of normalizedPages) {
-        onPage(page);
+        await onPage(page);
       }
 
       return {

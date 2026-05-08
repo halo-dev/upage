@@ -29,13 +29,11 @@ import {
   type PreparationToolPartType,
   type StepGroup,
   type StructuredPartItem,
-  shouldHidePreparationToolPart,
   shouldRenderDesignSystemPreviewFromToolPart,
 } from './assistant-message-structure';
 import { DesignSystemPreview } from './DesignSystemPreview';
 import { Markdown } from './Markdown';
 import markdownStyles from './Markdown.module.scss';
-import { PreparationTimeline } from './PreparationTimeline';
 import { RunningStatus } from './RunningStatus';
 import ThoughtBox from './ThoughtBox';
 import { ToolInvocationCard } from './ToolInvocationCard';
@@ -138,29 +136,22 @@ function StructuredMessageContent({
   const structuredPageSource = getStructuredPageSource(message);
   const renderedPageActionKeys = getRenderedPageActionKeys(messageParts, structuredPageSource);
   const blockArtifacts = getRenderableBlockArtifacts(messageParts, renderedPageActionKeys);
-  const hasPreparationToolParts = messageParts.some((part) => isToolPart(part) && isPreparationToolPart(part));
-  const preparationParts = messageParts
+  const latestPreparationStages = messageParts
     .filter(
       (part): part is Extract<(typeof messageParts)[number], { type: 'data-preparation-stage' }> =>
-        part.type === 'data-preparation-stage' && part.data.stage !== 'design-system',
+        part.type === 'data-preparation-stage',
     )
-    .map((part) => part.data as PreparationStageAnnotation);
-  const timelinePreparationToolTypes = new Set(
-    preparationParts
-      .map((part) => getPreparationToolTypeByStage(part.stage))
-      .filter((toolType): toolType is PreparationToolPartType => toolType !== null),
-  );
+    .reduce<Map<PreparationToolPartType, PreparationStageAnnotation>>((map, part) => {
+      const toolType = getPreparationToolTypeByStage(part.data.stage);
+      if (toolType) {
+        map.set(toolType, part.data as PreparationStageAnnotation);
+      }
+
+      return map;
+    }, new Map());
   const { leadingParts, steps: rawSteps } = buildStepGroups(messageParts);
   const steps = mergeRelatedPageChangeSteps(rawSteps);
-  const hasPreparationTimeline = timelinePreparationToolTypes.size > 0 && hasPreparationToolParts;
-  const visibleSteps = getRenderableSteps(
-    steps,
-    hasPreparationTimeline,
-    timelinePreparationToolTypes,
-    structuredPageSource,
-    renderedPageActionKeys,
-    blockArtifacts,
-  );
+  const visibleSteps = getRenderableSteps(steps, structuredPageSource, renderedPageActionKeys, blockArtifacts);
   const activeReasoningIndex = getActiveReasoningIndex(leadingParts, visibleSteps, isStreaming);
   const activeStep = isStreaming && visibleSteps.length > 0 ? visibleSteps[visibleSteps.length - 1] : null;
   const hasRunningActiveStep = activeStep ? hasRunningStepPart(activeStep, activeReasoningIndex) : false;
@@ -168,7 +159,6 @@ function StructuredMessageContent({
 
   return (
     <>
-      {hasPreparationTimeline ? <PreparationTimeline parts={preparationParts} isStreaming={isStreaming} /> : null}
       {leadingParts.map((item) =>
         renderStructuredPart({
           item,
@@ -176,8 +166,7 @@ function StructuredMessageContent({
           isStreaming,
           isAborted,
           insideStep: false,
-          hasPreparationTimeline,
-          timelinePreparationToolTypes,
+          latestPreparationStages,
           hasStreamedDesignSystem,
           structuredPageSource,
           renderedPageActionKeys,
@@ -209,8 +198,7 @@ function StructuredMessageContent({
                 isStreaming,
                 isAborted,
                 insideStep: true,
-                hasPreparationTimeline,
-                timelinePreparationToolTypes,
+                latestPreparationStages,
                 hasStreamedDesignSystem,
                 structuredPageSource,
                 renderedPageActionKeys,
@@ -297,8 +285,7 @@ function renderStructuredPart({
   isStreaming,
   isAborted,
   insideStep,
-  hasPreparationTimeline,
-  timelinePreparationToolTypes,
+  latestPreparationStages,
   hasStreamedDesignSystem,
   structuredPageSource,
   renderedPageActionKeys,
@@ -310,8 +297,7 @@ function renderStructuredPart({
   isStreaming: boolean;
   isAborted: boolean;
   insideStep: boolean;
-  hasPreparationTimeline: boolean;
-  timelinePreparationToolTypes: Set<PreparationToolPartType>;
+  latestPreparationStages: Map<PreparationToolPartType, PreparationStageAnnotation>;
   hasStreamedDesignSystem: boolean;
   structuredPageSource: RenderableStructuredPageSource | undefined;
   renderedPageActionKeys: Set<string>;
@@ -372,12 +358,12 @@ function renderStructuredPart({
       return null;
     }
 
-    if (hasPreparationTimeline && shouldHidePreparationToolPart(part, timelinePreparationToolTypes)) {
-      return null;
-    }
-
     const pageParts =
       isUpageToolPart(part) && structuredPageSource === 'tool-upage-output' ? getCompletedUpageToolPartPages(part) : [];
+    const preparationStage =
+      isPreparationToolPart(part) && latestPreparationStages.has(part.type)
+        ? latestPreparationStages.get(part.type)
+        : undefined;
     const designSystemPreview =
       isEnsureDesignSystemOutputPart(part) &&
       shouldRenderDesignSystemPreviewFromToolPart(part, hasStreamedDesignSystem) ? (
@@ -386,6 +372,11 @@ function renderStructuredPart({
 
     return (
       <div key={`tool-${index}`} className="flex flex-col gap-2">
+        {preparationStage?.detail ? (
+          <ThoughtBox title="思考过程" isRunning={preparationStage.status === 'in-progress'}>
+            <Markdown>{preparationStage.detail}</Markdown>
+          </ThoughtBox>
+        ) : null}
         <ToolInvocationCard part={part} runStatus={isAborted ? 'aborted' : message.metadata?.runStatus} />
         {designSystemPreview}
         {pageParts.length > 0 ? renderPageArtifacts(pageParts, message.id, index) : null}

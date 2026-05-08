@@ -1,19 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { createOrUpdatePagesV2, createOrUpdateManySections } = vi.hoisted(() => ({
-  createOrUpdatePagesV2: vi.fn(),
-  createOrUpdateManySections: vi.fn(),
-}));
+const { createOrUpdatePagesV2, createOrUpdateManySections, deletePageV2ByMessageId, deleteMessageSections } =
+  vi.hoisted(() => ({
+    createOrUpdatePagesV2: vi.fn(),
+    createOrUpdateManySections: vi.fn(),
+    deletePageV2ByMessageId: vi.fn(),
+    deleteMessageSections: vi.fn(),
+  }));
 
 vi.mock('./page-v2', () => ({
   createOrUpdatePagesV2,
+  deletePageV2ByMessageId,
 }));
 
 vi.mock('./section', () => ({
   createOrUpdateManySections,
+  deleteMessageSections,
 }));
 
-import { saveOrUpdateProject } from './project-service';
+import { replaceProjectSnapshot, saveOrUpdateProject } from './project-service';
 
 describe('saveOrUpdateProject', () => {
   beforeEach(() => {
@@ -145,5 +150,45 @@ describe('saveOrUpdateProject', () => {
         pageV2Id: 'page-v2-1',
       }),
     ]);
+  });
+
+  it('should replace an existing snapshot before persisting draft data', async () => {
+    createOrUpdatePagesV2.mockResolvedValue([
+      {
+        id: 'page-v2-1',
+        messageId: 'message-1',
+        name: 'index',
+        title: '首页',
+        content: '<main id="main"></main>',
+      },
+    ]);
+    createOrUpdateManySections.mockResolvedValue([]);
+
+    const result = await replaceProjectSnapshot(
+      'message-1',
+      [
+        {
+          messageId: 'message-1',
+          name: 'index',
+          title: '首页',
+          content: '<main id="main"></main>',
+          actionIds: [],
+        },
+      ],
+      [],
+    );
+
+    expect(deleteMessageSections).toHaveBeenCalledWith('message-1');
+    expect(deletePageV2ByMessageId).toHaveBeenCalledWith('message-1');
+    expect(createOrUpdatePagesV2).toHaveBeenCalledWith([
+      expect.objectContaining({
+        messageId: 'message-1',
+        name: 'index',
+      }),
+    ]);
+    expect(result).toMatchObject({
+      success: true,
+      sections: [],
+    });
   });
 });
