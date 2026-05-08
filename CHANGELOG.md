@@ -1,3 +1,34 @@
+## <small>[2.0.0](https://github.com/halo-dev/upage/compare/v1.0.1...v2.0.0) (2026-05-08)</small>
+### Features
+
+- add mainstream design system references, allowing the app to generate or refer to a design system before creating pages
+- automatically generate page titles before designing pages instead of using "Untitled Page"
+- add support for webpage patch operations
+- add multiple AI tools
+- add a dedicated vision model setting for visual processing when the primary model does not support multimodal capabilities
+- support viewing the AI's current thinking process
+
+### Performance Improvements
+
+- optimize prompt instructions
+- improve page saving logic to allow interrupted drafts to be saved
+- fully refresh the chat UI based on an Agent-driven approach
+
+### Bug Fixes
+
+- resolve interruption issues caused by excessively long content
+- resolve cases where content could fail to generate
+- fix the inability to scroll and view the page during page generation
+
+### Miscellaneous Chores
+
+- remove the obsolete max token configuration
+
+### Code Refactoring
+
+- refactor the page generation logic to use an Agent-based approach
+- replace the original Remix architecture with React Router v7
+
 ## <small>[1.0.1](https://github.com/halo-dev/upage/compare/v1.0.0...v1.0.1) (2025-10-11)</small>
 ### Features
 
