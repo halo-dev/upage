@@ -1,12 +1,10 @@
 import { atom } from 'nanostores';
-import type { TemplateReference } from '~/types/chat';
 import type { UPageMessageMetadata } from '~/types/message';
 
 export type SendChatMessageParams = {
   messageContent: string;
   files: File[];
   metadata?: UPageMessageMetadata;
-  templateReference?: TemplateReference;
 };
 
 export type SendChatMessageFunction = (params: SendChatMessageParams) => Promise<void>;

@@ -23,7 +23,7 @@ import { prisma } from '~/.server/service/prisma';
 import { replaceProjectSnapshot } from '~/.server/service/project-service';
 import { createScopedLogger } from '~/.server/utils/logger';
 import { accumulateUsageSnapshot, createEmptyTokenUsage, estimateAgentStepAbortUsage } from '~/.server/utils/token';
-import type { ChatMetadata, TemplateReference } from '~/types/chat';
+import type { ChatMetadata } from '~/types/chat';
 import type {
   ChatUIMessage,
   PreparationStageAnnotation,
@@ -68,8 +68,6 @@ export type ChatActionParams = {
   designMdRemoved?: boolean;
   // 用户当前尚未持久化的页面快照
   pageSnapshot?: UserPageSnapshot;
-  // 当前会话选择的借鉴模板引用
-  templateReference?: TemplateReference;
 };
 
 export type ChatActionArgs = ActionFunctionArgs & {
@@ -84,17 +82,7 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
     designMd: clientDesignMd,
     designMdRemoved,
     pageSnapshot,
-    templateReference: clientTemplateReference,
   } = await request.json<ChatActionParams>();
-  if (clientTemplateReference) {
-    logger.info('收到带模板引用的聊天请求', {
-      userId,
-      chatId,
-      templateId: clientTemplateReference.templateId,
-      templateTitle: clientTemplateReference.title,
-      sourceChatId: clientTemplateReference.sourceChatId,
-    });
-  }
   const message = await normalizeMessageFileReferences({
     userId,
     messageId: incomingMessage.id,
@@ -114,7 +102,6 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
     chatMetadata,
     clientDesignMd,
     designMdRemoved,
-    clientTemplateReference,
   });
 
   const shouldGenerateChatDescription = message.role === 'user' && isUntitledChatDescription(chat.description);
@@ -127,16 +114,6 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
   }
 
   const effectiveChatMetadata = shouldUpdate ? nextMetadata : (chatMetadata ?? nextMetadata);
-  if (effectiveChatMetadata.templateReference) {
-    logger.info('本次聊天将使用模板引用元数据', {
-      userId,
-      chatId: chat.id,
-      shouldUpdate,
-      templateId: effectiveChatMetadata.templateReference.templateId,
-      templateTitle: effectiveChatMetadata.templateReference.title,
-      sourceChatId: effectiveChatMetadata.templateReference.sourceChatId,
-    });
-  }
   const persistedDesignMd = designMdRemoved ? '' : (effectiveChatMetadata.designMd ?? '');
 
   const elementInfo = message.metadata?.elementInfo;

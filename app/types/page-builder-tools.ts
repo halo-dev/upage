@@ -56,14 +56,6 @@ export type EnsureDesignSystemToolOutput = {
   content: string;
 };
 
-export type EnsureTemplateReferenceToolOutput = {
-  available: boolean;
-  reused: boolean;
-  hasHtmlSnippets: boolean;
-  durationMs?: number;
-  warning?: string;
-};
-
 export type FinishRunToolOutput = {
   acknowledged: boolean;
   reason?: string;
@@ -106,10 +98,6 @@ export type PageBuilderCoreUITools = {
       detailLevel?: 'outline' | 'detailed';
     };
     output: BuildPageSnapshotToolOutput;
-  };
-  ensureTemplateReference: {
-    input: Record<string, never>;
-    output: EnsureTemplateReferenceToolOutput;
   };
   ensureDesignSystem: {
     input: Record<string, never>;

@@ -1,6 +1,5 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { buildTemplateReferenceContext } from '~/.server/llm/template-reference';
 import { getUserMessageContent, hasUserImageParts } from '~/.server/llm/utils';
 import {
   DEFAULT_MODEL,
@@ -13,9 +12,8 @@ import {
   VISION_PROVIDER_NAME,
 } from '~/.server/modules/constants';
 import { getModelCapabilities } from '~/.server/modules/llm/capabilities';
-import { getChatById, updateChat } from '~/.server/service/chat';
+import { updateChat } from '~/.server/service/chat';
 import { materializeMessageFileReferencesForModel } from '~/.server/service/chat-file-reference';
-import { createScopedLogger } from '~/.server/utils/logger';
 import type { ChatMetadata } from '~/types/chat';
 import type {
   ChatUIMessage,
@@ -49,14 +47,11 @@ export type PreparationToolName =
   | 'selectRelevantPages'
   | 'buildPageOutlineSnapshot'
   | 'buildPageDetailedSnapshot'
-  | 'ensureTemplateReference'
   | 'ensureDesignSystem'
   | 'fetchPageContent'
   | 'listAvailablePages';
 export type PageBuilderToolName = PreparationToolName | 'announceUpageBlock' | 'upage' | 'finishRun';
 const MAX_DETAILED_SNAPSHOT_PAGES = 2;
-const logger = createScopedLogger('page-builder-tools');
-
 type PageBuilderToolContext = {
   request: Request;
   chatId: string;
@@ -651,197 +646,6 @@ export function createPageBuilderTools({
     },
   });
 
-  const ensureTemplateReferenceTool = tool({
-    description: '确保当前会话已完成模板参考分析，以便后续页面生成可以借鉴模板的结构与风格。',
-    inputSchema: z.object({}),
-    execute: async () => {
-      const templateReference = chatMetadata?.templateReference;
-      if (!templateReference?.templateId || !templateReference.sourceChatId) {
-        emitPreparationStage({
-          stage: 'template-reference',
-          status: 'skipped',
-          message: '当前会话没有可用的模板参考，已跳过。',
-        });
-        return {
-          available: false,
-          reused: false,
-          hasHtmlSnippets: false,
-        };
-      }
-
-      state.templateReferenceAttempted = true;
-
-      if (state.templateReferenceReady && state.templateReferenceAnalysis) {
-        emitPreparationStage({
-          stage: 'template-reference',
-          status: 'complete',
-          message: '已复用现有模板参考分析。',
-        });
-        markEffectiveTool('ensureTemplateReference');
-        return {
-          available: true,
-          reused: true,
-          hasHtmlSnippets: Boolean(state.templateReferenceHtmlSnippets),
-        };
-      }
-
-      const startedAt = Date.now();
-      logger.info('开始执行模板参考分析', {
-        chatId,
-        templateId: templateReference.templateId,
-        templateTitle: templateReference.title,
-        sourceChatId: templateReference.sourceChatId,
-      });
-      emitPreparationStage({
-        stage: 'template-reference',
-        status: 'in-progress',
-        message: '正在分析模板参考。',
-      });
-
-      try {
-        const templateChat = await getChatById(templateReference.sourceChatId);
-        if (!templateChat) {
-          logger.warn('模板参考分析跳过：找不到来源会话', {
-            chatId,
-            templateId: templateReference.templateId,
-            sourceChatId: templateReference.sourceChatId,
-          });
-          emitPreparationStage({
-            stage: 'template-reference',
-            status: 'warning',
-            message: '找不到模板来源会话，已跳过模板参考分析。',
-          });
-          markEffectiveTool('ensureTemplateReference');
-          return {
-            available: false,
-            reused: false,
-            hasHtmlSnippets: false,
-            durationMs: Date.now() - startedAt,
-            warning: '找不到模板来源会话',
-          };
-        }
-
-        const latestVisualMessage = templateChat.messages
-          ? [...templateChat.messages]
-              .reverse()
-              .find((item) => item.pagesV2?.length || item.sections?.length || item.page)
-          : undefined;
-
-        if (!latestVisualMessage) {
-          logger.warn('模板参考分析跳过：模板缺少可分析页面内容', {
-            chatId,
-            templateId: templateReference.templateId,
-            sourceChatId: templateReference.sourceChatId,
-          });
-          emitPreparationStage({
-            stage: 'template-reference',
-            status: 'warning',
-            message: '模板缺少可分析的页面内容，已跳过模板参考分析。',
-          });
-          markEffectiveTool('ensureTemplateReference');
-          return {
-            available: false,
-            reused: false,
-            hasHtmlSnippets: false,
-            durationMs: Date.now() - startedAt,
-            warning: '模板缺少可分析的页面内容',
-          };
-        }
-
-        const context = await buildTemplateReferenceContext({
-          templateName: templateReference.title || templateReference.templateId,
-          templatePreviewUrl: templateReference.previewUrl,
-          pages: (latestVisualMessage.pagesV2 || []).map((page) => ({
-            name: page.name,
-            title: page.title,
-            content: page.content,
-          })),
-          sections: (latestVisualMessage.sections || []).map((section) => ({
-            type: section.type,
-            pageName: section.pageName,
-            content: section.content,
-          })),
-          model: getMinorModelSelection().getModel('no-thinking'),
-          abortSignal: request.signal,
-          onAbortUsage: onMinorModelUsage,
-          onStreamEvent: createPreparationReasoningForwarder('template-reference', '正在分析模板参考。'),
-        });
-
-        throwIfAborted(request.signal);
-
-        if (!context?.analysis) {
-          emitPreparationStage({
-            stage: 'template-reference',
-            status: 'warning',
-            message: '模板参考分析未产出有效结果，已跳过。',
-          });
-          markEffectiveTool('ensureTemplateReference');
-          return {
-            available: false,
-            reused: false,
-            hasHtmlSnippets: false,
-            durationMs: Date.now() - startedAt,
-            warning: '模板参考分析未产出有效结果',
-          };
-        }
-
-        if (context.totalUsage) {
-          onMinorModelUsage?.(context.totalUsage);
-        }
-
-        state.templateReferenceAnalysis = context.analysis;
-        state.templateReferenceHtmlSnippets = context.htmlSnippets || '';
-        state.templateReferenceReady = true;
-        logger.info('模板参考分析完成', {
-          chatId,
-          templateId: templateReference.templateId,
-          hasHtmlSnippets: Boolean(context.htmlSnippets),
-        });
-        emitPreparationStage({
-          stage: 'template-reference',
-          status: 'complete',
-          message: '模板参考分析已完成。',
-          durationMs: Date.now() - startedAt,
-        });
-        markEffectiveTool('ensureTemplateReference');
-
-        return {
-          available: true,
-          reused: false,
-          hasHtmlSnippets: Boolean(context.htmlSnippets),
-          durationMs: Date.now() - startedAt,
-        };
-      } catch (error) {
-        if (isAbortError(error, request.signal)) {
-          throw error;
-        }
-
-        const warning = error instanceof Error ? error.message : '模板参考分析失败';
-        logger.warn('模板参考分析失败', {
-          chatId,
-          templateId: templateReference.templateId,
-          warning,
-        });
-        state.preparationWarnings.push(`模板参考分析失败，已跳过：${warning}`);
-        emitPreparationStage({
-          stage: 'template-reference',
-          status: 'warning',
-          message: '模板参考分析失败，已跳过。',
-          warning,
-        });
-        markEffectiveTool('ensureTemplateReference');
-
-        return {
-          available: false,
-          reused: false,
-          hasHtmlSnippets: false,
-          durationMs: Date.now() - startedAt,
-          warning,
-        };
-      }
-    },
-  });
-
   const ensureDesignSystemTool = tool({
     description: '确保当前会话存在可复用的 DESIGN.md 设计系统规范。若没有，则立即生成一份。',
     inputSchema: z.object({}),
@@ -901,7 +705,6 @@ export function createPageBuilderTools({
           const generatedDesignResult = await generateDesignMd({
             userMessage: await materializeCurrentMessageForModel(modelSelection),
             visualSummary,
-            templateReferenceAnalysis: state.templateReferenceAnalysis || undefined,
             modelCapabilities: modelSelection.capabilities,
             model: modelSelection.getModel(),
             abortSignal: request.signal,
@@ -1029,7 +832,6 @@ export function createPageBuilderTools({
     selectRelevantPages: selectRelevantPagesTool,
     buildPageOutlineSnapshot: buildPageOutlineSnapshotTool,
     buildPageDetailedSnapshot: buildPageDetailedSnapshotTool,
-    ensureTemplateReference: ensureTemplateReferenceTool,
     ensureDesignSystem: ensureDesignSystemTool,
     fetchPageContent: fetchPageContentTool,
     listAvailablePages: listAvailablePagesTool,

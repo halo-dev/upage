@@ -73,7 +73,6 @@ export type PreparationStage =
   | 'candidate-pages'
   | 'page-snapshot'
   | 'precise-locate'
-  | 'template-reference'
   | 'design-system';
 
 export type PreparationStageStatus = 'in-progress' | 'complete' | 'warning' | 'failed' | 'skipped';

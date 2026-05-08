@@ -38,8 +38,6 @@ type PageBuilderAgentParams = {
   clientDesignMd?: string;
   pageSnapshot?: UserPageSnapshot;
   userPageContext?: string;
-  templateReferenceAnalysis?: string;
-  templateReferenceHtmlSnippets?: string;
   elementInfo?: ElementInfo;
   onFinish?: PageBuilderOnFinish;
   onMinorModelUsage?: (usage: {
@@ -64,8 +62,6 @@ export type PageBuilderAgentState = {
   pageSummaryDetailed: string;
   designMd: string;
   visualSummary: string;
-  templateReferenceAnalysis: string;
-  templateReferenceHtmlSnippets: string;
   rawPages: PageData[];
   selectedPages: PageData[];
   pagesLoaded: boolean;
@@ -74,8 +70,6 @@ export type PageBuilderAgentState = {
   snapshotReady: boolean;
   snapshotPhase: 'none' | 'outline' | 'detailed';
   designReady: boolean;
-  templateReferenceReady: boolean;
-  templateReferenceAttempted: boolean;
   visualSummaryReady: boolean;
   hasVisualReference: boolean;
   visualMode: 'direct' | 'sidecar' | 'limited' | 'none';
@@ -122,8 +116,6 @@ export function createPageBuilderAgent({
   clientDesignMd,
   pageSnapshot,
   userPageContext,
-  templateReferenceAnalysis,
-  templateReferenceHtmlSnippets,
   elementInfo,
   onFinish,
   onMinorModelUsage,
@@ -139,8 +131,6 @@ export function createPageBuilderAgent({
     pageSummaryDetailed: '',
     designMd: clientDesignMd || persistedDesignMd,
     visualSummary: '',
-    templateReferenceAnalysis: templateReferenceAnalysis || '',
-    templateReferenceHtmlSnippets: templateReferenceHtmlSnippets || '',
     rawPages: [],
     selectedPages: [],
     pagesLoaded: false,
@@ -149,8 +139,6 @@ export function createPageBuilderAgent({
     snapshotReady: false,
     snapshotPhase: 'none',
     designReady: Boolean(clientDesignMd || persistedDesignMd),
-    templateReferenceReady: Boolean(templateReferenceAnalysis),
-    templateReferenceAttempted: Boolean(templateReferenceAnalysis),
     visualSummaryReady: false,
     hasVisualReference: hasUserImageParts(currentMessage),
     visualMode: 'none',
@@ -351,7 +339,6 @@ export function createPageBuilderAgent({
   type PageBuilderPrepareStep = PrepareStepFunction<PageBuilderTools>;
 
   const prepareStep: PageBuilderPrepareStep = async ({ messages }) => {
-    const templateReference = chatMetadata?.templateReference;
     if (state.guardrailStopReason === 'step_budget_exceeded' || state.invalidStepCount >= MAX_INVALID_STEP_COUNT) {
       const preparedMessages = trimMessages(messages);
       const preparedSystem = `你已经触发运行时 guardrail，需要立即结束本轮工具调用并只输出一段简短总结。
@@ -405,60 +392,39 @@ export function createPageBuilderAgent({
       designMd: state.designMd || '当前暂无 DESIGN.md；如需统一视觉规范，可按需调用 ensureDesignSystem。',
       visualSummary: state.visualSummary,
       userPageContext,
-      templateReferenceAnalysis: state.templateReferenceAnalysis || undefined,
-      templateReferenceHtmlSnippets: state.templateReferenceHtmlSnippets || undefined,
       elementInfo,
     })}
-
-${
-  templateReference?.templateId
-    ? `当前会话已明确选择了一个借鉴模板。若用户提到“类似这个”“参考这个模板”“基于此模板”，默认就是指它：
-- 模板标题：${templateReference.title || '未命名模板'}
-- 模板 ID：${templateReference.templateId}
-${templateReference.sourceChatId ? `- 模板来源会话：${templateReference.sourceChatId}` : ''}
-${templateReference.previewUrl ? `- 模板预览地址：${templateReference.previewUrl}` : ''}
-
-在模板参考分析至少尝试一次之前，不得把“缺少参考对象”当作结束本轮的理由。`
-    : ''
-}
 
 你处于受限页面生成 agent 模式，当前运行时状态如下：
 - 历史摘要：${state.summaryReady ? '已就绪' : '未就绪'}
 - 页面筛选：${state.contextReady ? `已就绪（${state.candidatePages.join('、') || '无页面'}）` : '未就绪'}
 - 页面概览：${state.snapshotReady ? '已就绪' : '未就绪'}
 - 精确定位：${state.snapshotPhase === 'detailed' ? '已就绪' : '未就绪'}
-- 模板参考：${chatMetadata?.templateReference ? (state.templateReferenceReady ? '已就绪' : '未就绪') : '无'}
-- 模板分析尝试：${chatMetadata?.templateReference ? (state.templateReferenceAttempted ? '已尝试' : '未尝试') : '无'}
 - 设计系统：${state.designReady ? '已就绪' : '未就绪'}
 - 已提交页面变更：${state.effectiveMutationCount}
 - 当前无效步骤：${state.invalidStepCount}
 
 执行规则：
-1. historySummary、selectRelevantPages、buildPageOutlineSnapshot、buildPageDetailedSnapshot、ensureTemplateReference、ensureDesignSystem 都是可按需调用的信息工具，不代表固定阶段；只有在它们能帮助你完成当前请求时才调用。
+1. historySummary、selectRelevantPages、buildPageOutlineSnapshot、buildPageDetailedSnapshot、ensureDesignSystem 都是可按需调用的信息工具，不代表固定阶段；只有在它们能帮助你完成当前请求时才调用。
 2. 如果需要创建、更新或删除页面，必须先调用 announceUpageBlock，再调用 upage。
-3. 如果当前会话带有模板引用，而模板参考尚未就绪，必须先调用 ensureTemplateReference；在模板参考分析至少尝试一次之前，不允许调用 finishRun、announceUpageBlock 或 upage。
-4. 如需统一视觉风格但当前没有足够规范，可调用 ensureDesignSystem；如果已有足够上下文，不必为了“走流程”而额外调用准备工具。
-5. 不要重复提交已经用过的 actionId；重复或空提交会触发 guardrail。
-6. 每批 announceUpageBlock 与紧随其后的 upage 必须使用同一组 artifact/action 标识符，单批最多 3 个区块。
-7. 不要在正文直接输出完整 HTML、CSS、JS、代码块或页面协议；即使已经想好完整页面，也必须拆成 upage 调用后再提交。
-8. 上一轮消息中的 finishRun 只代表上一轮结束，不会限制本轮；不要把历史里的 finishRun 当成“本轮不能继续编辑”的理由。
-9. 如果你只是想快速理解页面结构，优先调用 buildPageOutlineSnapshot。
-10. 只有当你还需要更强的修改定位信息时，再调用 buildPageDetailedSnapshot。
-11. 你必须在内部先判断：这轮请求究竟是“必须产生实际页面变更”还是“只需要说明/分析/解释”。
-12. 调用 finishRun 时，必须通过 requiresMutation 字段显式写出你的内部判断结果；如果只是说明信息不足、缺少视觉参考、无法判断“类似”目标或暂时无法继续，请传 requiresMutation=false。若当前存在模板引用但模板分析尚未尝试，则不得以“缺少参考对象”为由结束。
-13. 如果你判断这轮请求必须产生实际页面变更，那么在至少一次成功的 upage 提交前，不要调用 finishRun。
-14. 只有当你已经完成本轮页面提交或说明任务时，才可以调用 finishRun 结束工具阶段。`;
+3. 如需统一视觉风格但当前没有足够规范，可调用 ensureDesignSystem；如果已有足够上下文，不必为了“走流程”而额外调用准备工具。
+4. 不要重复提交已经用过的 actionId；重复或空提交会触发 guardrail。
+5. 每批 announceUpageBlock 与紧随其后的 upage 必须使用同一组 artifact/action 标识符，单批最多 3 个区块。
+6. 不要在正文直接输出完整 HTML、CSS、JS、代码块或页面协议；即使已经想好完整页面，也必须拆成 upage 调用后再提交。
+7. 上一轮消息中的 finishRun 只代表上一轮结束，不会限制本轮；不要把历史里的 finishRun 当成“本轮不能继续编辑”的理由。
+8. 如果你只是想快速理解页面结构，优先调用 buildPageOutlineSnapshot。
+9. 只有当你还需要更强的修改定位信息时，再调用 buildPageDetailedSnapshot。
+10. 你必须在内部先判断：这轮请求究竟是“必须产生实际页面变更”还是“只需要说明/分析/解释”。
+11. 调用 finishRun 时，必须通过 requiresMutation 字段显式写出你的内部判断结果；如果只是说明信息不足、缺少视觉参考或暂时无法继续，请传 requiresMutation=false。
+12. 如果你判断这轮请求必须产生实际页面变更，那么在至少一次成功的 upage 提交前，不要调用 finishRun。
+13. 只有当你已经完成本轮页面提交或说明任务时，才可以调用 finishRun 结束工具阶段。`;
     state.lastPreparedStep = {
       system: preparedSystem,
       messages: preparedMessages,
     };
     state.preparedStepCount += 1;
     return {
-      activeTools: getPageBuilderActiveTools({
-        hasTemplateReference: Boolean(chatMetadata?.templateReference),
-        templateReferenceReady: state.templateReferenceReady,
-        templateReferenceAttempted: state.templateReferenceAttempted,
-      }),
+      activeTools: getPageBuilderActiveTools(),
       system: preparedSystem,
       messages: preparedMessages,
     };
@@ -489,8 +455,6 @@ function getPreparationStageLabel(stage: PreparationStage) {
       return '页面快照';
     case 'precise-locate':
       return '精确定位';
-    case 'template-reference':
-      return '模板参考分析';
     case 'design-system':
       return '设计系统';
     default:
@@ -506,35 +470,19 @@ function trimMessages(messages: ModelMessage[]) {
   return messages;
 }
 
-export function getPageBuilderActiveTools(options?: {
-  hasTemplateReference?: boolean;
-  templateReferenceReady?: boolean;
-  templateReferenceAttempted?: boolean;
-}): Array<keyof PageBuilderTools> {
-  const shouldForceTemplateReference = Boolean(
-    options?.hasTemplateReference && !options?.templateReferenceReady && !options?.templateReferenceAttempted,
-  );
-  if (shouldForceTemplateReference) {
-    return ['ensureTemplateReference'];
-  }
-
-  const shouldGateDesignSystem = Boolean(options?.hasTemplateReference && !options?.templateReferenceReady);
+export function getPageBuilderActiveTools(): Array<keyof PageBuilderTools> {
   const tools: Array<keyof PageBuilderTools> = [
     'historySummary',
     'selectRelevantPages',
     'buildPageOutlineSnapshot',
     'buildPageDetailedSnapshot',
-    'ensureTemplateReference',
+    'ensureDesignSystem',
     'announceUpageBlock',
     'upage',
     'finishRun',
     ...(process.env.SERPER_API_KEY ? (['serper'] as const) : []),
     ...(process.env.WEATHER_API_KEY ? (['weather'] as const) : []),
   ];
-
-  if (!shouldGateDesignSystem) {
-    tools.splice(5, 0, 'ensureDesignSystem');
-  }
 
   return tools;
 }

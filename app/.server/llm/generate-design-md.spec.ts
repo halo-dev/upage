@@ -106,41 +106,7 @@ describe('generateDesignMd', () => {
     ]);
   });
 
-  it('should include template reference context in text-only design prompts', async () => {
-    streamTextMock.mockReturnValue({
-      fullStream: createFullStream([
-        { type: 'text-start', id: 'text-1' },
-        { type: 'text-delta', id: 'text-1', text: '---\n' },
-        { type: 'text-end', id: 'text-1' },
-      ]),
-      totalUsage: Promise.resolve({
-        inputTokens: 6,
-        outputTokens: 2,
-        totalTokens: 8,
-      }),
-    });
-
-    await generateDesignMd({
-      userMessage: createUserMessage('帮我生成一个类似的网站'),
-      templateReferenceAnalysis: '参考模板：B2B SaaS 官网\n- 借鉴整体版块组织与视觉气质\n- 不要直接复制原文案',
-      modelCapabilities: {
-        supportsVisionInput: false,
-        supportsFileReference: false,
-        supportsImageUrl: false,
-        supportsBase64Image: false,
-        capabilityConfidence: 'unknown',
-      },
-      model: {} as never,
-    });
-
-    expect(streamTextMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: expect.stringContaining('参考模板：B2B SaaS 官网'),
-      }),
-    );
-  });
-
-  it('should explicitly avoid blocking on missing template analysis', async () => {
+  it('should generate a robust prompt from text-only requirements', async () => {
     streamTextMock.mockReturnValue({
       fullStream: createFullStream([
         { type: 'text-start', id: 'text-1' },
@@ -168,10 +134,8 @@ describe('generateDesignMd', () => {
 
     expect(streamTextMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        system: expect.stringContaining('当前未提供模板参考分析，必须忽略任何依赖模板分析的前提'),
-        prompt: expect.stringContaining(
-          '当前没有提供模板参考分析。不要把缺少模板参考分析、参考网站、图片或视觉摘要当作阻塞条件',
-        ),
+        system: expect.stringContaining('你需要根据用户的网站描述，生成一份完整、专业的 DESIGN.md 设计系统文档'),
+        prompt: expect.stringContaining('请基于现有文字需求直接生成一份稳妥、完整、通用的设计系统规范'),
       }),
     );
   });

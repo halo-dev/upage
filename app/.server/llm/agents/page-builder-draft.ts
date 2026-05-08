@@ -465,7 +465,7 @@ function findByDomId(container: ParentNode, domId: string) {
     return container instanceof Element ? container : null;
   }
 
-  if (container instanceof Document) {
+  if ('getElementById' in container && typeof container.getElementById === 'function') {
     return container.getElementById(domId);
   }
 

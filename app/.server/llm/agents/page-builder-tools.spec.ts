@@ -63,8 +63,6 @@ describe('createPageBuilderMutationTools.finishRun', () => {
         hasRejectedPageMutation: false,
         invalidStepCount: 0,
         lastEffectiveTool: undefined,
-        templateReferenceReady: true,
-        templateReferenceAttempted: true,
       } as never,
       markEffectiveTool: vi.fn(),
       markInvalidToolCall: vi.fn(),
@@ -99,8 +97,6 @@ describe('createPageBuilderMutationTools.finishRun', () => {
         hasRejectedPageMutation: true,
         invalidStepCount: 0,
         lastEffectiveTool: undefined,
-        templateReferenceReady: true,
-        templateReferenceAttempted: true,
       } as never,
       markEffectiveTool: vi.fn(),
       markInvalidToolCall: vi.fn(),
@@ -125,40 +121,4 @@ describe('createPageBuilderMutationTools.finishRun', () => {
     });
   });
 
-  it('blocks finishRun before template reference analysis is attempted', async () => {
-    const tools = createPageBuilderMutationTools({
-      state: {
-        emittedPages: [],
-        effectiveMutationCount: 0,
-        finishRequested: false,
-        guardrailStopReason: undefined,
-        hasRejectedPageMutation: false,
-        invalidStepCount: 0,
-        lastEffectiveTool: undefined,
-        templateReferenceReady: false,
-        templateReferenceAttempted: false,
-      } as never,
-      markEffectiveTool: vi.fn(),
-      markInvalidToolCall: vi.fn(),
-      announcedBlockKeys: new Set(),
-      submittedActionKeys: new Set(),
-    });
-
-    const result = await tools.finishRunTool.execute?.(
-      {
-        reason: '当前还缺少明确参考。',
-        requiresMutation: false,
-      },
-      {
-        toolCallId: 'finish-run-template-pending',
-        messages: [],
-        abortSignal: new AbortController().signal,
-      },
-    );
-
-    expect(result).toMatchObject({
-      acknowledged: false,
-      requiresMutation: false,
-    });
-  });
 });

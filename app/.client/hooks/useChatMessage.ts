@@ -292,7 +292,7 @@ export function useChatMessage({
     setChatStarted(true);
   };
 
-  const sendChatMessage = async ({ messageContent, files, metadata, templateReference }: SendChatMessageParams) => {
+  const sendChatMessage = async ({ messageContent, files, metadata }: SendChatMessageParams) => {
     if (!messageContent?.trim()) {
       return;
     }
@@ -328,16 +328,6 @@ export function useChatMessage({
       sections,
     });
 
-    if (templateReference) {
-      logger.info('发送聊天消息时附带模板引用', {
-        chatId: id,
-        rewindTo,
-        templateId: templateReference.templateId,
-        templateTitle: templateReference.title,
-        sourceChatId: templateReference.sourceChatId,
-      });
-    }
-
     sendMessage(
       {
         text: messageContent,
@@ -351,7 +341,6 @@ export function useChatMessage({
           designMd: getDesignMd(),
           designMdRemoved: isDesignMdUserRemoved(),
           pageSnapshot,
-          templateReference,
         },
       },
     );

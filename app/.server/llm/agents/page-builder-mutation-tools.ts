@@ -153,22 +153,6 @@ export function createPageBuilderMutationTools({
     }),
     execute: async ({ reason, requiresMutation }) => {
       const resolvedRequiresMutation = resolveFinishRunRequiresMutation(state, requiresMutation);
-      const shouldBlockForTemplateReference = Boolean(
-        !state.templateReferenceReady && !state.templateReferenceAttempted,
-      );
-
-      if (shouldBlockForTemplateReference) {
-        const blockedReason = '当前会话已选择借鉴模板，必须先完成或至少尝试一次模板参考分析，才能结束本轮。';
-        markInvalidToolCall('finishRun', blockedReason);
-        return {
-          acknowledged: false,
-          reason: blockedReason,
-          requiresMutation: resolvedRequiresMutation,
-          effectiveMutationCount: state.effectiveMutationCount,
-          invalidStepCount: state.invalidStepCount,
-        };
-      }
-
       if (shouldBlockPrematureFinishRun(state, resolvedRequiresMutation)) {
         const blockedReason = resolvedRequiresMutation
           ? '你已判断本轮任务必须产生实际页面变更，但当前还没有成功提交任何页面修改；请继续完成修改，或重新审视你的任务判断。'

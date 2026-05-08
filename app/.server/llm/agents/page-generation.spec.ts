@@ -47,24 +47,7 @@ describe('buildPageGenerationSystemPrompt', () => {
     expect(prompt).toContain('不要把首屏、正文主体、关键信息卡片、主要 CTA 做成');
   });
 
-  it('should include template reference context only when provided', () => {
-    const prompt = buildPageGenerationSystemPrompt({
-      summary: '',
-      pageSummaryOutline: '',
-      pageSummaryDetailed: '',
-      context: {},
-      designMd: '# Design System',
-      templateReferenceAnalysis: '参考模板：SaaS Landing Page',
-      templateReferenceHtmlSnippets: '<section><h1>Hero</h1></section>',
-    });
-
-    expect(prompt).toContain('TEMPLATE REFERENCE');
-    expect(prompt).toContain('参考模板：SaaS Landing Page');
-    expect(prompt).toContain('TEMPLATE HTML SNIPPETS');
-    expect(prompt).toContain('<section><h1>Hero</h1></section>');
-  });
-
-  it('should omit template reference block when not provided', () => {
+  it('should omit legacy template reference blocks', () => {
     const prompt = buildPageGenerationSystemPrompt({
       summary: '',
       pageSummaryOutline: '',
@@ -74,5 +57,6 @@ describe('buildPageGenerationSystemPrompt', () => {
     });
 
     expect(prompt).not.toContain('TEMPLATE REFERENCE');
+    expect(prompt).not.toContain('TEMPLATE HTML SNIPPETS');
   });
 });

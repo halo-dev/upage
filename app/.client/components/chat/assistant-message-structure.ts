@@ -22,7 +22,6 @@ export type PreparationToolPartType =
   | 'tool-selectRelevantPages'
   | 'tool-buildPageOutlineSnapshot'
   | 'tool-buildPageDetailedSnapshot'
-  | 'tool-ensureTemplateReference'
   | 'tool-buildPageSnapshot'
   | 'tool-ensureDesignSystem';
 
@@ -122,8 +121,6 @@ export function getPreparationToolTypeByStage(
       return 'tool-buildPageOutlineSnapshot';
     case 'precise-locate':
       return 'tool-buildPageDetailedSnapshot';
-    case 'template-reference':
-      return 'tool-ensureTemplateReference';
     case 'design-system':
       return 'tool-ensureDesignSystem';
     default:
@@ -147,7 +144,6 @@ export function isPreparationToolPart(part: Extract<ChatUIMessage['parts'][numbe
     part.type === 'tool-selectRelevantPages' ||
     part.type === 'tool-buildPageOutlineSnapshot' ||
     part.type === 'tool-buildPageDetailedSnapshot' ||
-    part.type === 'tool-ensureTemplateReference' ||
     part.type === 'tool-buildPageSnapshot' ||
     part.type === 'tool-ensureDesignSystem'
   );

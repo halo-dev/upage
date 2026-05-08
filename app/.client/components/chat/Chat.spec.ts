@@ -28,43 +28,14 @@ describe('getChatStateAfterInitialMessage', () => {
       getChatStateAfterInitialMessage({
         designMd: '# Airbnb design system',
         designBrand: 'Airbnb',
-        templateReference: {
-          mode: 'inspired-by-template',
-          templateId: 'template-1',
-          title: 'Modern SaaS',
-        },
       }),
     ).toEqual({
       designMd: '# Airbnb design system',
       designBrand: 'Airbnb',
-      templateReference: {
-        mode: 'inspired-by-template',
-        templateId: 'template-1',
-        title: 'Modern SaaS',
-      },
     });
   });
 
-  it('should preserve template reference even when no design system is present', () => {
-    expect(
-      getChatStateAfterInitialMessage({
-        designBrand: 'Airbnb',
-        templateReference: {
-          mode: 'inspired-by-template',
-          templateId: 'template-1',
-        },
-      }),
-    ).toEqual({
-      designMd: undefined,
-      designBrand: 'Airbnb',
-      templateReference: {
-        mode: 'inspired-by-template',
-        templateId: 'template-1',
-      },
-    });
-  });
-
-  it('should clear transient state when neither design system nor template reference is present', () => {
+  it('should clear transient state when no design system is present', () => {
     expect(
       getChatStateAfterInitialMessage({
         designBrand: 'Airbnb',

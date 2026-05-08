@@ -17,7 +17,6 @@ export type {
   BuildPageOutlineSnapshotToolOutput,
   BuildPageSnapshotToolOutput,
   EnsureDesignSystemToolOutput,
-  EnsureTemplateReferenceToolOutput,
   FinishRunToolOutput,
   HistorySummaryToolOutput,
   PageBuilderCoreToolName,
