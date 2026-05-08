@@ -70,10 +70,10 @@ const config = {
         },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
-            position: 'left',
-            label: '使用文档',
+            href: "https://upage.ai",
+            label: '官网',
+            position: 'right',
+            className: 'navbar-official-link',
           },
           {
             href: 'https://github.com/halo-dev/upage',

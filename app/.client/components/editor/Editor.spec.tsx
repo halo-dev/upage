@@ -1,4 +1,5 @@
 import { act, render } from '@testing-library/react';
+import { useEffect, useRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EditorPatch } from '~/.client/stores/pages';
 import type { Editor } from '~/types/editor';
@@ -31,7 +32,17 @@ vi.mock('~/.client/persistence', () => ({
 
 vi.mock('./EditorComponent', () => ({
   EditorComponent: ({ onReady }: { onReady?: (editor: Editor) => void }) => {
-    onReady?.(mockEditor);
+    const readyCalledRef = useRef(false);
+
+    useEffect(() => {
+      if (readyCalledRef.current) {
+        return;
+      }
+
+      readyCalledRef.current = true;
+      onReady?.(mockEditor);
+    }, [onReady]);
+
     return <div data-testid="editor-component" />;
   },
 }));
