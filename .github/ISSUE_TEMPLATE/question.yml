@@ -71,7 +71,7 @@ body:
       placeholder: |
         例如：
         - 操作系统：Ubuntu 22.04
-        - UPage 版本：1.0.1
+        - UPage 版本：2.0.0
         - Docker 版本：24.0.5
         - Ollama 版本：0.1.23
       render: shell

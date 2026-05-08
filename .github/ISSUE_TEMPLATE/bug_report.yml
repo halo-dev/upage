@@ -35,7 +35,7 @@ body:
     attributes:
       label: UPage 版本
       description: 请输入 UPage 的具体版本号
-      placeholder: 例如：1.0.1
+      placeholder: 例如：2.0.0
     validations:
       required: false
 
