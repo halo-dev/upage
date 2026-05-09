@@ -177,6 +177,10 @@ ${allowedHTMLElements.map((tagName) => `<${tagName}>`).join(', ')}
     - 每个 action 只围绕一个逻辑目标展开；同一个视觉或交互目标下的父子联动修改、容器与内容联动修改，属于同一个逻辑目标，不算“无关节点”的混合修改。
     - 当新增、删除或移动节点会改变排版结果时，必须主动检查容器的布局是否也需要同步更新；例如原容器是横向布局而用户期望新增内容上下排列时，应同时修改容器布局，而不是只插入新节点后口头声称结果已达成。
     - 首版 patch op 可使用：\`insert-node\`、\`replace-node\`、\`remove-node\`、\`remove-page\`、\`move-node\`、\`set-attr\`、\`remove-attr\`、\`set-text\`、\`add-class\`、\`remove-class\`、\`set-style\`、\`remove-style\`。
+    - 所有写入 \`content\` 或 \`patches[].html\` 的 HTML，都必须直接以原始 HTML 字符串传递，不要使用 \`\`\`\`、\` 或 JSON.stringify 包裹。
+    - 为降低工具参数中的 JSON 转义失败概率，HTML 属性值统一使用单引号；例如使用 \`<section id='hero'>\`，不要写成双引号属性。
+    - 当 \`contentKind=patch\` 时，\`content\` 必须始终为空字符串；只把 HTML 放在需要的 \`patches[].html\` 中。
+    - 如果只是修改文本、类名、样式或属性，优先使用 \`set-text\`、\`add-class\`、\`remove-class\`、\`set-style\`、\`remove-style\`、\`set-attr\`，避免提交过长的 \`replace-node\` / \`insert-node\` HTML。
     - 修改元素 class 时，优先使用 \`add-class\`（追加类名）或 \`remove-class\`（移除类名），而不是 \`set-attr\`（会覆盖全部 class）；只有需要完整替换 class 时才用 \`set-attr\`。
     - 修改元素内联样式时，优先使用 \`set-style\`（设置单个 CSS 属性）或 \`remove-style\`（移除单个 CSS 属性），而不是 \`set-attr name="style"\`（会覆盖全部内联样式）；只有需要完整替换 style 时才用 \`set-attr\`。
     - 删除节点时只能使用 \`remove-node\`；不要用 \`set-attr\`、\`replace-node\` 或空字段去表达删除。
@@ -187,6 +191,7 @@ ${allowedHTMLElements.map((tagName) => `<${tagName}>`).join(', ')}
     - header/footer 区块的根元素必须分别为 \`<header>\` / \`<footer>\`，其他区块使用 \`<section>\`、\`<style>\` 或 \`<script>\`。
     - 如果是更新操作，必须是最小化更新。
     - 所有 HTML 元素都要有唯一 domId。
+    - HTML 直接输出原始内容，不要使用 markdown 代码块、反引号或 JSON.stringify 包裹；属性值统一使用单引号。
   6. 如果只是更新页面标题，也要调用 \`upage\` 工具，并提交对应页面的 \`artifact\`，\`actions\` 可以为空数组。
   7. 如果你发现本轮内容很多，优先拆分批次，不要冒险输出超长工具 JSON。
   8. 调用完所有需要的 \`upage\` 工具后，再给用户一个简短总结。

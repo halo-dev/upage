@@ -3,6 +3,8 @@ import { z } from 'zod';
 import type { UPagePagePart } from '~/types/message';
 
 const nonEmptyString = z.string().trim().min(1);
+const htmlStringGuidance =
+  '直接传原始 HTML 字符串，不要使用 ```、` 或 JSON.stringify 包裹。为降低工具参数 JSON 转义失败概率，HTML 属性值统一使用单引号。';
 
 const patchTargetSchema = z.object({
   domId: nonEmptyString.describe('目标节点的稳定 domId。'),
@@ -15,7 +17,7 @@ const patchOpSchema = z.discriminatedUnion('type', [
     opId: nonEmptyString,
     reason: nonEmptyString.optional(),
     parentDomId: nonEmptyString.describe('插入目标的父节点 domId。'),
-    html: nonEmptyString.describe('要插入的完整 HTML，必须只有一个根元素且根元素带 id。'),
+    html: nonEmptyString.describe(`要插入的完整 HTML，必须只有一个根元素且根元素带 id。${htmlStringGuidance}`),
     position: z.enum(['append', 'prepend', 'before', 'after']).optional(),
     relativeToDomId: nonEmptyString.optional(),
     sort: z.number().optional(),
@@ -25,7 +27,7 @@ const patchOpSchema = z.discriminatedUnion('type', [
     opId: nonEmptyString,
     reason: nonEmptyString.optional(),
     target: patchTargetSchema,
-    html: nonEmptyString.describe('用于替换目标节点的完整 HTML，根元素必须保留稳定 id。'),
+    html: nonEmptyString.describe(`用于替换目标节点的完整 HTML，根元素必须保留稳定 id。${htmlStringGuidance}`),
   }),
   z.object({
     type: z.literal('remove-node'),
@@ -118,11 +120,19 @@ const actionSchema = z
       .string()
       .optional()
       .default('')
-      .describe('当前区块的完整 HTML、style 或 script 内容。删除操作时传空字符串。'),
+      .describe(`当前区块的完整 HTML、style 或 script 内容。删除操作时传空字符串。${htmlStringGuidance}`),
     patches: z.array(patchOpSchema).optional().describe('当 contentKind 为 patch 时使用的原始 patch ops。'),
   })
   .superRefine((action, ctx) => {
     if (action.contentKind === 'patch') {
+      if (action.content.trim() !== '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'patch action 的 content 必须为空字符串；如需传 HTML，请放到 patches[].html，并使用单引号属性值。',
+          path: ['content'],
+        });
+      }
+
       if (!Array.isArray(action.patches) || action.patches.length === 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -281,7 +291,7 @@ export const upageInputSchema = z
 export function createUPageTool(onPage: (page: UPagePagePart) => Promise<void> | void) {
   return tool({
     description:
-      '当你需要创建、更新或删除页面内容时，必须调用此工具输出结构化页面数据。请使用小批次提交：每次只处理少量区块，优先单页提交，单页单次最多 3 个区块。使用 artifact/actions 组织页面与区块变更。优先用 contentKind=patch + patches 表达局部修改；只有新增大块结构或无法安全 patch 时才回退到 html。注意：小批次和局部 patch 不等于只做最偷懒的单节点修改；只要为了完成用户要求的最终视觉、布局或交互结果，允许并且应该在同一 action 中一起修改直接相关的父节点、容器属性和新增/更新的子节点。不要因为过度追求最小修改而漏掉必要的容器联动调整。典型的必须联动修改容器的情况：容器有 flex 但没有 flex-col 时，向其中新增子节点会横排而不是竖排，必须在同一 action 里用 add-class 给容器加上 flex-col，否则视觉结果必然错误。该工具输出是最终页面结果的唯一结构化真相，不要重复提交已经发过的 actionId。调用完成后，不要立即在当前工具步骤里重复总结；最终只在 finishRun 之后输出一次简短自然语言说明。面向普通用户描述结果，不要重复任何页面内部标识、工具参数或技术实现细节。',
+      '当你需要创建、更新或删除页面内容时，必须调用此工具输出结构化页面数据。请使用小批次提交：每次只处理少量区块，优先单页提交，单页单次最多 3 个区块。使用 artifact/actions 组织页面与区块变更。优先用 contentKind=patch + patches 表达局部修改；只有新增大块结构或无法安全 patch 时才回退到 html。注意：小批次和局部 patch 不等于只做最偷懒的单节点修改；只要为了完成用户要求的最终视觉、布局或交互结果，允许并且应该在同一 action 中一起修改直接相关的父节点、容器属性和新增/更新的子节点。不要因为过度追求最小修改而漏掉必要的容器联动调整。典型的必须联动修改容器的情况：容器有 flex 但没有 flex-col 时，向其中新增子节点会横排而不是竖排，必须在同一 action 里用 add-class 给容器加上 flex-col，否则视觉结果必然错误。所有 HTML 字符串都必须直接传原始 HTML，不要使用 ```、` 或 JSON.stringify 包裹；HTML 属性值统一使用单引号。若 contentKind=patch，则 content 必须为空字符串。该工具输出是最终页面结果的唯一结构化真相，不要重复提交已经发过的 actionId。调用完成后，不要立即在当前工具步骤里重复总结；最终只在 finishRun 之后输出一次简短自然语言说明。面向普通用户描述结果，不要重复任何页面内部标识、工具参数或技术实现细节。',
     inputSchema: upageInputSchema,
     execute: async ({ pages }) => {
       const normalizedPages = pages.map((page) =>
@@ -324,18 +334,64 @@ function normalizeStructuredPageInput(page: unknown) {
 }
 
 function normalizeStructuredActionInput(action: unknown) {
-  if (!action || typeof action !== 'object' || !('patches' in action) || !Array.isArray(action.patches)) {
+  if (!action || typeof action !== 'object') {
     return action;
   }
 
+  const candidate = action as {
+    content?: unknown;
+    contentKind?: unknown;
+    patches?: unknown;
+  };
+  const isPatchAction = candidate.contentKind === 'patch';
+
   return {
     ...action,
-    patches: action.patches.map(normalizePatchInput),
+    content: isPatchAction ? '' : normalizeHtmlPayload(candidate.content),
+    patches: Array.isArray(candidate.patches) ? candidate.patches.map(normalizePatchInput) : candidate.patches,
   };
 }
 
 function normalizePatchInput(patch: unknown) {
-  return patch;
+  if (!patch || typeof patch !== 'object') {
+    return patch;
+  }
+
+  const candidate = patch as {
+    type?: unknown;
+    html?: unknown;
+  };
+  if (candidate.type !== 'insert-node' && candidate.type !== 'replace-node') {
+    return patch;
+  }
+
+  return {
+    ...patch,
+    html: normalizeHtmlPayload(candidate.html),
+  };
+}
+
+function normalizeHtmlPayload(value: unknown) {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  return stripWrappingCodeFences(value);
+}
+
+function stripWrappingCodeFences(value: string) {
+  const trimmed = value.trim();
+  const fencedMatch = trimmed.match(/^```[a-zA-Z0-9_-]*\s*[\r\n]+([\s\S]*?)\s*```$/);
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
+
+  const inlineBacktickMatch = trimmed.match(/^`([\s\S]*)`$/);
+  if (inlineBacktickMatch?.[1]) {
+    return inlineBacktickMatch[1].trim();
+  }
+
+  return trimmed;
 }
 
 function normalizePageInput(page: z.infer<typeof pageSchema> | z.infer<typeof legacyPageSchema>): UPagePagePart {
@@ -345,7 +401,7 @@ function normalizePageInput(page: z.infer<typeof pageSchema> | z.infer<typeof le
       actions: page.actions.map((action) => ({
         ...action,
         contentKind: action.contentKind === 'patch' ? 'patch' : 'html',
-        content: typeof action.content === 'string' ? action.content : '',
+        content: action.contentKind === 'patch' ? '' : typeof action.content === 'string' ? action.content : '',
       })),
     };
   }

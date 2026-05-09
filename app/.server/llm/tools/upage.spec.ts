@@ -196,6 +196,7 @@ describe('createUPageTool', () => {
     expect(result.pages[0]?.actions[0]).toMatchObject({
       id: 'hero-copy',
       contentKind: 'patch',
+      content: '',
       patches: [
         {
           opId: 'set-copy-text',
@@ -204,6 +205,55 @@ describe('createUPageTool', () => {
             domId: 'hero-copy',
           },
           text: '全新标题',
+        },
+      ],
+    });
+  });
+
+  it('should normalize wrapped patch html and clear stray patch content', () => {
+    const parsed = upageInputSchema.safeParse({
+      pages: [
+        {
+          artifact: {
+            id: 'home-page',
+            name: 'index',
+            title: '首页',
+          },
+          actions: [
+            {
+              id: 'hero-card',
+              action: 'add',
+              pageName: 'index',
+              contentKind: 'patch',
+              content: '让我重新构建 JSON',
+              domId: 'main',
+              rootDomId: 'hero-card',
+              patches: [
+                {
+                  type: 'insert-node',
+                  opId: 'insert-hero-card',
+                  parentDomId: 'main',
+                  html: "```html\n<section id='hero-card'><h2>标题</h2></section>\n```",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) {
+      return;
+    }
+
+    expect(parsed.data.pages[0]?.actions[0]).toMatchObject({
+      contentKind: 'patch',
+      content: '',
+      patches: [
+        {
+          type: 'insert-node',
+          html: "<section id='hero-card'><h2>标题</h2></section>",
         },
       ],
     });

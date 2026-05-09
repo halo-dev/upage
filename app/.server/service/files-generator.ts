@@ -241,12 +241,13 @@ export async function generateHTMLFromPageV2(pageV2: PageV2, params: GenerateHTM
 export async function generateHTMLFromPageV1(page: Page, params: GenerateHTMLParams): Promise<string> {
   const { inner = false, attachBody } = params;
 
-  const doc = createProjectHead(page, inner ? 'relative' : 'absolute', attachBody);
+  const doc = createProjectHead(page, inner ? 'relative' : 'absolute');
+  doc.body.insertAdjacentHTML('beforeend', page.content || '');
+  if (attachBody) {
+    doc.body.insertAdjacentHTML('beforeend', attachBody);
+  }
 
-  const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
-  doc.body.innerHTML = page.content || '';
-
-  return dom.serialize();
+  return convertAssetPaths(`<!DOCTYPE html>${doc.documentElement.outerHTML}`, inner);
 }
 
 /**
@@ -456,9 +457,10 @@ export async function generateDeploymentFiles(params: GenerateHTMLParams): Promi
   }
 }
 
-function createProjectHead(page: Page, pathMode: 'relative' | 'absolute' = 'relative', attachBody?: string): Document {
+function createProjectHead(page: Page, pathMode: 'relative' | 'absolute' = 'relative'): Document {
   const basePath = pathMode === 'relative' ? './' : '/';
-  const doc = document.implementation.createHTMLDocument('');
+  const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
+  const doc = dom.window.document;
   const head = doc.head;
 
   const meta = doc.createElement('meta');
@@ -481,11 +483,6 @@ function createProjectHead(page: Page, pathMode: 'relative' | 'absolute' = 'rela
   const iconifyScript = doc.createElement('script');
   iconifyScript.setAttribute('src', `${basePath}iconify-icon.min.js`);
   head.appendChild(iconifyScript);
-
-  if (attachBody) {
-    const body = doc.body;
-    body.insertAdjacentHTML('beforeend', attachBody);
-  }
 
   return doc;
 }

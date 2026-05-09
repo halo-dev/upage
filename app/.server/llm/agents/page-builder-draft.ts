@@ -462,7 +462,7 @@ function findTarget(container: HTMLElement, target: PatchTarget) {
 
 function findByDomId(container: ParentNode, domId: string) {
   if (domId === 'main') {
-    return container instanceof Element ? container : null;
+    return 'nodeType' in container && container.nodeType === 1 ? (container as Element) : null;
   }
 
   if ('getElementById' in container && typeof container.getElementById === 'function') {
