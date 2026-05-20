@@ -1,4 +1,3 @@
-import type { JsonArray, JsonObject } from '@prisma/client/runtime/library';
 import { createScopedLogger } from '~/.server/utils/logger';
 import type { Page } from '~/types/actions';
 import { prisma } from './prisma';
@@ -194,21 +193,21 @@ export async function getPageByMessageId(messageId: string) {
  *
  * @deprecated 使用 PageV2 getPageV2ByMessageIdAndName 代替
  */
-export async function getPageByMessageIdAndName(messageId: string, name: string): Promise<JsonObject | null> {
+export async function getPageByMessageIdAndName(messageId: string, name: string): Promise<Record<string, any> | null> {
   try {
     const page = await getPageByMessageId(messageId);
     if (!page) {
       return null;
     }
-    const pages = page.pages as JsonArray;
+    const pages = page.pages as any[];
     const pageData = pages.find((p) => {
-      const page = p as JsonObject;
+      const page = p as Record<string, any>;
       return page.name === name;
     });
     if (!pageData) {
       return null;
     }
-    return pageData as JsonObject;
+    return pageData as Record<string, any>;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : '未知错误';
     logger.error(`获取消息 ${messageId} 的页面 ${name} 失败: ${errorMessage}`);

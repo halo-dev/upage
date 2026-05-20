@@ -1,5 +1,4 @@
 import type { Message, Prisma } from '@prisma/client';
-import type { JsonArray } from '@prisma/client/runtime/library';
 import type { TextUIPart, UIMessagePart } from 'ai';
 import { prisma } from '~/.server/service/prisma';
 import { createScopedLogger } from '~/.server/utils/logger';
@@ -260,7 +259,7 @@ export function convertToUIMessage(message: Message): ChatUIMessage {
   }
 
   if (message.annotations) {
-    const messageAnnotations = message.annotations as JsonArray;
+    const messageAnnotations = message.annotations as any[];
     messageAnnotations.forEach((annotation) => {
       const { type } = annotation as { type: string };
       if (type === 'chatSummary') {
