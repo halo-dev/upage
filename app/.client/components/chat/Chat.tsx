@@ -35,10 +35,7 @@ export function getChatArtifactSyncState(
   };
 }
 
-export function getChatStateAfterInitialMessage(state?: {
-  designMd?: string;
-  designBrand?: string;
-}) {
+export function getChatStateAfterInitialMessage(state?: { designMd?: string; designBrand?: string }) {
   if (!state?.designMd) {
     return null;
   }
@@ -65,7 +62,7 @@ export function Chat({ loaderData, className }: Route.ComponentProps & { classNa
   const [animationScope] = useAnimate();
   const [scrollRef] = useSnapScroll();
 
-  const { messages, renderedTexts, progressAnnotations, abort, sendChatMessage } = useChatMessage({
+  const { messages, renderedTexts, progressAnnotations, abort, sendChatMessage, sendUserChoice } = useChatMessage({
     initialId: id,
     initialMessages: chat?.messages as unknown as ChatMessage[],
   });
@@ -174,6 +171,7 @@ export function Chat({ loaderData, className }: Route.ComponentProps & { classNa
                     className="mx-auto flex min-h-0 w-full max-w-chat flex-1 flex-col overflow-y-auto"
                     messages={messages}
                     renderedTexts={renderedTexts}
+                    onUserChoiceSubmit={sendUserChoice}
                   />
                   <div className="mx-auto flex w-full max-w-chat flex-col gap-4">
                     <div className="rounded-xl bg-upage-elements-background-depth-2/35">

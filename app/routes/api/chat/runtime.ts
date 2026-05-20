@@ -10,6 +10,7 @@ import type {
   PreparationStageAnnotation,
   UPageBlockAnnotation,
 } from '~/types/message';
+import type { UserChoiceRequest } from '~/types/page-builder-tools';
 import { extractRenderableStructuredPageParts } from '~/utils/message-parts';
 
 type ChatStreamWriter = Parameters<typeof createStreamTextUIMessageWriter>[0]['writer'];
@@ -65,11 +66,23 @@ export function createChatStreamEventWriters({
     },
   });
 
+  const writeUserChoiceEvent = (request: UserChoiceRequest) => {
+    writer.write({
+      type: 'data-user-choice',
+      id: `user-choice-${messageId}-${request.choiceId}`,
+      data: {
+        status: 'pending',
+        request,
+      },
+    });
+  };
+
   return {
     writeChatDescriptionEvent,
     writePreparationStageEvent,
     writeUpageBlockStartEvent,
     writeDesignSystemStreamEvent,
+    writeUserChoiceEvent,
   };
 }
 

@@ -120,5 +120,4 @@ describe('createPageBuilderMutationTools.finishRun', () => {
       requiresMutation: true,
     });
   });
-
 });

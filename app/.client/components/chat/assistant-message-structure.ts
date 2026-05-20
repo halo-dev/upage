@@ -352,6 +352,10 @@ function isVisibleStructuredPart(
     return false;
   }
 
+  if (part.type === 'data-user-choice') {
+    return true;
+  }
+
   if (part.type === 'data-upage-page') {
     return structuredPageSource === 'data-upage-page';
   }

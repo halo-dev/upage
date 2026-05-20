@@ -13,6 +13,7 @@ import type {
   UPagePagePart,
   UserPageSnapshot,
 } from '~/types/message';
+import type { UserChoiceRequest } from '~/types/page-builder-tools';
 import type { PageData } from '~/types/pages';
 import { buildContextFromPages, resolveSelectedPages } from '../preparation';
 import { type SelectContextResult } from '../select-context';
@@ -50,6 +51,7 @@ type PageBuilderAgentParams = {
   onDesignSystemStreamEvent?: (event: StreamTextUIEvent) => void;
   onUpageBlockStart?: (block: UPageBlockAnnotation) => void;
   onPreparationStage?: (event: PreparationStageAnnotation) => void;
+  onUserChoiceRequest?: (request: UserChoiceRequest) => void;
   onDraftCheckpoint?: (project: { pages: PageData[]; sections: SectionCreateParams[] }) => Promise<void> | void;
 };
 
@@ -122,6 +124,7 @@ export function createPageBuilderAgent({
   onDesignSystemStreamEvent,
   onUpageBlockStart,
   onPreparationStage,
+  onUserChoiceRequest,
   onDraftCheckpoint,
 }: PageBuilderAgentParams) {
   const state: PageBuilderAgentState = {
@@ -332,6 +335,7 @@ export function createPageBuilderAgent({
     ensureRawPagesLoaded,
     ensureSelectedPages,
     onDraftCheckpoint: persistDraftCheckpoint,
+    emitUserChoiceRequest: onUserChoiceRequest,
     announcedBlockKeys,
     submittedActionKeys,
   });
@@ -417,7 +421,8 @@ export function createPageBuilderAgent({
 10. 你必须在内部先判断：这轮请求究竟是“必须产生实际页面变更”还是“只需要说明/分析/解释”。
 11. 调用 finishRun 时，必须通过 requiresMutation 字段显式写出你的内部判断结果；如果只是说明信息不足、缺少视觉参考或暂时无法继续，请传 requiresMutation=false。
 12. 如果你判断这轮请求必须产生实际页面变更，那么在至少一次成功的 upage 提交前，不要调用 finishRun。
-13. 只有当你已经完成本轮页面提交或说明任务时，才可以调用 finishRun 结束工具阶段。`;
+13. 只有当你已经完成本轮页面提交或说明任务时，才可以调用 finishRun 结束工具阶段。
+14. 当你需要用户在多个方案中做选择时（如布局风格、配色方案、组件样式等），可调用 requestUserChoice。每轮最多只能调用一次。调用后必须立即结束当前工具阶段，等待用户响应后再继续。`;
     state.lastPreparedStep = {
       system: preparedSystem,
       messages: preparedMessages,
@@ -480,6 +485,7 @@ export function getPageBuilderActiveTools(): Array<keyof PageBuilderTools> {
     'announceUpageBlock',
     'upage',
     'finishRun',
+    'requestUserChoice',
     ...(process.env.SERPER_API_KEY ? (['serper'] as const) : []),
     ...(process.env.WEATHER_API_KEY ? (['weather'] as const) : []),
   ];

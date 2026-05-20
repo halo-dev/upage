@@ -19,9 +19,9 @@ const TEXTAREA_MIN_HEIGHT = 84;
 
 export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onStopMessage }: ChatTextareaProps) => {
   const { isAuthenticated, signIn } = useAuth();
-  const { chatStarted, isStreaming, requestPhase, designMd, designBrand } = useStore(aiState);
+  const { chatStarted, isStreaming, requestPhase, designMd, designBrand, isAwaitingUserChoice } = useStore(aiState);
   const { enhancedInput, isLoading, enhancePrompt, resetEnhancer } = usePromptEnhancer();
-  const isRequestActive = requestPhase === 'submitted' || requestPhase === 'streaming';
+  const isRequestActive = requestPhase === 'submitted' || requestPhase === 'streaming' || isAwaitingUserChoice;
 
   const [input, setInput] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -162,6 +162,7 @@ export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onSto
     requestPhase,
     isStreaming,
     chatStarted,
+    isAwaitingUserChoice,
   });
 
   return (
@@ -217,6 +218,7 @@ export const ChatTextarea = ({ uploadFiles, setUploadFiles, onSendMessage, onSto
           maxHeight: TEXTAREA_MAX_HEIGHT,
         }}
         placeholder={placeholder}
+        disabled={isAwaitingUserChoice}
         translate="no"
       />
       <ClientOnly>
@@ -327,11 +329,17 @@ function getTextareaPlaceholder({
   requestPhase,
   isStreaming,
   chatStarted,
+  isAwaitingUserChoice,
 }: {
   requestPhase: string;
   isStreaming: boolean;
   chatStarted: boolean;
+  isAwaitingUserChoice?: boolean;
 }) {
+  if (isAwaitingUserChoice) {
+    return '请在上方的选项中做出选择';
+  }
+
   if (requestPhase === 'submitted') {
     return '正在分析上下文...';
   }

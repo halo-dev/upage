@@ -15,10 +15,13 @@ import type {
 import {
   getChatStarted,
   getDesignMd,
+  getPendingUserChoice,
   isDesignMdUserRemoved,
   setAborted,
+  setAwaitingUserChoice,
   setChatStarted,
   setDesignSystem,
+  setPendingUserChoice,
   setRequestPhase,
   setShowChat,
   setStreamingState,
@@ -92,6 +95,16 @@ export function useChatMessage({
       if (dataPart.type === 'data-chat-description') {
         webBuilderStore.chatStore.applyGeneratedDescription((dataPart.data as ChatDescriptionAnnotation).description);
       }
+      if (dataPart.type === 'data-user-choice') {
+        const choiceData = dataPart.data as {
+          status: 'pending' | 'completed';
+          request: import('~/types/page-builder-tools').UserChoiceRequest;
+        };
+        if (choiceData.status === 'pending') {
+          setAwaitingUserChoice(true);
+          setPendingUserChoice(choiceData.request);
+        }
+      }
     },
     onError: (e) => {
       setRequestPhase('idle');
@@ -142,6 +155,9 @@ export function useChatMessage({
       syncRewindTo(message.id);
       setAborted(false);
       setRequestPhase('idle');
+      setStreamingState(false);
+      setAwaitingUserChoice(false);
+      setPendingUserChoice(undefined);
       webBuilderStore.chatStore.setCurrentMessageId(message.id);
       if (draftSaveTimerRef.current) {
         window.clearTimeout(draftSaveTimerRef.current);
@@ -292,6 +308,52 @@ export function useChatMessage({
     setChatStarted(true);
   };
 
+  const sendUserChoice = async (response: import('~/types/page-builder-tools').UserChoiceResponse) => {
+    const { choiceId, selectedOptionIds, customText } = response;
+    const pendingChoice = getPendingUserChoice();
+    if (!pendingChoice || pendingChoice.choiceId !== choiceId) {
+      return;
+    }
+
+    setAwaitingUserChoice(false);
+    setPendingUserChoice(undefined);
+
+    const selectedLabels = pendingChoice.options
+      .filter((opt: { id: string }) => selectedOptionIds.includes(opt.id))
+      .map((opt: { label: string }) => opt.label);
+    const summaryParts = [...selectedLabels];
+    if (customText) {
+      summaryParts.push(customText);
+    }
+    const messageContent = summaryParts.length > 0 ? `我的选择：${summaryParts.join('、')}` : '我已做出选择';
+
+    sendMessage(
+      {
+        text: messageContent,
+        metadata: {
+          choiceData: {
+            version: 1,
+            response,
+          },
+        },
+      },
+      {
+        body: {
+          chatId: id,
+          rewindTo: searchParams.get('rewindTo') || undefined,
+          designMd: getDesignMd(),
+          designMdRemoved: isDesignMdUserRemoved(),
+          pageSnapshot: buildPageSnapshotForRequest({
+            rewindTo: searchParams.get('rewindTo'),
+            allPages: webBuilderStore.pagesStore.pages.get(),
+            modifiedPages: webBuilderStore.pagesStore.getModifiedPages(),
+            sections: webBuilderStore.pagesStore.sections,
+          }),
+        },
+      },
+    );
+  };
+
   const sendChatMessage = async ({ messageContent, files, metadata }: SendChatMessageParams) => {
     if (!messageContent?.trim()) {
       return;
@@ -364,5 +426,6 @@ export function useChatMessage({
     isLoading,
     abort,
     sendChatMessage,
+    sendUserChoice,
   };
 }

@@ -8,6 +8,7 @@ import {
   type RenderableStructuredPageSource,
   type UPagePagePart,
 } from '~/types/message';
+import type { UserChoiceResponse } from '~/types/page-builder-tools';
 import {
   getCompletedUpageToolPartPages,
   getStructuredPageSource,
@@ -37,6 +38,7 @@ import markdownStyles from './Markdown.module.scss';
 import { RunningStatus } from './RunningStatus';
 import ThoughtBox from './ThoughtBox';
 import { ToolInvocationCard } from './ToolInvocationCard';
+import { UserChoiceCard } from './UserChoiceCard';
 
 export const AssistantMessage = memo(
   ({
@@ -44,11 +46,13 @@ export const AssistantMessage = memo(
     renderedText,
     isStreaming = false,
     isAborted = false,
+    onUserChoiceSubmit,
   }: {
     message: ChatUIMessage;
     renderedText?: string;
     isStreaming?: boolean;
     isAborted?: boolean;
+    onUserChoiceSubmit?: (response: UserChoiceResponse) => void;
   }) => {
     const isStructuredMessage =
       hasStructuredPageParts(message) ||
@@ -60,6 +64,7 @@ export const AssistantMessage = memo(
           part.type === 'data-design-md' ||
           part.type === 'data-preparation-stage' ||
           part.type === 'data-upage-block-start' ||
+          part.type === 'data-user-choice' ||
           part.type.startsWith('tool-'),
       );
 
@@ -108,7 +113,12 @@ export const AssistantMessage = memo(
         })}
         {isStructuredMessage ? (
           <div className="flex flex-col gap-3">
-            <StructuredMessageContent message={message} isStreaming={isStreaming} isAborted={isAborted} />
+            <StructuredMessageContent
+              message={message}
+              isStreaming={isStreaming}
+              isAborted={isAborted}
+              onUserChoiceSubmit={onUserChoiceSubmit}
+            />
           </div>
         ) : (
           renderedText && (
@@ -126,10 +136,12 @@ function StructuredMessageContent({
   message,
   isStreaming,
   isAborted,
+  onUserChoiceSubmit,
 }: {
   message: ChatUIMessage;
   isStreaming: boolean;
   isAborted: boolean;
+  onUserChoiceSubmit?: (response: UserChoiceResponse) => void;
 }) {
   const messageParts = message.parts || [];
   const hasStreamedDesignSystem = messageParts.some((part) => part.type === 'data-design-md');
@@ -172,6 +184,7 @@ function StructuredMessageContent({
           renderedPageActionKeys,
           blockArtifacts,
           activeReasoningIndex,
+          onUserChoiceSubmit,
         }),
       )}
       {visibleSteps.map((step, stepIndex) => (
@@ -204,6 +217,7 @@ function StructuredMessageContent({
                 renderedPageActionKeys,
                 blockArtifacts,
                 activeReasoningIndex,
+                onUserChoiceSubmit,
               })}
             </Fragment>
           ))}
@@ -291,6 +305,7 @@ function renderStructuredPart({
   renderedPageActionKeys,
   blockArtifacts,
   activeReasoningIndex,
+  onUserChoiceSubmit,
 }: {
   item: StructuredPartItem;
   message: ChatUIMessage;
@@ -303,6 +318,7 @@ function renderStructuredPart({
   renderedPageActionKeys: Set<string>;
   blockArtifacts: Map<number, UPagePagePart>;
   activeReasoningIndex: number;
+  onUserChoiceSubmit?: (response: UserChoiceResponse) => void;
 }) {
   const { part, index } = item;
 
@@ -347,6 +363,20 @@ function renderStructuredPart({
     }
 
     return renderPageArtifacts([blockArtifact], message.id, index);
+  }
+
+  if (part.type === 'data-user-choice') {
+    const { request } = part.data;
+    const choiceData = message.metadata?.choiceData;
+    const response = choiceData?.response?.choiceId === request.choiceId ? choiceData.response : undefined;
+    return (
+      <UserChoiceCard
+        key={`user-choice-${index}`}
+        request={request}
+        response={response}
+        onSubmit={onUserChoiceSubmit}
+      />
+    );
   }
 
   if (part.type === 'data-upage-block-complete') {

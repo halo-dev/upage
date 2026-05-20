@@ -30,6 +30,7 @@ import type {
   UPageBlockAnnotation,
   UserPageSnapshot,
 } from '~/types/message';
+import type { UserChoiceRequest } from '~/types/page-builder-tools';
 import { DEFAULT_CHAT_DESCRIPTION, isUntitledChatDescription } from '~/utils/chat-description';
 import { resolveChatMetadataForRequest } from './metadata';
 import {
@@ -225,6 +226,7 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
   let writeChatDescriptionEvent:
     | ((event: { chatId: string; description: string; source: 'default' | 'ai' }) => void)
     | undefined;
+  let writeUserChoiceEvent: ((request: UserChoiceRequest) => void) | undefined;
   const completedPrimaryUsage = createEmptyTokenUsage();
   let primaryUsageFlushed = false;
   const { agent, state } = createPageBuilderAgent({
@@ -248,6 +250,9 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
     onPreparationStage: (event) => {
       writePreparationStageEvent?.(event);
     },
+    onUserChoiceRequest: (request) => {
+      writeUserChoiceEvent?.(request);
+    },
     onDraftCheckpoint: async ({ pages, sections }) => {
       await replaceProjectSnapshot(
         message.id,
@@ -268,6 +273,7 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
         writePreparationStageEvent,
         writeUpageBlockStartEvent,
         writeDesignSystemStreamEvent,
+        writeUserChoiceEvent,
       } = createChatStreamEventWriters({
         writer,
         messageId,

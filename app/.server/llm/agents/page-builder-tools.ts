@@ -22,6 +22,7 @@ import type {
   UPageBlockAnnotation,
   UPagePagePart,
 } from '~/types/message';
+import type { UserChoiceRequest } from '~/types/page-builder-tools';
 import type { PageData } from '~/types/pages';
 import { isAbortError, throwIfAborted } from '../abort';
 import { createSummary } from '../create-summary';
@@ -49,7 +50,8 @@ export type PreparationToolName =
   | 'buildPageDetailedSnapshot'
   | 'ensureDesignSystem'
   | 'fetchPageContent'
-  | 'listAvailablePages';
+  | 'listAvailablePages'
+  | 'requestUserChoice';
 export type PageBuilderToolName = PreparationToolName | 'announceUpageBlock' | 'upage' | 'finishRun';
 const MAX_DETAILED_SNAPSHOT_PAGES = 2;
 type PageBuilderToolContext = {
@@ -80,6 +82,7 @@ type PageBuilderToolContext = {
   ensureRawPagesLoaded: () => Promise<PageData[]>;
   ensureSelectedPages: (allowFallback: boolean) => Promise<PageData[]>;
   onDraftCheckpoint?: (page: UPagePagePart) => Promise<void> | void;
+  emitUserChoiceRequest?: (request: UserChoiceRequest) => void;
   announcedBlockKeys: Set<string>;
   submittedActionKeys: Set<string>;
 };
@@ -102,6 +105,7 @@ export function createPageBuilderTools({
   ensureRawPagesLoaded,
   ensureSelectedPages,
   onDraftCheckpoint,
+  emitUserChoiceRequest,
   announcedBlockKeys,
   submittedActionKeys,
 }: PageBuilderToolContext) {
@@ -817,6 +821,62 @@ export function createPageBuilderTools({
     },
   });
 
+  const requestUserChoiceTool = tool({
+    description:
+      '当你需要让用户在多个方案中做选择时调用此工具。例如：布局风格选择、配色方案选择、组件风格选择等。你应该生成 2-5 个有实质差异的选项供用户选择。每轮最多只能调用一次此工具。',
+    inputSchema: z.object({
+      question: z.string().trim().min(1).describe('向用户提出的问题，说明需要做什么选择。'),
+      options: z
+        .array(
+          z.object({
+            id: z.string().trim().min(1).describe('选项唯一标识符，使用英文 kebab-case。'),
+            label: z.string().trim().min(1).describe('选项显示名称，简洁明了。'),
+            description: z.string().optional().describe('选项的详细描述，帮助用户理解。'),
+          }),
+        )
+        .min(2)
+        .max(5)
+        .describe('选项列表，至少 2 个，最多 5 个。'),
+      mode: z
+        .enum(['single', 'multiple'])
+        .optional()
+        .default('single')
+        .describe('选择模式：single=单选，multiple=多选。'),
+      allowCustomInput: z.boolean().optional().default(false).describe('是否允许用户输入自定义内容。'),
+      customInputPlaceholder: z.string().optional().describe('自定义输入框的占位提示文本。'),
+    }),
+    execute: async ({ question, options, mode, allowCustomInput, customInputPlaceholder }) => {
+      if (state.lastEffectiveTool === 'requestUserChoice') {
+        markInvalidToolCall('requestUserChoice', '每轮只能调用一次 requestUserChoice');
+        return {
+          status: 'completed' as const,
+          choiceId: '',
+          acknowledged: false,
+        };
+      }
+
+      const choiceId = `choice-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const request: UserChoiceRequest = {
+        version: 1,
+        choiceId,
+        question,
+        options,
+        mode: mode || 'single',
+        allowCustomInput: allowCustomInput || false,
+        customInputPlaceholder,
+      };
+
+      markEffectiveTool('requestUserChoice');
+      emitUserChoiceRequest?.(request);
+
+      return {
+        status: 'pending' as const,
+        choiceId,
+        acknowledged: true,
+      };
+    },
+  });
+
   const { announceUpageBlockTool, upageTool, finishRunTool } = createPageBuilderMutationTools({
     state,
     onUpageBlockStart,
@@ -835,6 +895,7 @@ export function createPageBuilderTools({
     ensureDesignSystem: ensureDesignSystemTool,
     fetchPageContent: fetchPageContentTool,
     listAvailablePages: listAvailablePagesTool,
+    requestUserChoice: requestUserChoiceTool,
     announceUpageBlock: announceUpageBlockTool,
     upage: upageTool,
     finishRun: finishRunTool,

@@ -70,6 +70,36 @@ export type AnnounceUpageBlockToolOutput = {
   announcedActions: string[];
 };
 
+export type UserChoiceOption = {
+  id: string;
+  label: string;
+  description?: string;
+};
+
+export type UserChoiceMode = 'single' | 'multiple';
+
+export type UserChoiceRequest = {
+  version: number;
+  choiceId: string;
+  question: string;
+  options: UserChoiceOption[];
+  mode: UserChoiceMode;
+  allowCustomInput: boolean;
+  customInputPlaceholder?: string;
+};
+
+export type UserChoiceResponse = {
+  choiceId: string;
+  selectedOptionIds: string[];
+  customText?: string;
+};
+
+export type RequestUserChoiceToolOutput = {
+  status: 'pending' | 'completed';
+  choiceId: string;
+  acknowledged: boolean;
+};
+
 export type UPageToolOutput = {
   pages: UPagePagePart[];
   emittedPages: string[];
@@ -128,6 +158,16 @@ export type PageBuilderCoreUITools = {
       requiresMutation: boolean;
     };
     output: FinishRunToolOutput;
+  };
+  requestUserChoice: {
+    input: {
+      question: string;
+      options: Array<{ id: string; label: string; description?: string }>;
+      mode?: 'single' | 'multiple';
+      allowCustomInput?: boolean;
+      customInputPlaceholder?: string;
+    };
+    output: RequestUserChoiceToolOutput;
   };
 };
 

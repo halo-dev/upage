@@ -1,5 +1,6 @@
 import { map } from 'nanostores';
 import type { ChatRequestPhase } from '~/types/message';
+import type { UserChoiceRequest } from '~/types/page-builder-tools';
 
 export type UIState = {
   // 是否显示聊天
@@ -25,6 +26,10 @@ export type AiState = {
   designBrand: string | undefined;
   // 用户主动移除了设计系统，此标志为 true 时禁止服务端推送覆盖
   designMdUserRemoved: boolean;
+  // 是否正在等待用户选择
+  isAwaitingUserChoice: boolean;
+  // 当前待处理的用户选择请求
+  pendingUserChoice: UserChoiceRequest | undefined;
 };
 
 /**
@@ -46,6 +51,8 @@ export const aiState = map<AiState & UIState>({
   designMd: undefined,
   designBrand: undefined,
   designMdUserRemoved: false,
+  isAwaitingUserChoice: false,
+  pendingUserChoice: undefined,
 });
 
 export function setChatStarted(chatStarted: boolean) {
@@ -134,4 +141,20 @@ export function removeDesignSystem() {
 
 export function isDesignMdUserRemoved(): boolean {
   return aiState.get().designMdUserRemoved;
+}
+
+export function setAwaitingUserChoice(isAwaiting: boolean) {
+  aiState.setKey('isAwaitingUserChoice', isAwaiting);
+}
+
+export function getAwaitingUserChoice(): boolean {
+  return aiState.get().isAwaitingUserChoice;
+}
+
+export function setPendingUserChoice(request: UserChoiceRequest | undefined) {
+  aiState.setKey('pendingUserChoice', request);
+}
+
+export function getPendingUserChoice(): UserChoiceRequest | undefined {
+  return aiState.get().pendingUserChoice;
 }

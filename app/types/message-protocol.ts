@@ -1,7 +1,7 @@
 import type { UIMessage } from 'ai';
 import type { PatchOp, UPageAction, UPageActionType } from './actions';
 import type { UPageArtifactData } from './artifact';
-import type { PageBuilderUITools, UPagePagePart } from './page-builder-tools';
+import type { PageBuilderUITools, UPagePagePart, UserChoiceRequest, UserChoiceResponse } from './page-builder-tools';
 import type { PageData } from './pages';
 
 export type AgentRunStatus = 'running' | 'completed' | 'failed' | 'aborted';
@@ -29,6 +29,12 @@ export type ElementInfoMetadata = {
   outerHTML?: string;
 };
 
+export type ChoiceData = {
+  version: number;
+  request?: UserChoiceRequest;
+  response?: UserChoiceResponse;
+};
+
 export type UPageMessageMetadata = {
   isHidden?: boolean;
   elementInfo?: ElementInfoMetadata;
@@ -42,6 +48,7 @@ export type UPageMessageMetadata = {
   invalidStepCount?: number;
   effectiveMutationCount?: number;
   guardrailStopReason?: GuardrailStopReason;
+  choiceData?: ChoiceData;
 };
 
 export type ChatRequestPhase = 'idle' | 'submitted' | 'streaming';
@@ -115,6 +122,12 @@ export type UserPageSnapshot = {
   actions: UPageAction[];
 };
 
+export type UserChoiceAnnotation = {
+  status: 'pending' | 'completed';
+  request: UserChoiceRequest;
+  response?: UserChoiceResponse;
+};
+
 export type UPageDataParts = {
   progress: ProgressAnnotation;
   summary: SummaryAnnotation;
@@ -124,6 +137,7 @@ export type UPageDataParts = {
   'upage-page': UPagePagePart;
   'upage-block-start': UPageBlockAnnotation;
   'upage-block-complete': UPageBlockAnnotation;
+  'user-choice': UserChoiceAnnotation;
 };
 
 export type ChatUIMessage = UIMessage<UPageMessageMetadata, UPageDataParts, PageBuilderUITools>;
