@@ -27,7 +27,7 @@ export default defineConfig((config) => {
       },
     },
     optimizeDeps: {
-      entries: ['./app/entry.client.tsx', './app/root.tsx', './app/routes/*'],
+      entries: ['./app/entry.client.tsx', './app/root.tsx'],
     },
     plugins: [
       reactRouter(),
