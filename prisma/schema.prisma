@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:../data/upage.db"
 }
 
 // 聊天使用记录，每个 message 对应多条。

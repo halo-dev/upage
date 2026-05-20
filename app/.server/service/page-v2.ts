@@ -1,4 +1,3 @@
-import type { JsonValue } from '@prisma/client/runtime/library';
 import { prisma } from '~/.server/service/prisma';
 import { storageProvider } from '~/.server/storage/index.server';
 import { getAssetDirPath, getAssetStoragePath, getAssetUrl } from '~/.server/utils/asset-utils';
@@ -19,10 +18,10 @@ export interface PageV2CreateParams {
   title: string;
   content: string;
   actionIds?: string[];
-  headMeta?: JsonValue;
-  headLinks?: JsonValue;
-  headScripts?: JsonValue;
-  headStyles?: JsonValue;
+  headMeta?: any;
+  headLinks?: any;
+  headScripts?: any;
+  headStyles?: any;
   headRaw?: string;
   sort?: number;
   assets?: PageAssetCreateParams[];
@@ -36,10 +35,10 @@ export interface PageV2UpdateParams {
   title?: string;
   content?: string;
   actionIds?: string[];
-  headMeta?: JsonValue;
-  headLinks?: JsonValue;
-  headScripts?: JsonValue;
-  headStyles?: JsonValue;
+  headMeta?: any;
+  headLinks?: any;
+  headScripts?: any;
+  headStyles?: any;
   headRaw?: string;
   sort?: number;
 }
