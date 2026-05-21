@@ -35,10 +35,7 @@ export function getChatArtifactSyncState(
   };
 }
 
-export function getChatStateAfterInitialMessage(state?: {
-  designMd?: string;
-  designBrand?: string;
-}) {
+export function getChatStateAfterInitialMessage(state?: { designMd?: string; designBrand?: string }) {
   if (!state?.designMd) {
     return null;
   }

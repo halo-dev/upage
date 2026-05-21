@@ -188,6 +188,15 @@ export class WebBuilderStore {
   async saveAllPages(changeSource: ChangeSource) {
     await this.flushIncomingChanges();
 
+    // Pre-sync: ensure pages map reflects latest editorDocuments
+    const documents = this.editorStore.editorDocuments.get();
+    for (const [pageName, doc] of Object.entries(documents)) {
+      const page = this.pagesStore.getPage(pageName);
+      if (page && doc.content !== page.content) {
+        await this.pagesStore.savePage(pageName, doc.content, changeSource);
+      }
+    }
+
     for (const pageName of this.editorStore.unsavedDocuments.get()) {
       await this.saveDocument(pageName, changeSource);
     }

@@ -392,17 +392,16 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
 
       await Promise.all([calculateTokenUsage(status), calculateMinorModelTokenUsage(status)]);
 
-      if (isAborted) {
-        logger.info(`用户 ${userId} 的聊天: ${chatId} 中止处理完成`);
-        return;
-      }
-
       await prisma.$transaction(async (tx) => {
         if (rewindTo) {
           await updateDiscardedMessage(chatId, rewindTo, tx);
         }
         await saveChatMessages(chatId, persistedMessages, tx);
       });
+
+      if (isAborted) {
+        logger.info(`用户 ${userId} 的聊天: ${chatId} 中止处理完成`);
+      }
     },
     onError: (error: unknown) => {
       streamFailed = true;
