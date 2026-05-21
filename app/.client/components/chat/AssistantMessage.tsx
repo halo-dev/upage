@@ -371,7 +371,7 @@ function renderStructuredPart({
     const response = choiceData?.response?.choiceId === request.choiceId ? choiceData.response : undefined;
     return (
       <UserChoiceCard
-        key={`user-choice-${index}`}
+        key={`user-choice-${request.choiceId}`}
         request={request}
         response={response}
         onSubmit={onUserChoiceSubmit}

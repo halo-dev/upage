@@ -86,6 +86,7 @@ export type PageBuilderAgentState = {
   hasRejectedPageMutation: boolean;
   guardrailStopReason?: 'finished_by_agent' | 'no_effective_progress' | 'duplicate_action' | 'step_budget_exceeded';
   finishRequested: boolean;
+  awaitingUserChoice: boolean;
   errorPhase?: AgentErrorPhase;
   lastPreparedStep?: {
     system?: string;
@@ -153,6 +154,7 @@ export function createPageBuilderAgent({
     effectiveMutationCount: 0,
     hasRejectedPageMutation: false,
     finishRequested: false,
+    awaitingUserChoice: false,
   };
   const announcedBlockKeys = new Set<string>();
   const submittedActionKeys = new Set<string>();
@@ -366,6 +368,26 @@ export function createPageBuilderAgent({
       };
     }
 
+    if (state.awaitingUserChoice) {
+      const preparedMessages = trimMessages(messages);
+      const preparedSystem = `你已经向用户发送了选择请求，现在必须等待用户响应，不要调用任何工具。
+
+要求：
+1. 不要调用任何工具，包括 finishRun。
+2. 只输出一句简短的话，告诉用户你已经提供了选项，请他们做出选择。
+3. 默认使用用户最新消息的语言。`;
+      state.lastPreparedStep = {
+        system: preparedSystem,
+        messages: preparedMessages,
+      };
+      state.preparedStepCount += 1;
+      return {
+        toolChoice: 'none',
+        system: preparedSystem,
+        messages: preparedMessages,
+      };
+    }
+
     if (state.finishRequested) {
       const preparedMessages = trimMessages(messages);
       const preparedSystem = `你已经调用 finishRun，下一步只允许输出一段简短总结。
@@ -411,18 +433,19 @@ export function createPageBuilderAgent({
 执行规则：
 1. historySummary、selectRelevantPages、buildPageOutlineSnapshot、buildPageDetailedSnapshot、ensureDesignSystem 都是可按需调用的信息工具，不代表固定阶段；只有在它们能帮助你完成当前请求时才调用。
 2. 如果需要创建、更新或删除页面，必须先调用 announceUpageBlock，再调用 upage。
-3. 如需统一视觉风格但当前没有足够规范，可调用 ensureDesignSystem；如果已有足够上下文，不必为了“走流程”而额外调用准备工具。
+3. 如需统一视觉风格但当前没有足够规范，可调用 ensureDesignSystem；如果已有足够上下文，不必为了”走流程”而额外调用准备工具。
 4. 不要重复提交已经用过的 actionId；重复或空提交会触发 guardrail。
 5. 每批 announceUpageBlock 与紧随其后的 upage 必须使用同一组 artifact/action 标识符，单批最多 3 个区块。
 6. 不要在正文直接输出完整 HTML、CSS、JS、代码块或页面协议；即使已经想好完整页面，也必须拆成 upage 调用后再提交。
-7. 上一轮消息中的 finishRun 只代表上一轮结束，不会限制本轮；不要把历史里的 finishRun 当成“本轮不能继续编辑”的理由。
+7. 上一轮消息中的 finishRun 只代表上一轮结束，不会限制本轮；不要把历史里的 finishRun 当成”本轮不能继续编辑”的理由。
 8. 如果你只是想快速理解页面结构，优先调用 buildPageOutlineSnapshot。
 9. 只有当你还需要更强的修改定位信息时，再调用 buildPageDetailedSnapshot。
-10. 你必须在内部先判断：这轮请求究竟是“必须产生实际页面变更”还是“只需要说明/分析/解释”。
+10. 你必须在内部先判断：这轮请求究竟是”必须产生实际页面变更”还是”只需要说明/分析/解释”。
 11. 调用 finishRun 时，必须通过 requiresMutation 字段显式写出你的内部判断结果；如果只是说明信息不足、缺少视觉参考或暂时无法继续，请传 requiresMutation=false。
 12. 如果你判断这轮请求必须产生实际页面变更，那么在至少一次成功的 upage 提交前，不要调用 finishRun。
 13. 只有当你已经完成本轮页面提交或说明任务时，才可以调用 finishRun 结束工具阶段。
-14. 当你需要用户在多个方案中做选择时（如布局风格、配色方案、组件样式等），可调用 requestUserChoice。每轮最多只能调用一次。调用后必须立即结束当前工具阶段，等待用户响应后再继续。`;
+14. 当你需要用户在多个方案中做选择时（如布局风格、配色方案、组件样式等），可调用 requestUserChoice。每轮最多只能调用一次。调用后必须立即结束当前工具阶段，等待用户响应后再继续。
+15. 如果用户当前轮次的需求过于笼统、模糊或缺少关键偏好信息（如风格方向、目标受众、品牌调性、配色偏好、布局倾向等），**必须**先调用 requestUserChoice 向用户展示 2-5 个有实质差异的方案选项，收集用户明确偏好后再进入设计和页面生成阶段。不要跳过询问直接生成。例如”帮我做一个公司官网””我要一个电商页面”等描述属于模糊需求，应触发选择询问。`;
     state.lastPreparedStep = {
       system: preparedSystem,
       messages: preparedMessages,

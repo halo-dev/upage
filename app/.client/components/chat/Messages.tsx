@@ -225,7 +225,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
         return (
           <MessageItem
             ref={refToApply}
-            key={`${message.id || index}`}
+            key={message.id ? `msg-${message.id}` : `streaming-${index}`}
             message={message}
             renderedText={renderedTexts[message.id]}
             index={index}

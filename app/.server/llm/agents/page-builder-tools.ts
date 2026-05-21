@@ -866,6 +866,7 @@ export function createPageBuilderTools({
         customInputPlaceholder,
       };
 
+      state.awaitingUserChoice = true;
       markEffectiveTool('requestUserChoice');
       emitUserChoiceRequest?.(request);
 

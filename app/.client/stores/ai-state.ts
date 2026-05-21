@@ -158,3 +158,19 @@ export function setPendingUserChoice(request: UserChoiceRequest | undefined) {
 export function getPendingUserChoice(): UserChoiceRequest | undefined {
   return aiState.get().pendingUserChoice;
 }
+
+// 持久化用户选择状态，防止流式传输期间组件重挂载导致状态丢失
+export type UserChoiceSelection = {
+  selectedIds: string[];
+  customText: string;
+};
+
+const userChoiceSelections = map<Record<string, UserChoiceSelection>>({});
+
+export function getUserChoiceSelection(choiceId: string): UserChoiceSelection | undefined {
+  return userChoiceSelections.get()[choiceId];
+}
+
+export function setUserChoiceSelection(choiceId: string, selection: UserChoiceSelection | undefined) {
+  userChoiceSelections.setKey(choiceId, selection);
+}

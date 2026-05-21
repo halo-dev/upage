@@ -167,6 +167,18 @@ export function createPageBuilderMutationTools({
         };
       }
 
+      if (state.awaitingUserChoice) {
+        const blockedReason = '已向用户发送选择请求，必须等待用户响应后才能继续，不能调用 finishRun 结束本轮。';
+        markInvalidToolCall('finishRun', blockedReason);
+        return {
+          acknowledged: false,
+          reason: blockedReason,
+          requiresMutation: resolvedRequiresMutation,
+          effectiveMutationCount: state.effectiveMutationCount,
+          invalidStepCount: state.invalidStepCount,
+        };
+      }
+
       const invalidStepCount = state.invalidStepCount;
       state.finishRequested = true;
       state.guardrailStopReason = state.guardrailStopReason || 'finished_by_agent';

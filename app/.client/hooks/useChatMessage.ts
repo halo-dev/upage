@@ -13,6 +13,7 @@ import type {
   ProgressAnnotation,
 } from '~/types/message';
 import {
+  getAwaitingUserChoice,
   getChatStarted,
   getDesignMd,
   getPendingUserChoice,
@@ -156,8 +157,11 @@ export function useChatMessage({
       setAborted(false);
       setRequestPhase('idle');
       setStreamingState(false);
-      setAwaitingUserChoice(false);
-      setPendingUserChoice(undefined);
+      // 如果正在等待用户选择，不要清除 pending 状态，否则用户点击确认选择时会失效
+      if (!getAwaitingUserChoice()) {
+        setAwaitingUserChoice(false);
+        setPendingUserChoice(undefined);
+      }
       webBuilderStore.chatStore.setCurrentMessageId(message.id);
       if (draftSaveTimerRef.current) {
         window.clearTimeout(draftSaveTimerRef.current);
