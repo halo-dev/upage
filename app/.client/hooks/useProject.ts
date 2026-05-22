@@ -41,7 +41,7 @@ export function useProject() {
         const editorDoc = editorDocuments[page.name];
         return {
           ...page,
-          content: editorDoc?.content ?? page.content ?? '',
+          content: editorDoc?.content || page.content || '',
         };
       });
     const projectSections = Object.values(webBuilderStore.pagesStore.sections.get())
