@@ -161,9 +161,56 @@ async saveAllPages(changeSource: ChangeSource) {
 
 ---
 
-## Task 6: Code review and cleanup
+## Task 6: Fix draft checkpoint validation error
+
+- [x] **Done**
+
+**File**: `app/.server/service/project-service.ts`
+
+**Current behavior**: `saveOrUpdateProject` rejects pages with empty `content` (`pages.filter((page) => page.name && page.content)`). During draft checkpoint, a page may have sections but empty content if materialization hasn't produced output yet, causing the error: "保存页面和部分数据失败: 页面或部分数据无效".
+
+**Required change**: 
+1. Relax `validPages` validation to only check `page.name`, allowing empty `content`.
+2. Add warning logs when empty-content pages are detected.
+3. Add detailed error logs on validation failure.
+
+**File**: `app/routes/api/chat/chat.ts`
+
+**Required change**: Wrap `onDraftCheckpoint` in try-catch so draft checkpoint failures don't interrupt the AI generation stream.
+
+---
+
+## Task 7: Code review and cleanup
 
 - [x] **Done**
   - `pnpm check` — passed, auto-fixed 2 formatting issues
   - `pnpm typecheck` — passed with no errors
   - No unintended changes to non-abort flow (transaction structure preserved)
+
+---
+
+## Task 8: Fix patch deadlock in Editor.tsx
+
+- [x] **Done**
+
+**File**: `app/.client/components/editor/Editor.tsx`
+
+**Current behavior**: `updateComponents` returns without calling `onPatchApplied` when `isValidContent` fails. This leaves the patch stuck in `editorPatchQueue` forever, blocking all subsequent patches. `flushIncomingChanges` in `saveAllPages` times out waiting for the queue to empty.
+
+**Required change**: Call `onPatchAppliedRef.current?.(patch.id)` before returning on validation failure.
+
+**Acceptance**: Even when a patch has invalid content, it is dequeued and subsequent patches can proceed.
+
+---
+
+## Task 9: Fix collectProjectData empty-string fallback
+
+- [x] **Done**
+
+**File**: `app/.client/hooks/useProject.ts`
+
+**Current behavior**: `content: editorDoc?.content ?? page.content ?? ''` uses nullish coalescing (`??`). If `editorDoc.content` is an empty string `''`, it does NOT fall back to `page.content`, so empty content is saved.
+
+**Required change**: Use logical OR (`||`): `content: editorDoc?.content || page.content || ''`.
+
+**Acceptance**: When `editorDocuments` holds an empty string but `pages` has actual content, `collectProjectData` returns the real content.
