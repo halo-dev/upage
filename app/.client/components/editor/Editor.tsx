@@ -80,6 +80,7 @@ export const EditorStudio = memo(
       // 验证 content 是否有效
       if (action !== 'remove' && !isValidContent(content)) {
         logger.warn('内容无效，无法更新组件', JSON.stringify({ action, domId }));
+        onPatchAppliedRef.current?.(patch.id);
         return;
       }
       if (rootDomId) {

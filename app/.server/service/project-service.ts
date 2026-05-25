@@ -58,7 +58,16 @@ async function saveOrUpdateSections(sections: SectionCreateParams[]) {
  */
 export async function saveOrUpdateProject(pages: PageV2CreateParams[], sections: SectionCreateParams[]) {
   try {
-    const validPages = pages.filter((page) => page.name && page.content);
+    // 放宽验证：只检查 name 是否存在，允许 content 为空
+    // content 为空是合法的中间状态（如 draft checkpoint 时 materialize 尚未产生内容）
+    const validPages = pages.filter((page) => page.name);
+    const emptyContentPages = pages.filter((page) => page.name && !page.content);
+    if (emptyContentPages.length > 0) {
+      logger.warn(
+        `检测到 ${emptyContentPages.length} 个 content 为空的页面: ${emptyContentPages.map((p) => p.name).join(', ')}`,
+      );
+    }
+
     const normalizedSections = sections
       .filter((section) => section.pageName && (section.actionId || section.id) && (section.domId || section.rootDomId))
       .map((section) => ({
@@ -68,6 +77,10 @@ export async function saveOrUpdateProject(pages: PageV2CreateParams[], sections:
       }));
 
     if (validPages.length === 0 || normalizedSections.length === 0) {
+      logger.error(
+        `保存失败详情: validPages=${validPages.length}, normalizedSections=${normalizedSections.length}, ` +
+          `原始pages=${pages.length}, content为空的page=${emptyContentPages.length}`,
+      );
       throw new Error('保存页面和部分数据失败: 页面或部分数据无效');
     }
 

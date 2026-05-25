@@ -33,7 +33,17 @@ export function useProject() {
 
   function collectProjectData(options?: { strict?: boolean }) {
     const strict = options?.strict ?? false;
-    const projectPages = Object.values(webBuilderStore.pagesStore.pages.get()).filter(hasValidPageName);
+    const editorDocuments = webBuilderStore.editorStore.editorDocuments.get();
+
+    const projectPages = Object.values(webBuilderStore.pagesStore.pages.get())
+      .filter(hasValidPageName)
+      .map((page) => {
+        const editorDoc = editorDocuments[page.name];
+        return {
+          ...page,
+          content: editorDoc?.content || page.content || '',
+        };
+      });
     const projectSections = Object.values(webBuilderStore.pagesStore.sections.get())
       .filter(hasValidSectionPageName)
       .map((section) => ({

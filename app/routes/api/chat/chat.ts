@@ -249,11 +249,17 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
       writePreparationStageEvent?.(event);
     },
     onDraftCheckpoint: async ({ pages, sections }) => {
-      await replaceProjectSnapshot(
-        message.id,
-        pages.map(({ id, createdAt, updatedAt, assets, ...page }) => page),
-        sections,
-      );
+      try {
+        await replaceProjectSnapshot(
+          message.id,
+          pages.map(({ id, createdAt, updatedAt, assets, ...page }) => page),
+          sections,
+        );
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '未知错误';
+        logger.error(`Draft checkpoint 保存失败: ${errorMessage}`);
+        // 不抛出异常，避免打断 AI 生成流
+      }
     },
     onFinish: ({ finishReason, steps }: { finishReason?: string; steps: unknown[] }) => {
       finalFinishReason = finishReason;
@@ -392,17 +398,16 @@ export async function chatAction({ request, userId }: ChatActionArgs) {
 
       await Promise.all([calculateTokenUsage(status), calculateMinorModelTokenUsage(status)]);
 
-      if (isAborted) {
-        logger.info(`用户 ${userId} 的聊天: ${chatId} 中止处理完成`);
-        return;
-      }
-
       await prisma.$transaction(async (tx) => {
         if (rewindTo) {
           await updateDiscardedMessage(chatId, rewindTo, tx);
         }
         await saveChatMessages(chatId, persistedMessages, tx);
       });
+
+      if (isAborted) {
+        logger.info(`用户 ${userId} 的聊天: ${chatId} 中止处理完成`);
+      }
     },
     onError: (error: unknown) => {
       streamFailed = true;

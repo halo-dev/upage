@@ -90,7 +90,8 @@ export function useChatHistory() {
     }
 
     const projectData = await loadEditorProject();
-    if (projectData) {
+    // 仅当 IndexedDB 缓存包含有效内容时才使用
+    if (projectData?.pages?.some((page) => page.content?.trim())) {
       return {
         messageId: projectData.messageId,
         pages: projectData.pages,
