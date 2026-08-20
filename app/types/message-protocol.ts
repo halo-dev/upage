@@ -1,7 +1,7 @@
 import type { UIMessage } from 'ai';
 import type { PatchOp, UPageAction, UPageActionType } from './actions';
 import type { UPageArtifactData } from './artifact';
-import type { PageBuilderUITools, UPagePagePart } from './page-builder-tools';
+import type { PageBuilderUITools, UPagePagePart, UserChoiceResponse } from './page-builder-tools';
 import type { PageData } from './pages';
 
 export type AgentRunStatus = 'running' | 'completed' | 'failed' | 'aborted';
@@ -42,6 +42,7 @@ export type UPageMessageMetadata = {
   invalidStepCount?: number;
   effectiveMutationCount?: number;
   guardrailStopReason?: GuardrailStopReason;
+  userChoiceResponse?: UserChoiceResponse;
 };
 
 export type ChatRequestPhase = 'idle' | 'submitted' | 'streaming';

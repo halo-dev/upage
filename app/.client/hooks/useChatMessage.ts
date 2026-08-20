@@ -12,6 +12,7 @@ import type {
   PreparationStageAnnotation,
   ProgressAnnotation,
 } from '~/types/message';
+import type { UserChoiceResponse } from '~/types/page-builder-tools';
 import {
   getChatStarted,
   getDesignMd,
@@ -39,6 +40,10 @@ import {
 import { mergeStreamingProgressAnnotations } from './chat-progress';
 
 export { getActiveRewindTo } from './chat-message-utils';
+
+export function hasCompletedUserChoiceRequest(message: Pick<ChatUIMessage, 'parts'>) {
+  return message.parts.some((part) => part.type === 'tool-requestUserChoice' && part.state === 'output-available');
+}
 
 import { useChatUsage } from './useChatUsage';
 import { useMessageParser } from './useMessageParser';
@@ -142,6 +147,9 @@ export function useChatMessage({
       syncRewindTo(message.id);
       setAborted(false);
       setRequestPhase('idle');
+      if (hasCompletedUserChoiceRequest(message)) {
+        setProgressAnnotations([]);
+      }
       webBuilderStore.chatStore.setCurrentMessageId(message.id);
       if (draftSaveTimerRef.current) {
         window.clearTimeout(draftSaveTimerRef.current);
@@ -350,6 +358,43 @@ export function useChatMessage({
     }
   };
 
+  const sendUserChoice = async (response: UserChoiceResponse) => {
+    const choicePart = messages
+      .flatMap((message) => message.parts || [])
+      .find(
+        (
+          part,
+        ): part is Extract<
+          ChatUIMessage['parts'][number],
+          { type: 'tool-requestUserChoice'; state: 'output-available' }
+        > =>
+          part.type === 'tool-requestUserChoice' &&
+          part.state === 'output-available' &&
+          (part.output.choiceId || part.toolCallId) === response.choiceId,
+      );
+
+    if (
+      !choicePart ||
+      messages.some((message) => message.metadata?.userChoiceResponse?.choiceId === response.choiceId)
+    ) {
+      return;
+    }
+
+    const selectedLabels = choicePart.input.options
+      .filter((option) => response.selectedOptionIds.includes(option.id))
+      .map((option) => option.label);
+    const answer = [...selectedLabels, response.customText].filter(Boolean).join('、');
+    const messageContent = `关于“${choicePart.input.question}”，我的选择是：${answer}。请基于这个选择继续。`;
+
+    await sendChatMessage({
+      messageContent,
+      files: [],
+      metadata: {
+        userChoiceResponse: response,
+      },
+    });
+  };
+
   useEffect(() => {
     setSendChatMessage(sendChatMessage);
     return () => {
@@ -364,5 +409,6 @@ export function useChatMessage({
     isLoading,
     abort,
     sendChatMessage,
+    sendUserChoice,
   };
 }

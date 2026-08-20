@@ -10,6 +10,7 @@ import { useChatOperate } from '~/.client/hooks/useChatOperate';
 import { useSnapScroll } from '~/.client/hooks/useSnapScroll';
 import { aiState } from '~/.client/stores/ai-state';
 import type { ChatUIMessage } from '~/types/message';
+import type { UserChoiceResponse } from '~/types/page-builder-tools';
 import { AssistantMessage } from './AssistantMessage';
 import styles from './Messages.module.scss';
 import { UserMessage } from './UserMessage';
@@ -19,6 +20,7 @@ interface MessagesProps {
   className?: string;
   messages: ChatUIMessage[];
   renderedTexts: Record<string, string>;
+  onUserChoiceSubmit?: (response: UserChoiceResponse) => Promise<void> | void;
 }
 
 const MessageItem = memo(
@@ -34,137 +36,158 @@ const MessageItem = memo(
       userInfo: any;
       onRewind: (messageId: string) => void;
       onFork: (messageId: string) => void;
+      userChoiceResponses: ReadonlyMap<string, UserChoiceResponse>;
+      onUserChoiceSubmit?: (response: UserChoiceResponse) => Promise<void> | void;
     }
-  >(({ message, renderedText, index, isLast, isStreaming, isAborted, userInfo, onRewind, onFork }, ref) => {
-    const { role, id: messageId } = message;
+  >(
+    (
+      {
+        message,
+        renderedText,
+        index,
+        isLast,
+        isStreaming,
+        isAborted,
+        userInfo,
+        onRewind,
+        onFork,
+        userChoiceResponses,
+        onUserChoiceSubmit,
+      },
+      ref,
+    ) => {
+      const { role, id: messageId } = message;
 
-    const isUserMessage = role === 'user';
-    const isHidden = message.metadata?.isHidden;
+      const isUserMessage = role === 'user';
+      const isHidden = message.metadata?.isHidden;
 
-    if (isHidden) {
-      return <Fragment key={index} />;
-    }
+      if (isHidden) {
+        return <Fragment key={index} />;
+      }
 
-    return (
-      <div
-        ref={ref}
-        className={classNames(styles.messageItem, {
-          [styles.userRow]: isUserMessage,
-          [styles.assistantRow]: !isUserMessage,
-        })}
-      >
-        {!isUserMessage && (
-          <div
-            className={classNames(
-              styles.avatar,
-              styles.assistantAvatar,
-              'flex items-center justify-center overflow-hidden rounded-full shrink-0 self-start',
-            )}
-          >
-            <div className="i-ph:sparkle text-base" />
-          </div>
-        )}
-
+      return (
         <div
-          className={classNames(styles.messageMain, {
-            [styles.userMain]: isUserMessage,
-            [styles.assistantMain]: !isUserMessage,
+          ref={ref}
+          className={classNames(styles.messageItem, {
+            [styles.userRow]: isUserMessage,
+            [styles.assistantRow]: !isUserMessage,
           })}
         >
+          {!isUserMessage && (
+            <div
+              className={classNames(
+                styles.avatar,
+                styles.assistantAvatar,
+                'flex items-center justify-center overflow-hidden rounded-full shrink-0 self-start',
+              )}
+            >
+              <div className="i-ph:sparkle text-base" />
+            </div>
+          )}
+
           <div
-            className={classNames(styles.messageBubble, {
-              [styles.userBubble]: isUserMessage,
-              [styles.assistantBubble]: !isUserMessage && (!isStreaming || !isLast),
-              [styles.streamingBubble]: !isUserMessage && isStreaming && isLast,
+            className={classNames(styles.messageMain, {
+              [styles.userMain]: isUserMessage,
+              [styles.assistantMain]: !isUserMessage,
             })}
           >
             <div
-              className={classNames(styles.messageContent, {
-                [styles.userContent]: isUserMessage,
-                [styles.assistantContent]: !isUserMessage,
+              className={classNames(styles.messageBubble, {
+                [styles.userBubble]: isUserMessage,
+                [styles.assistantBubble]: !isUserMessage && (!isStreaming || !isLast),
+                [styles.streamingBubble]: !isUserMessage && isStreaming && isLast,
               })}
             >
-              {isUserMessage ? (
-                <UserMessage message={message} />
-              ) : (
-                <AssistantMessage
-                  message={message}
-                  renderedText={renderedText}
-                  isStreaming={isStreaming && isLast}
-                  isAborted={isAborted && isLast}
-                />
-              )}
+              <div
+                className={classNames(styles.messageContent, {
+                  [styles.userContent]: isUserMessage,
+                  [styles.assistantContent]: !isUserMessage,
+                })}
+              >
+                {isUserMessage ? (
+                  <UserMessage message={message} />
+                ) : (
+                  <AssistantMessage
+                    message={message}
+                    renderedText={renderedText}
+                    isStreaming={isStreaming && isLast}
+                    isAborted={isAborted && isLast}
+                    userChoiceResponses={userChoiceResponses}
+                    onUserChoiceSubmit={onUserChoiceSubmit}
+                  />
+                )}
+              </div>
             </div>
-          </div>
 
-          {!isUserMessage && (
-            <div className={styles.assistantActions}>
-              {messageId && (
-                <WithTooltip tooltip="恢复到此消息">
+            {!isUserMessage && (
+              <div className={styles.assistantActions}>
+                {messageId && (
+                  <WithTooltip tooltip="恢复到此消息">
+                    <button
+                      type="button"
+                      aria-label="恢复到此消息"
+                      onClick={() => onRewind(messageId)}
+                      key="rewind-message"
+                      className={classNames(
+                        styles.actionButton,
+                        'text-upage-elements-textSecondary hover:text-upage-elements-textPrimary',
+                      )}
+                    >
+                      <span className="i-ph:arrow-u-up-left text-base" aria-hidden="true" />
+                      <span className={styles.actionLabel}>恢复</span>
+                    </button>
+                  </WithTooltip>
+                )}
+
+                <WithTooltip tooltip="从此消息分叉聊天">
                   <button
                     type="button"
-                    aria-label="恢复到此消息"
-                    onClick={() => onRewind(messageId)}
-                    key="rewind-message"
+                    aria-label="从此消息分叉聊天"
+                    onClick={() => onFork(messageId)}
+                    key="fork-message"
                     className={classNames(
                       styles.actionButton,
                       'text-upage-elements-textSecondary hover:text-upage-elements-textPrimary',
                     )}
                   >
-                    <span className="i-ph:arrow-u-up-left text-base" aria-hidden="true" />
-                    <span className={styles.actionLabel}>恢复</span>
+                    <span className="i-ph:git-fork text-base" aria-hidden="true" />
+                    <span className={styles.actionLabel}>分叉</span>
                   </button>
                 </WithTooltip>
-              )}
+              </div>
+            )}
+          </div>
 
-              <WithTooltip tooltip="从此消息分叉聊天">
-                <button
-                  type="button"
-                  aria-label="从此消息分叉聊天"
-                  onClick={() => onFork(messageId)}
-                  key="fork-message"
-                  className={classNames(
-                    styles.actionButton,
-                    'text-upage-elements-textSecondary hover:text-upage-elements-textPrimary',
-                  )}
-                >
-                  <span className="i-ph:git-fork text-base" aria-hidden="true" />
-                  <span className={styles.actionLabel}>分叉</span>
-                </button>
-              </WithTooltip>
+          {isUserMessage && (
+            <div
+              className={classNames(
+                styles.avatar,
+                styles.userAvatar,
+                'flex items-center justify-center overflow-hidden rounded-full shrink-0 self-start',
+              )}
+            >
+              {userInfo?.picture ? (
+                <img
+                  src={userInfo.picture}
+                  alt={userInfo?.user || userInfo.username || 'User'}
+                  className="size-full object-cover"
+                  loading="eager"
+                  decoding="sync"
+                />
+              ) : (
+                <div className="i-ph:user-fill text-base" />
+              )}
             </div>
           )}
         </div>
-
-        {isUserMessage && (
-          <div
-            className={classNames(
-              styles.avatar,
-              styles.userAvatar,
-              'flex items-center justify-center overflow-hidden rounded-full shrink-0 self-start',
-            )}
-          >
-            {userInfo?.picture ? (
-              <img
-                src={userInfo.picture}
-                alt={userInfo?.user || userInfo.username || 'User'}
-                className="size-full object-cover"
-                loading="eager"
-                decoding="sync"
-              />
-            ) : (
-              <div className="i-ph:user-fill text-base" />
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }),
+      );
+    },
+  ),
 );
 
 export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
   (props: MessagesProps, ref: ForwardedRef<HTMLDivElement> | undefined) => {
-    const { id, messages, renderedTexts } = props;
+    const { id, messages, renderedTexts, onUserChoiceSubmit } = props;
     const location = useLocation();
     const { userInfo } = useAuth();
     const { forkMessage } = useChatOperate();
@@ -207,6 +230,17 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
       }
     };
 
+    const userChoiceResponses = useMemo(() => {
+      const responses = new Map<string, UserChoiceResponse>();
+      for (const message of messages) {
+        const response = message.metadata?.userChoiceResponse;
+        if (response) {
+          responses.set(response.choiceId, response);
+        }
+      }
+      return responses;
+    }, [messages]);
+
     const messageItems = useMemo(() => {
       return messages.map((message, index) => {
         const isLast = index === messages.length - 1;
@@ -226,10 +260,12 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
             userInfo={userInfo}
             onRewind={handleRewind}
             onFork={handleFork}
+            userChoiceResponses={userChoiceResponses}
+            onUserChoiceSubmit={onUserChoiceSubmit}
           />
         );
       });
-    }, [aborted, isStreaming, messages, renderedTexts, userInfo, messageRef]);
+    }, [aborted, isStreaming, messages, onUserChoiceSubmit, renderedTexts, userChoiceResponses, userInfo, messageRef]);
 
     const shouldShowSubmittedPlaceholder =
       requestPhase === 'submitted' && (messages.length === 0 || messages[messages.length - 1]?.role === 'user');

@@ -8,6 +8,7 @@ import {
   type RenderableStructuredPageSource,
   type UPagePagePart,
 } from '~/types/message';
+import type { UserChoiceResponse } from '~/types/page-builder-tools';
 import {
   getCompletedUpageToolPartPages,
   getStructuredPageSource,
@@ -37,6 +38,7 @@ import markdownStyles from './Markdown.module.scss';
 import { RunningStatus } from './RunningStatus';
 import ThoughtBox from './ThoughtBox';
 import { ToolInvocationCard } from './ToolInvocationCard';
+import { UserChoiceCard } from './UserChoiceCard';
 
 export const AssistantMessage = memo(
   ({
@@ -44,11 +46,15 @@ export const AssistantMessage = memo(
     renderedText,
     isStreaming = false,
     isAborted = false,
+    userChoiceResponses,
+    onUserChoiceSubmit,
   }: {
     message: ChatUIMessage;
     renderedText?: string;
     isStreaming?: boolean;
     isAborted?: boolean;
+    userChoiceResponses?: ReadonlyMap<string, UserChoiceResponse>;
+    onUserChoiceSubmit?: (response: UserChoiceResponse) => Promise<void> | void;
   }) => {
     const isStructuredMessage =
       hasStructuredPageParts(message) ||
@@ -108,7 +114,13 @@ export const AssistantMessage = memo(
         })}
         {isStructuredMessage ? (
           <div className="flex flex-col gap-3">
-            <StructuredMessageContent message={message} isStreaming={isStreaming} isAborted={isAborted} />
+            <StructuredMessageContent
+              message={message}
+              isStreaming={isStreaming}
+              isAborted={isAborted}
+              userChoiceResponses={userChoiceResponses}
+              onUserChoiceSubmit={onUserChoiceSubmit}
+            />
           </div>
         ) : (
           renderedText && (
@@ -126,10 +138,14 @@ function StructuredMessageContent({
   message,
   isStreaming,
   isAborted,
+  userChoiceResponses,
+  onUserChoiceSubmit,
 }: {
   message: ChatUIMessage;
   isStreaming: boolean;
   isAborted: boolean;
+  userChoiceResponses?: ReadonlyMap<string, UserChoiceResponse>;
+  onUserChoiceSubmit?: (response: UserChoiceResponse) => Promise<void> | void;
 }) {
   const messageParts = message.parts || [];
   const hasStreamedDesignSystem = messageParts.some((part) => part.type === 'data-design-md');
@@ -172,6 +188,8 @@ function StructuredMessageContent({
           renderedPageActionKeys,
           blockArtifacts,
           activeReasoningIndex,
+          userChoiceResponses,
+          onUserChoiceSubmit,
         }),
       )}
       {visibleSteps.map((step, stepIndex) => (
@@ -204,6 +222,8 @@ function StructuredMessageContent({
                 renderedPageActionKeys,
                 blockArtifacts,
                 activeReasoningIndex,
+                userChoiceResponses,
+                onUserChoiceSubmit,
               })}
             </Fragment>
           ))}
@@ -291,6 +311,8 @@ function renderStructuredPart({
   renderedPageActionKeys,
   blockArtifacts,
   activeReasoningIndex,
+  userChoiceResponses,
+  onUserChoiceSubmit,
 }: {
   item: StructuredPartItem;
   message: ChatUIMessage;
@@ -303,6 +325,8 @@ function renderStructuredPart({
   renderedPageActionKeys: Set<string>;
   blockArtifacts: Map<number, UPagePagePart>;
   activeReasoningIndex: number;
+  userChoiceResponses?: ReadonlyMap<string, UserChoiceResponse>;
+  onUserChoiceSubmit?: (response: UserChoiceResponse) => Promise<void> | void;
 }) {
   const { part, index } = item;
 
@@ -356,6 +380,19 @@ function renderStructuredPart({
   if (isToolPart(part)) {
     if (isHiddenToolPart(part)) {
       return null;
+    }
+
+    if (part.type === 'tool-requestUserChoice' && part.state === 'output-available') {
+      const choiceId = part.output.choiceId || part.toolCallId;
+      return (
+        <UserChoiceCard
+          key={`user-choice-${choiceId}`}
+          choiceId={choiceId}
+          request={part.input}
+          response={userChoiceResponses?.get(choiceId)}
+          onSubmit={onUserChoiceSubmit}
+        />
+      );
     }
 
     const pageParts =

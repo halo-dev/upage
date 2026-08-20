@@ -41,6 +41,7 @@ import { summarizeVisualReference } from '../visual-reference';
 import type { PageBuilderAgentState } from './page-builder';
 import { createPageBuilderMutationTools } from './page-builder-mutation-tools';
 import { createOptionalPageBuilderTools } from './page-builder-optional-tools';
+import { createRequestUserChoiceTool } from './page-builder-user-choice';
 
 export type PreparationToolName =
   | 'historySummary'
@@ -49,7 +50,8 @@ export type PreparationToolName =
   | 'buildPageDetailedSnapshot'
   | 'ensureDesignSystem'
   | 'fetchPageContent'
-  | 'listAvailablePages';
+  | 'listAvailablePages'
+  | 'requestUserChoice';
 export type PageBuilderToolName = PreparationToolName | 'announceUpageBlock' | 'upage' | 'finishRun';
 const MAX_DETAILED_SNAPSHOT_PAGES = 2;
 type PageBuilderToolContext = {
@@ -817,6 +819,8 @@ export function createPageBuilderTools({
     },
   });
 
+  const requestUserChoiceTool = createRequestUserChoiceTool(markEffectiveTool);
+
   const { announceUpageBlockTool, upageTool, finishRunTool } = createPageBuilderMutationTools({
     state,
     onUpageBlockStart,
@@ -835,6 +839,7 @@ export function createPageBuilderTools({
     ensureDesignSystem: ensureDesignSystemTool,
     fetchPageContent: fetchPageContentTool,
     listAvailablePages: listAvailablePagesTool,
+    requestUserChoice: requestUserChoiceTool,
     announceUpageBlock: announceUpageBlockTool,
     upage: upageTool,
     finishRun: finishRunTool,
