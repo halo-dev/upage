@@ -9,6 +9,7 @@ import { EditorOverlay } from './EditorOverlay';
 export interface PageRenderRef {
   element: HTMLDivElement | null;
   iframe: HTMLIFrameElement | null;
+  refresh: () => void;
 }
 
 export interface EditorRenderProps {
@@ -102,6 +103,7 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
     const documentContentRef = useRef<string>(document.content);
     const previousSelectedElementRef = useRef<HTMLElement | null>(null);
     const hasUnsavedChangesRef = useRef<boolean>(false);
+    const [frameVersion, setFrameVersion] = useState(0);
 
     const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
     const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
@@ -112,12 +114,30 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
       setShow(true);
     }, []);
 
-    useImperativeHandle(ref, () => {
-      return {
-        element: contentRef.current,
-        iframe: frameRef.current,
-      };
-    }, [frameRef.current, contentRef.current]);
+    const refreshFrame = useCallback(() => {
+      const currentContent = contentRef.current?.innerHTML;
+      if (currentContent !== undefined) {
+        documentContentRef.current = currentContent;
+        lastContentRef.current = currentContent;
+        onUpdate?.(document.name, currentContent);
+      }
+
+      setFrameVersion((version) => version + 1);
+    }, [document.name, onUpdate]);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        get element() {
+          return contentRef.current;
+        },
+        get iframe() {
+          return frameRef.current;
+        },
+        refresh: refreshFrame,
+      }),
+      [refreshFrame],
+    );
 
     const setElementEditable = useCallback((element: HTMLElement, isEditable: boolean) => {
       if (isEditable) {
@@ -504,6 +524,7 @@ export const PageRender = forwardRef<PageRenderRef, EditorRenderProps>(
       >
         {show && (
           <Frame
+            key={`${document.name}-${frameVersion}`}
             ref={frameRef}
             initialContent={initialContent}
             mountTarget="#page-content"
