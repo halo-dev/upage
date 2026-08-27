@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getActiveRewindTo } from './useChatMessage';
+import { getActiveRewindTo, hasCompletedUserChoiceRequest } from './useChatMessage';
 
 describe('getActiveRewindTo', () => {
   it('should keep using the latest stable message while rewinding', () => {
@@ -27,5 +27,31 @@ describe('getActiveRewindTo', () => {
         lastStableMessageId: 'assistant-latest',
       }),
     ).toBeNull();
+  });
+});
+
+describe('hasCompletedUserChoiceRequest', () => {
+  it('should recognize a completed user-choice tool request', () => {
+    expect(
+      hasCompletedUserChoiceRequest({
+        parts: [
+          {
+            type: 'tool-requestUserChoice',
+            toolCallId: 'choice-1',
+            state: 'output-available',
+            input: {
+              question: '选择风格',
+              options: [
+                { id: 'tech', label: '科技风' },
+                { id: 'warm', label: '自然风' },
+              ],
+              mode: 'single',
+              allowCustomInput: true,
+            },
+            output: { acknowledged: true, awaitingUserResponse: true, choiceId: 'choice-1' },
+          },
+        ],
+      }),
+    ).toBe(true);
   });
 });

@@ -203,9 +203,23 @@ export function sanitizeMessagesForAgent(
   } = {},
 ): ChatUIMessage[] {
   return messages.map((message) => {
-    const nextParts = (message.parts || []).filter(
-      (part) => part.type === 'text' || part.type === 'reasoning' || (options.allowFileParts && part.type === 'file'),
-    );
+    const nextParts = (message.parts || []).flatMap((part) => {
+      if (part.type === 'text' || part.type === 'reasoning' || (options.allowFileParts && part.type === 'file')) {
+        return [part];
+      }
+
+      if (part.type === 'tool-requestUserChoice' && part.state === 'output-available') {
+        const optionLabels = part.input.options.map((option) => option.label).join('、');
+        return [
+          {
+            type: 'text' as const,
+            text: `我向用户询问了：“${part.input.question}”${optionLabels ? `；可选方案包括：${optionLabels}` : ''}。`,
+          },
+        ];
+      }
+
+      return [];
+    });
 
     const structuredSummary = summarizeStructuredPagePartsForAgent(message);
     if (structuredSummary) {

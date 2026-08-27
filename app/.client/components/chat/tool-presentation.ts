@@ -60,6 +60,8 @@ function getToolTitle(toolName: string) {
       return '构建页面快照';
     case 'ensureDesignSystem':
       return '准备设计系统';
+    case 'requestUserChoice':
+      return '准备选择方案';
     case 'upage':
       return '应用页面变更';
     case 'finishRun':

@@ -1,4 +1,10 @@
-import { type ModelMessage, type PrepareStepFunction, stepCountIs, Experimental_Agent as ToolLoopAgent } from 'ai';
+import {
+  hasToolCall,
+  type ModelMessage,
+  type PrepareStepFunction,
+  stepCountIs,
+  Experimental_Agent as ToolLoopAgent,
+} from 'ai';
 import { DEFAULT_MODEL, DEFAULT_MODEL_DETAILS, getModel } from '~/.server/modules/constants';
 import { getPageV2ByMessageId } from '~/.server/service/page-v2';
 import type { SectionCreateParams } from '~/.server/service/section';
@@ -417,7 +423,11 @@ export function createPageBuilderAgent({
 10. 你必须在内部先判断：这轮请求究竟是“必须产生实际页面变更”还是“只需要说明/分析/解释”。
 11. 调用 finishRun 时，必须通过 requiresMutation 字段显式写出你的内部判断结果；如果只是说明信息不足、缺少视觉参考或暂时无法继续，请传 requiresMutation=false。
 12. 如果你判断这轮请求必须产生实际页面变更，那么在至少一次成功的 upage 提交前，不要调用 finishRun。
-13. 只有当你已经完成本轮页面提交或说明任务时，才可以调用 finishRun 结束工具阶段。`;
+13. 只有当你已经完成本轮页面提交或说明任务时，才可以调用 finishRun 结束工具阶段。
+14. 当用户要求从零创建项目或页面、已经进入规划阶段，但没有明确给出视觉风格时，必须先调用 requestUserChoice，提供 3-4 个针对当前项目、彼此有明显差异的风格方向，并允许用户自定义输入；在用户回答前，不得调用 ensureDesignSystem、announceUpageBlock 或 upage。
+15. 如果用户已经在当前消息、设计系统或视觉参考中明确表达了风格，不要重复询问同一个决定，直接继续后续步骤。
+16. 除了初始风格，在后续 Agent 执行中遇到会显著影响结果、且存在多种合理取舍的决策时，也可以调用 requestUserChoice。每轮最多询问一次；不要为琐碎细节打断用户，也不要要求用户确认技术性的中间对象。
+17. requestUserChoice 一旦调用，本轮运行会自动暂停。不要同时提交其他工具调用；等待用户选择或输入自定义方案后，在下一轮基于答案继续。`;
     state.lastPreparedStep = {
       system: preparedSystem,
       messages: preparedMessages,
@@ -433,7 +443,7 @@ export function createPageBuilderAgent({
   const agent = new ToolLoopAgent({
     model: getModel(DEFAULT_MODEL),
     maxOutputTokens: DEFAULT_MODEL_DETAILS?.maxTokenAllowed,
-    stopWhen: stepCountIs(PAGE_GENERATION_STEP_LIMIT),
+    stopWhen: [stepCountIs(PAGE_GENERATION_STEP_LIMIT), hasToolCall('requestUserChoice')],
     tools,
     prepareStep,
     onFinish,
@@ -477,6 +487,7 @@ export function getPageBuilderActiveTools(): Array<keyof PageBuilderTools> {
     'buildPageOutlineSnapshot',
     'buildPageDetailedSnapshot',
     'ensureDesignSystem',
+    'requestUserChoice',
     'announceUpageBlock',
     'upage',
     'finishRun',

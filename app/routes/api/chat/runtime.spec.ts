@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { ChatUIMessage } from '~/types/message';
 
 vi.mock('~/.server/service/prisma', () => ({
   prisma: {},
@@ -115,6 +116,43 @@ describe('sanitizeMessagesForAgent', () => {
         type: 'text',
         text: '页面 index（首页）：update:hero-update',
       }),
+    ]);
+  });
+
+  it('should preserve user-choice context as readable text for continuation', () => {
+    const messages = [
+      {
+        id: 'assistant-choice',
+        role: 'assistant',
+        parts: [
+          {
+            type: 'tool-requestUserChoice',
+            toolCallId: 'choice-1',
+            state: 'output-available',
+            input: {
+              question: '你更喜欢哪种风格？',
+              options: [
+                { id: 'editorial', label: '编辑杂志风' },
+                { id: 'tech', label: '未来科技风' },
+              ],
+              mode: 'single',
+              allowCustomInput: true,
+            },
+            output: {
+              acknowledged: true,
+              awaitingUserResponse: true,
+              choiceId: 'choice-1',
+            },
+          },
+        ],
+      },
+    ] as ChatUIMessage[];
+
+    expect(sanitizeMessagesForAgent(messages)[0].parts).toEqual([
+      {
+        type: 'text',
+        text: '我向用户询问了：“你更喜欢哪种风格？”；可选方案包括：编辑杂志风、未来科技风。',
+      },
     ]);
   });
 });
