@@ -44,6 +44,7 @@ export function EditorComponent(props: EditorComponentProps) {
         getContentElement,
         getIframeElement,
         getAutoScrollEnabled,
+        refreshPage,
       });
 
       setTimeout(() => {
@@ -78,6 +79,11 @@ export function EditorComponent(props: EditorComponentProps) {
     }
 
     return autoScrollEnabledRef.current[currentPageName] ?? true;
+  }, []);
+
+  const refreshPage = useCallback(() => {
+    const currentPageName = currentPageRef.current ?? 'index';
+    pageRefsRef.current[currentPageName]?.current?.refresh();
   }, []);
 
   const handleAutoScrollChange = useCallback((pageName: string, enabled: boolean) => {
