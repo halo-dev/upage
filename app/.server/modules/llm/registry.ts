@@ -1,5 +1,6 @@
 import AmazonBedrockProvider from './providers/amazon-bedrock';
 import AnthropicProvider from './providers/anthropic';
+import AtlasCloudProvider from './providers/atlas-cloud';
 import CohereProvider from './providers/cohere';
 import DeepseekProvider from './providers/deepseek';
 import DouBaoProvider from './providers/doubao';
@@ -23,6 +24,7 @@ import ZhiPuProvider from './providers/zhipu';
 
 export {
   AnthropicProvider,
+  AtlasCloudProvider,
   CohereProvider,
   DeepseekProvider,
   DouBaoProvider,
