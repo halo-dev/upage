@@ -44,7 +44,7 @@ export const LinkEditor: React.FC<EditorProps> = memo(({ element }) => {
           }}
           value={href}
           onChange={handleHrefChange}
-          placeholder="https://upage.ai"
+          placeholder="https://upage.cn"
         />
       </div>
 

@@ -1,15 +1,15 @@
 blank_issues_enabled: true
 contact_links:
   - name: 📚 在线文档
-    url: https://docs.upage.ai/
+    url: https://docs.upage.cn/
     about: 查看 UPage 的完整文档和使用指南
   - name: 🙋 常见问题
-    url: https://docs.upage.ai/faq
+    url: https://docs.upage.cn/faq
     about: 在这里可能已经有您问题的答案
   - name: 💬 技术交流群
     url: https://github.com/halo-dev/upage#%E8%81%94%E7%B3%BB%E6%88%91%E4%BB%AC
     about: 加入我们的技术交流群，与其他用户和开发者交流
   - name: 🔧 参与贡献
-    url: https://docs.upage.ai/contributing
+    url: https://docs.upage.cn/contributing
     about: 了解如何为 UPage 贡献代码或文档
 

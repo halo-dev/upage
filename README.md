@@ -20,7 +20,7 @@ UPage 是一款基于大语言模型的可视化网页构建平台，支持接�
 
 ## 网页版
 
-UPage Online ：[upage.ai](https://upage.ai/)
+UPage Online ：[upage.cn](https://upage.cn/)
 
 
 ## 快速开始
@@ -69,7 +69,7 @@ docker run -d \
 
 你也可以通过 [1Panel 应用商店](https://1panel.cn/) 来安装部署 UPage。
 
-详细使用指南请参考：[UPage 在线文档](https://docs.upage.ai/quick-start)
+详细使用指南请参考：[UPage 在线文档](https://docs.upage.cn/quick-start)
 
 ### 联系我们
 
