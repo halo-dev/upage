@@ -208,10 +208,6 @@ export class EditorController implements Editor {
   }
 
   refresh() {
-    const iframeElement = this.props.getIframeElement();
-    if (!iframeElement) {
-      return;
-    }
-    iframeElement.contentWindow?.location.reload();
+    this.props.refreshPage();
   }
 }

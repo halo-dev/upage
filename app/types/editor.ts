@@ -28,4 +28,5 @@ export interface EditorControllerProps {
   getContentElement: () => HTMLElement | null;
   getIframeElement: () => HTMLIFrameElement | null;
   getAutoScrollEnabled?: () => boolean;
+  refreshPage: () => void;
 }
