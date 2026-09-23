@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        感谢您的提问！在提交之前，请先查看[文档](https://docs.upage.ai/)和[常见问题](https://docs.upage.ai/faq)，可能已经有答案了。
+        感谢您的提问！在提交之前，请先查看[文档](https://docs.upage.cn/)和[常见问题](https://docs.upage.cn/faq)，可能已经有答案了。
 
         如果您的问题比较复杂或需要深入讨论，也欢迎加入我们的技术交流群。
 

@@ -136,7 +136,7 @@ export function DeployTo1PanelDialog({ deploying, isOpen, onClose, onDeploy, dep
                           type="text"
                           value={customDomain}
                           onChange={(e) => setCustomDomain(e.target.value)}
-                          placeholder="example.upage.ai"
+                          placeholder="example.upage.cn"
                           className="flex-1 px-3 py-2 rounded-lg text-sm bg-[#F8F8F8] dark:bg-[#1A1A1A] border border-[#E5E5E5] dark:border-[#333333] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-upage-elements-borderColorActive"
                         />
                       </div>

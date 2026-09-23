@@ -71,7 +71,7 @@ export async function getWebsiteList(
 
 export async function createWebsite(params: CreateWebsiteParams) {
   const { serverUrl, apiKey, version = 'v2', alias, primaryDomain, proxyProtocol, isSSL } = params;
-  const domain = primaryDomain || `${alias}.upage.ai`;
+  const domain = primaryDomain || `${alias}.upage.cn`;
   const response = await request(`${get1PanelHost(serverUrl, version)}/websites`, {
     method: 'POST',
     headers: {

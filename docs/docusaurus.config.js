@@ -8,7 +8,7 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://docs.upage.ai',
+  url: 'https://docs.upage.cn',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
@@ -70,7 +70,7 @@ const config = {
         },
         items: [
           {
-            href: "https://upage.ai",
+            href: "https://upage.cn",
             label: '官网',
             position: 'right',
             className: 'navbar-official-link',
